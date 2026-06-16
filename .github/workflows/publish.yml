@@ -1,0 +1,96 @@
+# Автопубликация модпака Kingdom RP на GitHub Pages.
+#
+# По пушу в main (или тегу vX.Y.Z): собирает мод, прогоняет сборщик дистрибутива
+# из krp-launcher и деплоит готовый dist/ на GitHub Pages.
+# Лаунчер тянет файлы с https://<логин>.github.io/krp-mod (= MANIFEST_BASE_URL).
+#
+# ОДНОРАЗОВАЯ НАСТРОЙКА:
+#   1. Репозитории Kingdom-RP/krp-mod и Kingdom-RP/krp-launcher на GitHub.
+#   2. Settings → Pages → Source = "GitHub Actions" (в репо krp-mod).
+#   3. Если krp-launcher ПРИВАТНЫЙ — создать секрет LAUNCHER_PAT (PAT с доступом
+#      на чтение репо) и раскомментировать строку token ниже.
+
+name: Publish modpack
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  # Адрес Pages организации Kingdom-RP (поддомен — имя владельца, в нижнем регистре).
+  BASE_URL: https://kingdom-rp.github.io/krp-mod
+
+jobs:
+  build:
+    runs-on: windows-latest # windows — чтобы нативы совпадали с целевой ОС
+    steps:
+      - name: Checkout krp-mod
+        uses: actions/checkout@v4
+        with:
+          path: krp-mod
+
+      - name: Checkout krp-launcher (сборщик)
+        uses: actions/checkout@v4
+        with:
+          repository: Kingdom-RP/krp-launcher
+          path: krp-launcher
+          # token: ${{ secrets.LAUNCHER_PAT }}   # раскомментировать, если krp-launcher приватный
+
+      - name: Setup JDK 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build mod
+        shell: bash
+        working-directory: krp-mod
+        run: ./gradlew build --no-daemon
+
+      - name: Locate mod jar
+        id: jar
+        shell: pwsh
+        run: |
+          $jar = Get-ChildItem krp-mod/build/libs -Filter *.jar |
+            Where-Object { $_.Name -notmatch 'sources|javadoc' } |
+            Select-Object -First 1
+          "path=$($jar.FullName)" >> $env:GITHUB_OUTPUT
+
+      - name: Build dist (NeoForge + mod + JRE + manifest)
+        shell: bash
+        working-directory: krp-launcher
+        run: |
+          cargo run --manifest-path builder/Cargo.toml --release -- \
+            --base-url "$BASE_URL" \
+            --mod-jar "${{ steps.jar.outputs.path }}" \
+            --version "1.0.${{ github.run_number }}" \
+            --out "${{ github.workspace }}/dist"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ github.workspace }}/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
