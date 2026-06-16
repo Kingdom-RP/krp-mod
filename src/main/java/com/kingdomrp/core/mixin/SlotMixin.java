@@ -11,20 +11,23 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Гейт КРАФТА по уровню специализации — блокируем ИЗЪЯТИЕ результата, не пряча его.
- * <p>
- * Предмет в слоте результата виден (игрок понимает, что мог бы скрафтить), но если
- * он недоступен по уровню — забрать нельзя НИКАК: обычный клик, shift-click, выброс
- * по Q и свап цифрами в ванили ВСЕ проходят через {@link Slot#mayPickup(Player)}
- * (напрямую в {@code AbstractContainerMenu.doClick} либо через
- * {@code safeTake}/{@code tryRemove}). Возвращаем {@code false} → блок + предупреждение
- * в чат (троттлится). Раньше гейт стоял на {@code ItemCraftedEvent}→{@code burnCraft},
- * но он не ловил shift-click (см. «Частые ошибки» №13/№15).
+ * Гейт КРАФТА по уровню специализации — блокировка ИЗЪЯТИЯ результата (результат
+ * ВИДЕН в слоте, но забрать его нельзя, пока не хватает уровня).
  * <p>
  * Цель — базовый {@link Slot} (его {@code mayPickup} наследует {@link ResultSlot},
- * не переопределяя), с guard'ом {@code instanceof ResultSlot}, чтобы трогать только
- * слоты результата крафта (верстак + сетка 2×2). {@code mayPickup} зовётся лишь при
- * попытке взаимодействия, не в тик/рендер — спама нет.
+ * не переопределяя), guard {@code instanceof ResultSlot} ограничивает гейт слотами
+ * результата крафта (верстак + сетка 2×2). Возвращаем {@code false} при
+ * {@link RestrictionSystem#isCraftBlocked} → результат нельзя взять НИКАК: все
+ * способы изъятия в ванили проходят через {@code Slot.mayPickup}:
+ * <ul>
+ *   <li>обычный клик / выброс по Q / double-click — через {@code tryRemove};</li>
+ *   <li>shift-click — {@code AbstractContainerMenu.doClick} в ветке QUICK_MOVE
+ *       проверяет {@code slot.mayPickup(player)} и выходит ДО {@code quickMoveStack},
+ *       если он {@code false} (проверено по исходнику 1.20.1);</li>
+ *   <li>свап цифрами — там же.</li>
+ * </ul>
+ * Сообщение в чат — на попытку (троттлится по времени), только на сервере.
+ * {@code mayPickup} зовётся лишь при взаимодействии (не в тик/рендер) — спама нет.
  */
 @Mixin(value = Slot.class, remap = false)
 public class SlotMixin {
