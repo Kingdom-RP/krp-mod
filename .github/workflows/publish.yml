@@ -56,6 +56,11 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Setup Pages (авто-включение источника = GitHub Actions)
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
       - name: Build mod
         shell: bash
         working-directory: krp-mod
