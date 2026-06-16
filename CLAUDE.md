@@ -47,7 +47,18 @@
 - Сборка: NeoGradle (`net.neoforged.gradle.userdev` 7.0.192) + Gradle 8.14.
   Зависимость загрузчика: `net.neoforged:forge:1.20.1-47.1.106`. Реобфускации нет
   (рантайм на Mojmap). Сборка/проверка: `./gradlew build`, запуск: `./gradlew runClient`.
-- Mixin — БЕЗ MixinGradle: плагин `org.spongepowered.mixin` несовместим с NeoForge
-  (тянет `reobf`) и не нужен. Конфиг `kingdomrpcore.mixins.json` подключён через
-  `[[mixins]]` в `mods.toml`; refmap не требуется (Mojmap).
+- Mixin — без MixinGradle (плагин `org.spongepowered.mixin` тянет `reobf`, не нужен);
+  refmap не требуется (рантайм Mojmap, имена совпадают). Все микстины — `remap = false`.
+  - **Конфиг `kingdomrpcore.mixins.json` регистрируется атрибутом манифеста
+    `MixinConfigs`**, а НЕ через `[[mixins]]` в mods.toml (поддержка `[[mixins]]`
+    появилась только с 1.20.2 / NeoForge 20.2; на 1.20.1 её нет, и `[[mixins]]`
+    молча игнорируется). Подключение в двух местах:
+    - `manifest{ 'MixinConfigs' : 'kingdomrpcore.mixins.json' }` в jar-задаче
+      (`build.gradle`) — для собранного мода;
+    - `src/main/resources/META-INF/MANIFEST.MF` с тем же атрибутом — для dev
+      (`runClient` грузит мод из sourceSet, а не из jar). Этот ресурсный манифест
+      исключён из jar (`exclude 'META-INF/MANIFEST.MF'`), чтобы не дублировать.
+  - Проверка, что микстины применились — `run/logs/debug.log`:
+    `Registering mixin config: kingdomrpcore.mixins.json` и `Mixing <X> ... into <target>`.
+    Если этих строк нет — конфиг не зарегистрирован, ни один микстин не работает.
 - Конфиг: `saves/<мир>/serverconfig/kingdomrpcore-server.toml`

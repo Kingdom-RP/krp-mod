@@ -275,6 +275,10 @@ public class XPSystem {
             boolean leveledUp = data.addXP(path, finalAmount);
             PacketHelper.syncPlayer(serverPlayer);
 
+            // Полоска прогресса в HUD — текущий прогресс к следующему уровню
+            PacketHelper.sendXPBar(serverPlayer, path, data.getXP(path),
+                    data.getXPRequired(path), data.getLevel(path), leveledUp);
+
             if (leveledUp) {
                 onLevelUp(player, path, data.getLevel(path));
             }
@@ -288,6 +292,12 @@ public class XPSystem {
         ));
     }
 
+    /**
+     * Бэкстоп отмены недоступного крафта: зануляет результат и возвращает
+     * ингредиенты из крафт-сетки в инвентарь. Основной гейт — на ВЫЧИСЛЕНИИ
+     * результата (`CraftingMenuMixin` не даёт результату появиться в слоте), так
+     * что для gated-крафта это событие недостижимо. Оставлен на случай иных путей.
+     */
     private static void burnCraft(Player player, ItemStack result) {
         result.setCount(0);
         var menu = player.containerMenu;

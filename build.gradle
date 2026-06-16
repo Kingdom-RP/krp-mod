@@ -84,6 +84,10 @@ tasks.named('processResources', ProcessResources).configure {
 
 // Свойства в манифест jar для чтения в рантайме.
 tasks.named('jar', Jar).configure {
+    // Ресурсный META-INF/MANIFEST.MF нужен только dev-рантайму (его читает
+    // Default mixin-агент из sourceSet); в jar манифест генерится из manifest{}
+    // ниже — исключаем ресурсную копию, чтобы не было дубликата.
+    exclude 'META-INF/MANIFEST.MF'
     manifest {
         attributes([
                 'Specification-Title'     : mod_id,
@@ -92,7 +96,11 @@ tasks.named('jar', Jar).configure {
                 'Implementation-Title'    : project.name,
                 'Implementation-Version'  : project.jar.archiveVersion,
                 'Implementation-Vendor'   : mod_authors,
-                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                // На этом NeoForge 1.20.1 mixin-конфиг грузится через атрибут манифеста
+                // (Default-агент), а НЕ через [[mixins]] в mods.toml (его агент отклоняет
+                // контейнер мода в userdev). Без этого ни один микстин не применяется.
+                'MixinConfigs'            : 'kingdomrpcore.mixins.json'
         ])
     }
 }

@@ -32,5 +32,12 @@ public class NetworkHandler {
                 ChooseSpecializationPacket::decode,
                 ChooseSpecializationPacket::handle
         );
+        CHANNEL.registerMessage(
+                packetId++,
+                XPGainPacket.class,
+                XPGainPacket::encode,
+                XPGainPacket::decode,
+                XPGainPacket::handle
+        );
     }
 }
