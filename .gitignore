@@ -1,0 +1,30 @@
+# eclipse
+bin
+*.launch
+.settings
+.metadata
+.classpath
+.project
+
+# idea
+out
+*.ipr
+*.iws
+*.iml
+.idea
+
+# gradle
+build
+.gradle
+
+# other
+eclipse
+run
+run-data
+
+# Files from Forge MDK
+forge*changelog.txt
+changelog.txt
+
+# Claude local settings (CLAUDE.md и docs/ остаются в репозитории)
+.claude/settings.local.json
