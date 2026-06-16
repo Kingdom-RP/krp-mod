@@ -23,7 +23,8 @@
   ],
   "client": [
     "client.EnchantmentScreenMixin",
-    "client.EffectTooltipMixin"
+    "client.EffectTooltipMixin",
+    "client.MinecraftTitleMixin"
   ],
   "injectors": {
     "defaultRequire": 1
