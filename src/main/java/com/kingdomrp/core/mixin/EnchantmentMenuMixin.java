@@ -69,7 +69,8 @@ public class EnchantmentMenuMixin {
     // Вокруг генерации списка чар выставляем уровень Зачарователя, чтобы
     // EnchantmentHelperMixin отфильтровал недоступные чары из пула стола.
     @Inject(method = "getEnchantmentList", at = @At("HEAD"), remap = false)
-    private void krp$setTableLevel(ItemStack stack, int index, int cost,
+    private void krp$setTableLevel(net.minecraft.core.RegistryAccess registryAccess,
+                                   ItemStack stack, int index, int cost,
                                    CallbackInfoReturnable<List<EnchantmentInstance>> cir) {
         if (krp$player != null) {
             EnchantSystem.setTableLevel(EnchantSystem.getEnchanterLevel(krp$player));
@@ -77,7 +78,8 @@ public class EnchantmentMenuMixin {
     }
 
     @Inject(method = "getEnchantmentList", at = @At("RETURN"), remap = false)
-    private void krp$clearTableLevel(ItemStack stack, int index, int cost,
+    private void krp$clearTableLevel(net.minecraft.core.RegistryAccess registryAccess,
+                                     ItemStack stack, int index, int cost,
                                      CallbackInfoReturnable<List<EnchantmentInstance>> cir) {
         EnchantSystem.clearTableLevel();
     }
@@ -104,13 +106,14 @@ public class EnchantmentMenuMixin {
         int level = EnchantSystem.getEnchanterLevel(player);
 
         List<EnchantmentInstance> list = ((EnchantmentMenuAccessor) (Object) this)
-                .krp$getEnchantmentList(item, buttonId, this.costs[buttonId]);
-        Map<Enchantment, Integer> enchMap = new HashMap<>();
-        for (EnchantmentInstance ei : list) enchMap.merge(ei.enchantment, ei.level, Math::max);
+                .krp$getEnchantmentList(player.registryAccess(), item, buttonId, this.costs[buttonId]);
 
         boolean isBook = item.is(Items.BOOK);
-        int required = EnchantTierMap.requiredForEnchants(enchMap);
-        if (isBook) required = Math.max(required, EnchantSystem.BOOK_TABLE_LEVEL);
+        // 1.21: EnchantmentInstance.enchantment — это Holder<Enchantment>.
+        int required = isBook ? EnchantSystem.BOOK_TABLE_LEVEL : 0;
+        for (EnchantmentInstance ei : list) {
+            required = Math.max(required, EnchantTierMap.requiredForEnchant(ei.enchantment, ei.level));
+        }
 
         if (EnchantSystem.restrictionsEnabled()) {
             if (buttonId >= EnchantTierMap.slotCount(level)) {
@@ -145,7 +148,7 @@ public class EnchantmentMenuMixin {
         if (result.isEmpty()) return;
         // Редкий случай: ваниль вернула true, но список чар был пуст (ничего не
         // наложилось) — не наказываем не-зачарованный предмет.
-        if (EnchantmentHelper.getEnchantments(result).isEmpty()) return;
+        if (EnchantmentHelper.getEnchantmentsForCrafting(result).isEmpty()) return;
 
         // XP по ценности наложенных чар — и при успехе, и при провале.
         float xp = EnchantXPMap.xp(result);
@@ -158,7 +161,7 @@ public class EnchantmentMenuMixin {
             if (krp$wasBook) {
                 this.enchantSlots.setItem(0, ItemStack.EMPTY); // книга пропадает
             } else {
-                EnchantmentHelper.setEnchantments(Collections.emptyMap(), result);
+                EnchantmentHelper.setEnchantments(result, net.minecraft.world.item.enchantment.ItemEnchantments.EMPTY);
                 if (result.isDamageableItem()) {
                     int dmg = (int) (result.getMaxDamage() * EnchantSystem.failDurabilityFrac(krp$level));
                     result.setDamageValue(Math.min(result.getMaxDamage() - 1,
@@ -184,17 +187,22 @@ public class EnchantmentMenuMixin {
         // Усиление чары (только для предметов — у книг чары в StoredEnchantments,
         // и EnchantmentHelper.setEnchantments писал бы не тот тег).
         if (!krp$wasBook) {
-            Map<Enchantment, Integer> map = new HashMap<>(EnchantmentHelper.getEnchantments(result));
-            boolean changed = false;
             float boost = level * EnchantSystem.ENCHANT_BOOST_PER_LEVEL;
-            for (Map.Entry<Enchantment, Integer> e : map.entrySet()) {
-                int lvl = e.getValue();
-                if (lvl < e.getKey().getMaxLevel() && rng.nextFloat() < boost) {
-                    e.setValue(lvl + 1);
-                    changed = true;
+            // 1.21: чары — компонент ItemEnchantments (ключ Holder<Enchantment>);
+            // решаем, что усилить, по снимку, применяем через updateEnchantments.
+            var current = EnchantmentHelper.getEnchantmentsForCrafting(result);
+            java.util.Map<net.minecraft.core.Holder<net.minecraft.world.item.enchantment.Enchantment>, Integer> ups =
+                    new java.util.HashMap<>();
+            for (var e : current.entrySet()) {
+                int lvl = e.getIntValue();
+                if (lvl < e.getKey().value().getMaxLevel() && rng.nextFloat() < boost) {
+                    ups.put(e.getKey(), lvl + 1);
                 }
             }
-            if (changed) EnchantmentHelper.setEnchantments(map, result);
+            if (!ups.isEmpty()) {
+                EnchantmentHelper.updateEnchantments(result, mutable ->
+                        ups.forEach(mutable::set));
+            }
         }
 
         // Экономия лазурита: вернуть потраченные единицы.

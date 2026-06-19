@@ -1,59 +1,55 @@
 package com.kingdomrp.core.data;
 
+import net.minecraft.core.Holder;
+import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.world.item.enchantment.Enchantment;
-
-import java.util.Map;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 
 /**
  * Лестница доступа Зачарователя (path {@link Path#MAGIC}, spec {@link Spec#ENCHANTER}) —
  * гейтинг ЗАЧАРОВАНИЯ по уровню специализации. Возвращает требуемый уровень для
- * получения данного результата; гейт «не запускать» сравнивает его с уровнем
- * игрока.
+ * получения данного результата; гейт «не запускать» сравнивает его с уровнем игрока.
  * <p>
- * Тир по редкости чары (база опущена до 0 — стол всё равно не предложит
- * недоступное благодаря фильтрации пула в {@code EnchantmentHelperMixin}, а
- * «нужда в прокачке» выражается шансом успеха и разблокировкой RARE/VERY_RARE):
+ * 1.21: {@code Enchantment.Rarity} убрана — тир считается по ВЕСУ чары
+ * ({@code definition().weight()}). Вес ванильных чар совпадает со старыми бакетами
+ * редкости (COMMON=10, UNCOMMON=5, RARE=2, VERY_RARE=1), поэтому баланс сохраняется,
+ * а модовые чары покрываются автоматически. Проклятия — тег {@link EnchantmentTags#CURSE}.
  * <ul>
- *   <li>COMMON = 0</li>
- *   <li>UNCOMMON = 0</li>
- *   <li>RARE = 3</li>
- *   <li>VERY_RARE = 5</li>
+ *   <li>вес ≥5 (COMMON/UNCOMMON) → 0</li>
+ *   <li>вес ≥2 (RARE) → 3</li>
+ *   <li>вес 1 (VERY_RARE) → 5</li>
  * </ul>
- * Сверх того: проклятие или чара, наложенная на МАКСИМАЛЬНЫЙ уровень (для чар с
- * maxLevel > 1) → 7. Тиры по типу действия (книга на столе = 3, наковальня = 5)
- * задаются в {@code EnchantSystem} и комбинируются с тиром редкости.
+ * Сверх того: проклятие или чара на МАКСИМАЛЬНОМ уровне (maxLevel > 1) → 7.
  */
 public class EnchantTierMap {
 
     public static final int CURSE_LEVEL    = 7;
     public static final int MAXLEVEL_LEVEL = 7;
 
-    private static int rarityTier(Enchantment.Rarity rarity) {
-        return switch (rarity) {
-            case COMMON    -> 0;
-            case UNCOMMON  -> 0; // базовый набор доступен с ур.0, гейтится шансом
-            case RARE      -> 3;
-            case VERY_RARE -> 5;
-        };
+    private static int weightTier(int weight) {
+        if (weight >= 5) return 0; // COMMON/UNCOMMON — доступны с ур.0, гейтятся шансом
+        if (weight >= 2) return 3; // RARE
+        return 5;                  // VERY_RARE (вес 1)
     }
 
     /** Требуемый уровень для одной чары данного уровня. */
-    public static int requiredForEnchant(Enchantment enchantment, int level) {
-        int req = rarityTier(enchantment.getRarity());
-        if (enchantment.isCurse()) {
+    public static int requiredForEnchant(Holder<Enchantment> ench, int level) {
+        int req = weightTier(ench.value().getWeight());
+        if (ench.is(EnchantmentTags.CURSE)) {
             req = Math.max(req, CURSE_LEVEL);
         }
-        if (enchantment.getMaxLevel() > 1 && level >= enchantment.getMaxLevel()) {
+        int maxLevel = ench.value().getMaxLevel();
+        if (maxLevel > 1 && level >= maxLevel) {
             req = Math.max(req, MAXLEVEL_LEVEL);
         }
         return req;
     }
 
     /** Требуемый уровень для набора чар (максимум по всем). */
-    public static int requiredForEnchants(Map<Enchantment, Integer> enchantments) {
+    public static int requiredForEnchants(ItemEnchantments enchantments) {
         int req = 0;
-        for (Map.Entry<Enchantment, Integer> e : enchantments.entrySet()) {
-            req = Math.max(req, requiredForEnchant(e.getKey(), e.getValue()));
+        for (var e : enchantments.entrySet()) {
+            req = Math.max(req, requiredForEnchant(e.getKey(), e.getIntValue()));
         }
         return req;
     }

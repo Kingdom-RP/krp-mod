@@ -3,17 +3,17 @@ package com.kingdomrp.core.client;
 import com.kingdomrp.core.KingdomRPCore;
 import com.kingdomrp.core.client.screen.PathScreen;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 
-@Mod.EventBusSubscriber(modid = KingdomRPCore.MODID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = KingdomRPCore.MODID, value = Dist.CLIENT)
 public class ClientEvents {
 
+    // 1.21: TickEvent удалён → ClientTickEvent.Post (фаза END уже подразумевается).
     @SubscribeEvent
-    public static void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
+    public static void onClientTick(ClientTickEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.screen != null) return;
 

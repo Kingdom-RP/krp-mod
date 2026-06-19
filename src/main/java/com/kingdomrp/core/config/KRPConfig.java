@@ -1,29 +1,29 @@
 package com.kingdomrp.core.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class KRPConfig {
 
-    public static final ForgeConfigSpec SPEC;
+    public static final ModConfigSpec SPEC;
 
     // XP и прокачка
-    public static final ForgeConfigSpec.DoubleValue BASE_XP;
-    public static final ForgeConfigSpec.DoubleValue XP_CURVE;
+    public static final ModConfigSpec.DoubleValue BASE_XP;
+    public static final ModConfigSpec.DoubleValue XP_CURVE;
 
     // Штраф при смерти
-    public static final ForgeConfigSpec.IntValue DEATH_PENALTY_DURATION;
-    public static final ForgeConfigSpec.DoubleValue DEATH_XP_MULTIPLIER;
+    public static final ModConfigSpec.IntValue DEATH_PENALTY_DURATION;
+    public static final ModConfigSpec.DoubleValue DEATH_XP_MULTIPLIER;
 
     // Магия
-    public static final ForgeConfigSpec.DoubleValue BREW_BASE_CHANCE;
-    public static final ForgeConfigSpec.DoubleValue ENCHANT_TABLE_BASE_CHANCE;
-    public static final ForgeConfigSpec.DoubleValue ENCHANT_ANVIL_BASE_CHANCE;
+    public static final ModConfigSpec.DoubleValue BREW_BASE_CHANCE;
+    public static final ModConfigSpec.DoubleValue ENCHANT_TABLE_BASE_CHANCE;
+    public static final ModConfigSpec.DoubleValue ENCHANT_ANVIL_BASE_CHANCE;
 
     // Общее
-    public static final ForgeConfigSpec.BooleanValue RESTRICTIONS_ENABLED;
+    public static final ModConfigSpec.BooleanValue RESTRICTIONS_ENABLED;
 
     static {
-        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
 
         builder.comment("Настройки прокачки").push("progression");
         BASE_XP = builder

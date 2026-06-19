@@ -24,6 +24,13 @@ public class BlacksmithTemperMap {
     private static final Map<Item, TemperTier> MAP = new HashMap<>();
 
     static {
+        // Камень — нижний тир инструментов: открытие ур.1, полная прочность ур.4.
+        // Камень не натуральный материал Мастерового и не металл Кузнеца в чистом
+        // виде, но обработка камня в инструмент ближе к кузнечному делу.
+        reg(new TemperTier(1, 4),
+                Items.STONE_SWORD, Items.STONE_AXE, Items.STONE_PICKAXE,
+                Items.STONE_SHOVEL, Items.STONE_HOE);
+
         // Золото — нижний металлический тир: открытие ур.2, полная прочность ур.3
         reg(new TemperTier(2, 3),
                 Items.GOLDEN_SWORD, Items.GOLDEN_AXE, Items.GOLDEN_PICKAXE,

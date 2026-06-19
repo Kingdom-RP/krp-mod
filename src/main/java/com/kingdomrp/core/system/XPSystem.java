@@ -1,7 +1,8 @@
 package com.kingdomrp.core.system;
 
 import com.kingdomrp.core.KingdomRPCore;
-import com.kingdomrp.core.capability.PlayerDataProvider;
+import com.kingdomrp.core.capability.PlayerData;
+import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.config.KRPConfig;
 import com.kingdomrp.core.data.*;
 import com.kingdomrp.core.network.PacketHelper;
@@ -14,18 +15,18 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.level.BlockEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 
-@Mod.EventBusSubscriber(modid = KingdomRPCore.MODID)
+@EventBusSubscriber(modid = KingdomRPCore.MODID)
 public class XPSystem {
 
     @SubscribeEvent
-    public static void onLivingHurt(net.minecraftforge.event.entity.living.LivingHurtEvent event) {
+    public static void onLivingHurt(net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent event) {
         // XP за нанесение урона
         if (event.getSource().getEntity() instanceof ServerPlayer attacker) {
             if (!attacker.level().isClientSide()) {
@@ -44,7 +45,7 @@ public class XPSystem {
     }
 
     @SubscribeEvent
-    public static void onArrowHit(net.minecraftforge.event.entity.ProjectileImpactEvent event) {
+    public static void onArrowHit(net.neoforged.neoforge.event.entity.ProjectileImpactEvent event) {
         if (!(event.getProjectile() instanceof net.minecraft.world.entity.projectile.AbstractArrow arrow)) return;
         if (!(arrow.getOwner() instanceof ServerPlayer player)) return;
         if (player.level().isClientSide()) return;
@@ -67,6 +68,14 @@ public class XPSystem {
 
         BlockEntry entry = BlockXPMap.get(event.getState().getBlock());
         if (entry == null) return;
+
+        // Недозрелый урожай XP не даёт (как и двойной дроп Фермера, см.
+        // SpecializationEffects.checkFarmer). Иначе можно фармить опыт, ломая
+        // ростки сразу после посадки.
+        if (event.getState().getBlock() instanceof net.minecraft.world.level.block.CropBlock crop
+                && !crop.isMaxAge(event.getState())) {
+            return;
+        }
 
         giveXP(player, entry.path(), entry.xpReward());
     }
@@ -97,9 +106,23 @@ public class XPSystem {
         if (duration <= 0) return;
 
         MobEffectInstance inst = new MobEffectInstance(
-                KRPEffects.DEATH_XP_PENALTY.get(), duration, 0, false, true, true);
-        inst.getCurativeItems().clear();
+                KRPEffects.DEATH_XP_PENALTY, duration, 0, false, true, true);
         player.addEffect(inst);
+    }
+
+    /**
+     * 1.21: {@code MobEffectInstance.getCurativeItems()} удалён, лечение идёт через
+     * систему {@link net.neoforged.neoforge.common.EffectCure}. Молоко снимает
+     * эффекты с {@link net.neoforged.neoforge.common.EffectCures#MILK}. Отменяем
+     * удаление штрафа к опыту именно молоком — дебафф должен дожить до истечения
+     * (воспроизводит поведение 1.20.1, где curative-items очищался).
+     */
+    @SubscribeEvent
+    public static void onEffectRemove(net.neoforged.neoforge.event.entity.living.MobEffectEvent.Remove event) {
+        if (event.getEffect() != KRPEffects.DEATH_XP_PENALTY) return;
+        if (event.getCure() == net.neoforged.neoforge.common.EffectCures.MILK) {
+            event.setCanceled(true);
+        }
     }
 
     @SubscribeEvent
@@ -135,7 +158,7 @@ public class XPSystem {
     }
 
     @SubscribeEvent
-    public static void onFishing(net.minecraftforge.event.entity.player.ItemFishedEvent event) {
+    public static void onFishing(net.neoforged.neoforge.event.entity.player.ItemFishedEvent event) {
         Player player = event.getEntity();
         if (player.level().isClientSide()) return;
 
@@ -185,7 +208,7 @@ public class XPSystem {
     }
 
     @SubscribeEvent
-    public static void onBabySpawn(net.minecraftforge.event.entity.living.BabyEntitySpawnEvent event) {
+    public static void onBabySpawn(net.neoforged.neoforge.event.entity.living.BabyEntitySpawnEvent event) {
         if (!(event.getCausedByPlayer() instanceof ServerPlayer player)) return;
         if (player.level().isClientSide()) return;
 
@@ -199,7 +222,7 @@ public class XPSystem {
     @SubscribeEvent
     public static void onToolModify(BlockEvent.BlockToolModificationEvent event) {
         if (event.isSimulated()) return;
-        if (event.getToolAction() != net.minecraftforge.common.ToolActions.HOE_TILL) return;
+        if (event.getItemAbility() != net.neoforged.neoforge.common.ItemAbilities.HOE_TILL) return;
         if (!(event.getPlayer() instanceof ServerPlayer player)) return;
         if (player.level().isClientSide()) return;
 
@@ -264,25 +287,25 @@ public class XPSystem {
 
     public static void giveXP(Player player, Path path, float amount) {
         if (!(player instanceof ServerPlayer serverPlayer)) return;
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
-            float multiplier = data.getXPMultiplier(path);
-            // Дебафф смерти стакается с приоритетным штрафом (мультипликативно)
-            if (player.hasEffect(KRPEffects.DEATH_XP_PENALTY.get())) {
-                multiplier *= KRPConfig.DEATH_XP_MULTIPLIER.get().floatValue();
-            }
-            float finalAmount = amount * multiplier;
+        PlayerData data = serverPlayer.getData(KRPAttachments.PLAYER_DATA);
 
-            boolean leveledUp = data.addXP(path, finalAmount);
-            PacketHelper.syncPlayer(serverPlayer);
+        float multiplier = data.getXPMultiplier(path);
+        // Дебафф смерти стакается с приоритетным штрафом (мультипликативно)
+        if (player.hasEffect(KRPEffects.DEATH_XP_PENALTY)) {
+            multiplier *= KRPConfig.DEATH_XP_MULTIPLIER.get().floatValue();
+        }
+        float finalAmount = amount * multiplier;
 
-            // Полоска прогресса в HUD — текущий прогресс к следующему уровню
-            PacketHelper.sendXPBar(serverPlayer, path, data.getXP(path),
-                    data.getXPRequired(path), data.getLevel(path), leveledUp);
+        boolean leveledUp = data.addXP(path, finalAmount);
+        PacketHelper.syncPlayer(serverPlayer);
 
-            if (leveledUp) {
-                onLevelUp(player, path, data.getLevel(path));
-            }
-        });
+        // Полоска прогресса в HUD — текущий прогресс к следующему уровню
+        PacketHelper.sendXPBar(serverPlayer, path, data.getXP(path),
+                data.getXPRequired(path), data.getLevel(path), leveledUp);
+
+        if (leveledUp) {
+            onLevelUp(player, path, data.getLevel(path));
+        }
     }
 
     private static void onLevelUp(Player player, Path path, int newLevel) {

@@ -1,6 +1,7 @@
 package com.kingdomrp.core.command;
 
-import com.kingdomrp.core.capability.PlayerDataProvider;
+import com.kingdomrp.core.capability.PlayerData;
+import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.data.Path;
 import com.kingdomrp.core.network.PacketHelper;
 import com.kingdomrp.core.system.XPSystem;
@@ -12,12 +13,16 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 
-@Mod.EventBusSubscriber(modid = KingdomRPCore.MODID)
+@EventBusSubscriber(modid = KingdomRPCore.MODID)
 public class KRPCommand {
+
+    private static void withData(ServerPlayer player, java.util.function.Consumer<PlayerData> action) {
+        action.accept(player.getData(KRPAttachments.PLAYER_DATA));
+    }
 
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
@@ -68,7 +73,7 @@ public class KRPCommand {
                                                     }
                                                     Path path = Path.values()[IntegerArgumentType.getInteger(ctx, "path")];
                                                     int level = IntegerArgumentType.getInteger(ctx, "level");
-                                                    player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+                                                    withData(player, data -> {
                                                         while (data.getLevel(path) < level) {
                                                             data.addXP(path, data.getXPRequired(path));
                                                         }
@@ -89,8 +94,8 @@ public class KRPCommand {
                                         ctx.getSource().sendFailure(Component.literal("Только для игроков"));
                                         return 0;
                                     }
-                                    player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
-                                        data.deserializeNBT(new net.minecraft.nbt.CompoundTag());
+                                    withData(player, data -> {
+                                        data.deserializeNBT(player.registryAccess(), new net.minecraft.nbt.CompoundTag());
                                         PacketHelper.syncPlayer(player);
                                     });
                                     ctx.getSource().sendSuccess(() -> Component.literal(
@@ -101,7 +106,7 @@ public class KRPCommand {
                         .then(Commands.literal("debug")
                                 .executes(ctx -> {
                                     if (!(ctx.getSource().getEntity() instanceof ServerPlayer player)) return 0;
-                                    player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+                                    withData(player, data -> {
                                         for (Path path : Path.values()) {
                                             int spent     = data.getTotalSpentInPath(path);
                                             int available = data.getLevel(path) - spent;
@@ -129,7 +134,7 @@ public class KRPCommand {
     }
 
     private static void showStats(ServerPlayer player) {
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             player.sendSystemMessage(Component.literal("§6========= Kingdom RP ========="));
             for (Path path : Path.values()) {
                 int level     = data.getLevel(path);

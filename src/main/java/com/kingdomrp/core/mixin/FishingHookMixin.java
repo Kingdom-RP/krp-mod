@@ -1,6 +1,6 @@
 package com.kingdomrp.core.mixin;
 
-import com.kingdomrp.core.capability.PlayerDataProvider;
+import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.data.Spec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
@@ -74,9 +74,7 @@ public class FishingHookMixin {
     private int krp$fishermanLevel() {
         Player player = ((FishingHook) (Object) this).getPlayerOwner();
         if (player == null) return 0;
-        return player.getCapability(PlayerDataProvider.PLAYER_DATA)
-                .map(data -> data.getSpecializationLevel(Spec.FISHERMAN.id))
-                .orElse(0);
+        return player.getData(KRPAttachments.PLAYER_DATA).getSpecializationLevel(Spec.FISHERMAN.id);
     }
 
     /**

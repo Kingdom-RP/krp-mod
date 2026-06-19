@@ -4,12 +4,14 @@ import com.kingdomrp.core.config.KRPConfig;
 import com.kingdomrp.core.data.Path;
 import com.kingdomrp.core.data.Spec;
 import com.kingdomrp.core.specialization.SpecializationRegistry;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.neoforged.neoforge.common.util.INBTSerializable;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class PlayerData {
+public class PlayerData implements INBTSerializable<CompoundTag> {
 
     public static final int MAX_SPEC_LEVEL = 10;
 
@@ -91,7 +93,8 @@ public class PlayerData {
     public float getXP(Path path)    { return pathXP[path.index]; }
     public int   getLevel(Path path) { return pathLevel[path.index]; }
 
-    public CompoundTag serializeNBT() {
+    @Override
+    public CompoundTag serializeNBT(HolderLookup.Provider provider) {
         CompoundTag tag = new CompoundTag();
         for (Path path : Path.values()) {
             tag.putFloat("xp_" + path.index,   pathXP[path.index]);
@@ -103,7 +106,8 @@ public class PlayerData {
         return tag;
     }
 
-    public void deserializeNBT(CompoundTag tag) {
+    @Override
+    public void deserializeNBT(HolderLookup.Provider provider, CompoundTag tag) {
         for (Path path : Path.values()) {
             pathXP[path.index]   = tag.getFloat("xp_" + path.index);
             pathLevel[path.index] = tag.getInt("level_" + path.index);

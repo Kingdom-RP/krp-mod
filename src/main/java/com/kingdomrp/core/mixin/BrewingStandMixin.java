@@ -3,6 +3,7 @@ package com.kingdomrp.core.mixin;
 import com.kingdomrp.core.system.MagicSystem;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.alchemy.PotionBrewing;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.core.BlockPos;
@@ -15,13 +16,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = BrewingStandBlockEntity.class, remap = false)
 public class BrewingStandMixin {
-
-    private static final org.slf4j.Logger LOGGER =
-            com.mojang.logging.LogUtils.getLogger();
-
-    static {
-        LOGGER.info("[KRP Mixin] BrewingStandMixin loaded!");
-    }
 
     @Inject(
             method = "serverTick",
@@ -48,14 +42,14 @@ public class BrewingStandMixin {
             method = "serverTick",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/block/entity/BrewingStandBlockEntity;isBrewable(Lnet/minecraft/core/NonNullList;)Z"
+                    target = "Lnet/minecraft/world/level/block/entity/BrewingStandBlockEntity;isBrewable(Lnet/minecraft/world/item/alchemy/PotionBrewing;Lnet/minecraft/core/NonNullList;)Z"
             ),
             remap = false
     )
-    private static boolean krp$gateBrewable(NonNullList<ItemStack> items,
+    private static boolean krp$gateBrewable(PotionBrewing brewing, NonNullList<ItemStack> items,
                                             Level level, BlockPos pos, BlockState state,
                                             BrewingStandBlockEntity stand) {
-        if (!MagicSystem.isVanillaBrewable(items)) return false;
+        if (!MagicSystem.isVanillaBrewable(brewing, items)) return false;
         int brewTime = ((BrewingStandAccessor) stand).krp$getBrewTime();
         return MagicSystem.canBrewGate(level, pos, items, brewTime);
     }

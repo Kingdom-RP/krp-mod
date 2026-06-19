@@ -1,5 +1,6 @@
 package com.kingdomrp.core.mixin;
 
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.world.inventory.EnchantmentMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
@@ -17,5 +18,5 @@ import java.util.List;
 @Mixin(value = EnchantmentMenu.class, remap = false)
 public interface EnchantmentMenuAccessor {
     @Invoker("getEnchantmentList")
-    List<EnchantmentInstance> krp$getEnchantmentList(ItemStack stack, int index, int cost);
+    List<EnchantmentInstance> krp$getEnchantmentList(RegistryAccess registryAccess, ItemStack stack, int index, int cost);
 }
