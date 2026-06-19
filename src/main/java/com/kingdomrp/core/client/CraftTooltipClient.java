@@ -7,10 +7,10 @@ import com.kingdomrp.core.system.XPSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.CraftingMenu;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 import java.util.List;
 
@@ -24,7 +24,7 @@ import java.util.List;
  * №0). Требование для НОШЕНИЯ показывается всегда — оно в общем
  * {@code RestrictionSystem.onTooltip}.
  */
-@Mod.EventBusSubscriber(modid = KingdomRPCore.MODID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = KingdomRPCore.MODID, value = Dist.CLIENT)
 public class CraftTooltipClient {
 
     @SubscribeEvent

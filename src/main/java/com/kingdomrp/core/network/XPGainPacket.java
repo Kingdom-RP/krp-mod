@@ -1,53 +1,41 @@
 package com.kingdomrp.core.network;
 
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.network.NetworkEvent;
-
-import java.util.function.Supplier;
+import com.kingdomrp.core.KingdomRPCore;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
- * Сервер → клиент: уведомление о получении XP по пути. Триггерит появление
- * полоски прогресса в HUD (см. {@code client.XPHudOverlay}). Шлётся из
- * {@link com.kingdomrp.core.system.XPSystem#giveXP} при каждом начислении.
+ * Сервер → клиент: уведомление о получении XP по пути. Триггерит полоску
+ * прогресса в HUD ({@code client.XPHudOverlay}).
  */
-public class XPGainPacket {
+public record XPGainPacket(int pathIndex, float currentXP, float requiredXP, int level, boolean leveledUp)
+        implements CustomPacketPayload {
 
-    private final int pathIndex;
-    private final float currentXP;
-    private final float requiredXP;
-    private final int level;
-    private final boolean leveledUp;
+    public static final Type<XPGainPacket> TYPE =
+            new Type<>(ResourceLocation.fromNamespaceAndPath(KingdomRPCore.MODID, "xp_gain"));
 
-    public XPGainPacket(int pathIndex, float currentXP, float requiredXP, int level, boolean leveledUp) {
-        this.pathIndex = pathIndex;
-        this.currentXP = currentXP;
-        this.requiredXP = requiredXP;
-        this.level = level;
-        this.leveledUp = leveledUp;
+    public static final StreamCodec<RegistryFriendlyByteBuf, XPGainPacket> STREAM_CODEC =
+            StreamCodec.composite(
+                    ByteBufCodecs.VAR_INT, XPGainPacket::pathIndex,
+                    ByteBufCodecs.FLOAT, XPGainPacket::currentXP,
+                    ByteBufCodecs.FLOAT, XPGainPacket::requiredXP,
+                    ByteBufCodecs.VAR_INT, XPGainPacket::level,
+                    ByteBufCodecs.BOOL, XPGainPacket::leveledUp,
+                    XPGainPacket::new);
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static void encode(XPGainPacket packet, FriendlyByteBuf buf) {
-        buf.writeVarInt(packet.pathIndex);
-        buf.writeFloat(packet.currentXP);
-        buf.writeFloat(packet.requiredXP);
-        buf.writeVarInt(packet.level);
-        buf.writeBoolean(packet.leveledUp);
-    }
-
-    public static XPGainPacket decode(FriendlyByteBuf buf) {
-        return new XPGainPacket(buf.readVarInt(), buf.readFloat(), buf.readFloat(),
-                buf.readVarInt(), buf.readBoolean());
-    }
-
-    public static void handle(XPGainPacket packet, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() ->
-                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->
-                        com.kingdomrp.core.client.XPHudOverlay.onXPGain(
-                                packet.pathIndex, packet.currentXP, packet.requiredXP,
-                                packet.level, packet.leveledUp))
-        );
-        ctx.get().setPacketHandled(true);
+    public static void handle(XPGainPacket packet, IPayloadContext context) {
+        // Только клиент (playToClient) — обращение к клиентскому оверлею безопасно.
+        com.kingdomrp.core.client.XPHudOverlay.onXPGain(
+                packet.pathIndex(), packet.currentXP(), packet.requiredXP(),
+                packet.level(), packet.leveledUp());
     }
 }

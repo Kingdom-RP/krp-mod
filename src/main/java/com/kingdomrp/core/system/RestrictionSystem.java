@@ -1,7 +1,7 @@
 package com.kingdomrp.core.system;
 
 import com.kingdomrp.core.KingdomRPCore;
-import com.kingdomrp.core.capability.PlayerDataProvider;
+import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.config.KRPConfig;
 import com.kingdomrp.core.data.ItemCraftTierMap;
 import com.kingdomrp.core.data.ItemUseTierMap;
@@ -10,15 +10,15 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraftforge.event.entity.living.LivingEquipmentChangeEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 import java.util.List;
 
-@Mod.EventBusSubscriber(modid = KingdomRPCore.MODID)
+@EventBusSubscriber(modid = KingdomRPCore.MODID)
 public class RestrictionSystem {
 
     @SubscribeEvent
@@ -74,9 +74,8 @@ public class RestrictionSystem {
     }
 
     public static boolean meetsRequirement(Player player, SpecRequirement req) {
-        return player.getCapability(PlayerDataProvider.PLAYER_DATA)
-                .map(data -> data.getSpecializationLevel(req.spec().id) >= req.level())
-                .orElse(false);
+        return player.getData(KRPAttachments.PLAYER_DATA)
+                .getSpecializationLevel(req.spec().id) >= req.level();
     }
 
     public static void sendRestrictionMessage(Player player, SpecRequirement req) {

@@ -30,7 +30,7 @@ public class EffectTooltipMixin {
     private List<Component> krp$appendEffectDescription(List<Component> lines) {
         if (lines.isEmpty()) return lines;
 
-        String wanted = KRPEffects.DEATH_XP_PENALTY.get().getDisplayName().getString();
+        String wanted = KRPEffects.DEATH_XP_PENALTY.value().getDisplayName().getString();
         if (!lines.get(0).getString().startsWith(wanted)) return lines;
 
         List<Component> copy = new ArrayList<>(lines);

@@ -1,8 +1,9 @@
 # Kingdom RP — инструкции для Claude
 
-Это мод для Minecraft 1.20.1 + NeoForge, реализующий RPG-систему специализаций
+Это мод для Minecraft **1.21.1 + NeoForge**, реализующий RPG-систему специализаций
 (Kingdom RP). Полная архитектура, история решений и частые ошибки описаны в
 файле `KINGDOM_RP_ARCHITECTURE.md` в папке docs — прочитай его в начале работы над проектом.
+Детали переезда с 1.20.1 — в `docs/MIGRATION_1.20_to_1.21.md`.
 
 ## Главные правила
 
@@ -25,10 +26,11 @@
    логике. Каждый новый тип данных (BlockEntry, CraftEntry, KillEntry,
    TierRequirement и т.п.) — отдельный record.
 
-5. **Один обработчик на одно событие Forge.** Если нужно несколько проверок
+5. **Один обработчик на одно событие.** Если нужно несколько проверок
    на одно событие (например `BlockEvent.BreakEvent`) — один `@SubscribeEvent`
-   метод, который вызывает приватные подметоды (`checkMiner`, `checkFarmer`
-   и т.д.), а не несколько отдельных `@SubscribeEvent` на одно событие.
+   метод (`net.neoforged.bus.api.SubscribeEvent`), который вызывает приватные
+   подметоды (`checkMiner`, `checkFarmer` и т.д.), а не несколько отдельных
+   `@SubscribeEvent` на одно событие.
 
 6. **Натуральные блоки.** Любая механика начисления XP/эффектов от ломки
    блоков должна проверять `PlacedBlockTracker.isPlacedByPlayer(pos)` —
@@ -43,22 +45,31 @@
 
 ## Окружение
 
-- Windows, IntelliJ IDEA, Java 17, NeoForge 1.20.1 (47.1.106)
-- Сборка: NeoGradle (`net.neoforged.gradle.userdev` 7.0.192) + Gradle 8.14.
-  Зависимость загрузчика: `net.neoforged:forge:1.20.1-47.1.106`. Реобфускации нет
-  (рантайм на Mojmap). Сборка/проверка: `./gradlew build`, запуск: `./gradlew runClient`.
-- Mixin — без MixinGradle (плагин `org.spongepowered.mixin` тянет `reobf`, не нужен);
-  refmap не требуется (рантайм Mojmap, имена совпадают). Все микстины — `remap = false`.
-  - **Конфиг `kingdomrpcore.mixins.json` регистрируется атрибутом манифеста
-    `MixinConfigs`**, а НЕ через `[[mixins]]` в mods.toml (поддержка `[[mixins]]`
-    появилась только с 1.20.2 / NeoForge 20.2; на 1.20.1 её нет, и `[[mixins]]`
-    молча игнорируется). Подключение в двух местах:
-    - `manifest{ 'MixinConfigs' : 'kingdomrpcore.mixins.json' }` в jar-задаче
-      (`build.gradle`) — для собранного мода;
-    - `src/main/resources/META-INF/MANIFEST.MF` с тем же атрибутом — для dev
-      (`runClient` грузит мод из sourceSet, а не из jar). Этот ресурсный манифест
-      исключён из jar (`exclude 'META-INF/MANIFEST.MF'`), чтобы не дублировать.
-  - Проверка, что микстины применились — `run/logs/debug.log`:
-    `Registering mixin config: kingdomrpcore.mixins.json` и `Mixing <X> ... into <target>`.
-    Если этих строк нет — конфиг не зарегистрирован, ни один микстин не работает.
-- Конфиг: `saves/<мир>/serverconfig/kingdomrpcore-server.toml`
+- Windows, IntelliJ IDEA, **Java 21**, **NeoForge 1.21.1 (21.1.233)**.
+- Сборка: **ModDevGradle** (`net.neoforged.moddev` 2.0.141) + Gradle 8.14.
+  Зависимость: `net.neoforged:neoforge:21.1.233` (через `neoForge { version = ... }`).
+  Реобфускации нет (рантайм на Mojmap / official mappings). Сборка/проверка:
+  `./gradlew build`, запуск: `./gradlew runClient` (рабочая папка — `run/`).
+- **Метаданные мода — `src/main/resources/META-INF/neoforge.mods.toml`** (НЕ
+  `mods.toml`). Формат 1.21: `type="required"`, зависимость на modid `neoforge`.
+- **Данные игрока — Data Attachment** (`registry/KRPAttachments.PLAYER_DATA`,
+  `copyOnDeath`), доступ `player.getData(...)` / `setData(...)`; capability больше
+  нет. **Сеть** — `CustomPacketPayload` + `StreamCodec` + `PayloadRegistrar`
+  (`network/NetworkHandler` на `RegisterPayloadHandlersEvent`). **Конфиг** —
+  `ModConfigSpec`. **HUD** — `LayeredDraw.Layer` через `RegisterGuiLayersEvent`.
+  **Магия** — Data Components (`PotionContents`, `ItemEnchantments`,
+  `Holder<Enchantment>`/`Holder<MobEffect>`).
+- Mixin — без MixinGradle; refmap не требуется (Mojmap), `compatibilityLevel`
+  `JAVA_21`, все микстины `remap = false`.
+  - **Конфиг `kingdomrpcore.mixins.json` подключается НАТИВНО через `[[mixins]]`
+    `config="..."` в `neoforge.mods.toml`** (на 1.21 это поддерживается; костыль
+    1.20.1 с атрибутом манифеста `MixinConfigs` и ресурсным `MANIFEST.MF` УДАЛЁН).
+  - Проверка применения — `run/logs/debug.log`: `Registering mixin config: ...`
+    и `Mixing <X> ... into <target>`.
+  - ⚠️ **Цели инжекта проверяются в РАНТАЙМЕ, не компилятором.** При смене
+    сигнатуры ванильного метода между версиями миксин падает с
+    `InvalidInjectionException`/`InvalidAccessorException` только при ЗАГРУЗКЕ
+    целевого класса (часть классов грузится лениво — напр. `EnchantmentHelper`
+    при первом зачаровании). Поэтому после правок миксинов недостаточно `build` —
+    нужен `runClient` и заход в соответствующее меню.
+- Конфиг сервера: `saves/<мир>/serverconfig/kingdomrpcore-server.toml`

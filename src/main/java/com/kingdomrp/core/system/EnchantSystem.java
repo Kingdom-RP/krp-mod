@@ -1,6 +1,6 @@
 package com.kingdomrp.core.system;
 
-import com.kingdomrp.core.capability.PlayerDataProvider;
+import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.config.KRPConfig;
 import com.kingdomrp.core.data.Spec;
 import com.kingdomrp.core.util.ScalingFormula;
@@ -57,10 +57,7 @@ public final class EnchantSystem {
     public static Integer tableLevel()          { return TABLE_LEVEL.get(); }
 
     public static int getEnchanterLevel(Player player) {
-        return player.getCapability(PlayerDataProvider.PLAYER_DATA)
-                .resolve()
-                .map(d -> d.getSpecializationLevel(Spec.ENCHANTER.id))
-                .orElse(0);
+        return player.getData(KRPAttachments.PLAYER_DATA).getSpecializationLevel(Spec.ENCHANTER.id);
     }
 
     public static boolean restrictionsEnabled() {

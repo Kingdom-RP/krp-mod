@@ -2,25 +2,27 @@
 
 ## Стек
 
-- Minecraft 1.20.1, **NeoForge 47.1.106** (артефакт `net.neoforged:forge:1.20.1-47.1.106`;
-  на 1.20.1 NeoForge сохраняет пакеты `net.minecraftforge.*` и Forge-API)
-- Java 17, IntelliJ IDEA
-- Сборка: **NeoGradle** (`net.neoforged.gradle.userdev` 7.0.192), **Gradle 8.14**.
-  Рантайм на Mojmap — реобфускации (`reobfJar`) НЕТ.
+- Minecraft **1.21.1**, **NeoForge 21.1.233** (артефакт `net.neoforged:neoforge:21.1.233`;
+  пакеты `net.neoforged.neoforge.*` / `net.neoforged.fml.*` / `net.neoforged.bus.api.*`)
+- **Java 21**, IntelliJ IDEA
+- Сборка: **ModDevGradle** (`net.neoforged.moddev` 2.0.141), **Gradle 8.14**.
+  Рантайм на Mojmap (official mappings) — реобфускации НЕТ.
 - Mixin — без MixinGradle (refmap не нужен, рантайм Mojmap). Mixin поставляется
-  NeoForge (0.8.5). Все микстины — `remap = false`. Mod ID: `kingdomrpcore`,
-  главный класс `KingdomRPCore`. `DistExecutor` помечен deprecated, но работает.
+  NeoForge. Все микстины — `remap = false`, `compatibilityLevel JAVA_21`. Mod ID:
+  `kingdomrpcore`, главный класс `KingdomRPCore` (конструктор `@Mod(IEventBus, ModContainer)`).
+- Инфраструктура 1.21: данные игрока — **Data Attachment** (`registry/KRPAttachments`),
+  сеть — **PayloadRegistrar** (`CustomPacketPayload` + `StreamCodec`), конфиг —
+  **ModConfigSpec**, HUD — **LayeredDraw**, магия — **Data Components**
+  (`PotionContents`/`ItemEnchantments`). Подробности переезда с 1.20.1 —
+  `docs/MIGRATION_1.20_to_1.21.md`.
 
-> **Регистрация Mixin-конфига (важно для 1.20.1).** Конфиг
-> `kingdomrpcore.mixins.json` подключается **атрибутом манифеста `MixinConfigs`**,
-> а НЕ через `[[mixins]]` в `mods.toml` — поддержка `[[mixins]]` появилась только
-> с 1.20.2 (NeoForge 20.2); на 1.20.1 строка `[[mixins]]` игнорируется, и без
-> манифеста ни один микстин не применяется (молча, без краша). Подключение:
-> `'MixinConfigs' : 'kingdomrpcore.mixins.json'` в `manifest{}` jar-задачи
-> (`build.gradle`) для собранного мода + `src/main/resources/META-INF/MANIFEST.MF`
-> с тем же атрибутом для dev (`runClient` грузит мод из sourceSet; ресурсный
-> манифест исключён из jar через `exclude 'META-INF/MANIFEST.MF'`). Проверка —
-> в `run/logs/debug.log` строки `Registering mixin config` и `Mixing <X> into <target>`.
+> **Регистрация Mixin-конфига.** Конфиг `kingdomrpcore.mixins.json` подключается
+> **нативно через `[[mixins]]` `config="..."` в `neoforge.mods.toml`** (на 1.21
+> поддерживается; костыль 1.20.1 с атрибутом манифеста `MixinConfigs` удалён).
+> Проверка применения — в `run/logs/debug.log`: `Registering mixin config` и
+> `Mixing <X> into <target>`. ⚠️ Цели инжекта проверяются в РАНТАЙМЕ при загрузке
+> целевого класса (часть лениво) — после правок миксинов нужен `runClient` + заход
+> в соответствующее меню, не только `build`.
 
 ---
 
@@ -28,15 +30,16 @@
 
 ```
 com.kingdomrp.core
-├── capability/         PlayerData, PlayerDataProvider, PlayerDataEvents
+├── capability/         PlayerData (INBTSerializable), PlayerDataEvents (login-sync)
+├── registry/           KRPAttachments (Data Attachment), KRPEffects (mob effects)
 ├── client/
 │   ├── screen/          PathScreen, SpecializationScreen
-│   └── KeyBindings, ClientEvents, XPHudOverlay
+│   └── KeyBindings, ClientEvents, XPHudOverlay (LayeredDraw)
 ├── command/             KRPCommand (/krp ...)
-├── config/              KRPConfig (ForgeConfigSpec)
+├── config/              KRPConfig (ModConfigSpec)
 ├── data/                Все маппинги и enum'ы (см. ниже)
 ├── mixin/                Mixin-классы
-├── network/              SimpleChannel, пакеты синхронизации
+├── network/              NetworkHandler (PayloadRegistrar), CustomPacketPayload-пакеты
 ├── specialization/      Specialization, SpecializationRegistry
 ├── system/               XPSystem, RestrictionSystem, SpecializationEffects, MagicSystem
 ├── util/                 ScalingFormula
@@ -452,8 +455,9 @@ public static void onBlockBreak(BlockEvent.BreakEvent event) {
      Узкий «дабл» только для переработки бревна — общий дабл выхода остаётся
      отклонённым.
    - **Пассив — строительный размах** (`refreshBlockReach`): бонус дальности
-     блоков (`ForgeMod.BLOCK_REACH`), ур.5 = +1, ур.10 = +2 (линейно +0.2/уровень
-     от 5). Transient-модификатор с фикс. UUID; переустанавливается через
+     блоков (ванильный атрибут `Attributes.BLOCK_INTERACTION_RANGE`), ур.5 = +1,
+     ур.10 = +2 (линейно +0.2/уровень от 5). Transient-`AttributeModifier` с фикс.
+     `ResourceLocation` (1.21: не UUID), `Operation.ADD_VALUE`; переустанавливается через
      `PacketHelper.syncPlayer` (login/левелап/прокачка/команды) и на
      `PlayerRespawnEvent`/`PlayerChangedDimensionEvent` (у нового entity атрибуты
      сбрасываются).
@@ -765,7 +769,18 @@ public static void onBlockBreak(BlockEvent.BreakEvent event) {
   решение, повторяет подход оригинального KRP)
 - `/krp stats` — для всех; `/krp addxp|setlevel|reset` — `requires(perm 2)`
   (только операторы); `/krp debug` — для всех
-- Конфиг `KRPConfig` (ForgeConfigSpec, тип SERVER):
+- **Данные игрока — Data Attachment** (`registry/KRPAttachments.PLAYER_DATA`,
+  `AttachmentType.serializable(PlayerData::new).copyOnDeath()`); `PlayerData`
+  реализует `INBTSerializable<CompoundTag>` (методы с параметром
+  `HolderLookup.Provider`). Доступ — `player.getData(...)` (всегда не-null) /
+  `setData(...)`. `PlayerDataEvents` — только sync клиенту при входе (attach и
+  копирование при смерти делает система аттачментов).
+- **Сеть** — `network/NetworkHandler` регистрирует пакеты в
+  `RegisterPayloadHandlersEvent` через `PayloadRegistrar`; пакеты —
+  `record ... implements CustomPacketPayload` со `StreamCodec` (`SyncPlayerDataPacket`,
+  `XPGainPacket` — `playToClient`; `ChooseSpecializationPacket` — `playToServer`).
+  Отправка — `PacketDistributor.sendToPlayer/sendToServer`.
+- Конфиг `KRPConfig` (**ModConfigSpec**, тип SERVER):
   `baseXP=100, xpCurve=1.5` (реально используются в `PlayerData.getXPRequired`),
   `deathPenaltyDuration=6000, deathXpMultiplier=0.5` (дебафф смерти),
   `brewBaseChance=0.4, enchantTableBaseChance=0.35, enchantAnvilBaseChance=0.2`,
@@ -778,6 +793,53 @@ public static void onBlockBreak(BlockEvent.BreakEvent event) {
 ---
 
 ## История решений и частые ошибки
+
+### Пострелизный ретест миграции 1.21 (2026-06-19) — фиксы
+
+- **Замыленные экраны (K / выбор спец.).** В 1.21 `Screen.render` САМ вызывает
+  `renderBackground` → `renderBlurredBackground` (блюр-шейдер `processBlurEffect`),
+  причём наш `super.render(...)` зовётся ПОСЛЕ собственного рендера — блюр
+  пост-обрабатывал уже нарисованный текст (замыливал), а кнопки (рисуются после
+  блюра) оставались чёткими. Простой замены вызова `renderBackground` в override
+  НЕ хватило. Фикс: `PathScreen`/`SpecializationScreen` переопределяют
+  `renderBlurredBackground` и `renderMenuBackground` пустыми, затемнение — своё
+  `graphics.fill(...)`. ⚠️ Грабли: переопределять надо именно подметоды, а не сам
+  `render`-вызов.
+- **Молоко снимало штраф к опыту.** Возвращена защита через `EffectCure`:
+  `XPSystem.onEffectRemove` (`MobEffectEvent.Remove`) отменяет удаление
+  `DEATH_XP_PENALTY` при `EffectCures.MILK`. (`getCurativeItems()` в 1.21 нет.)
+- **Фермер качался на недозрелом урожае.** `XPSystem.onBlockBreak` теперь
+  пропускает XP, если `CropBlock` && `!isMaxAge` (как `checkFarmer` для дроп-бонуса).
+- **Наковальня врала про требуемый уровень книги.** Сообщение `AnvilMenuMixin`
+  показывало статичный `ANVIL_LEVEL` (5) вместо реального `krp$requiredFor`
+  (для чар на макс. уровне / проклятий тир = 7). Теперь выводит фактическое требование.
+  Заодно убрано ДВОЙНОЕ сообщение: `createResult` выполняется на клиентском И
+  серверном меню (одиночная игра) — сообщение шлём только при `!isClientSide()`.
+- **Лук: переработка нёрфа.** `BowItemMixin` был сломан (`speedBonus = 20`
+  выкручивал ticks в максимум) и дублировал `ArrowLooseEvent` — удалён (и из
+  `kingdomrpcore.mixins.json`). Механический бонус скорости зарядки
+  (`event.setCharge`) тоже убран: давал рассинхрон визуал/механика и абуз спама.
+  Новый перк Лучника — **дальность полёта стрелы** (`onArrowSpawn`,
+  `EntityJoinLevelEvent`): скорость стрелы ×(0.5 + 0.1·ур) → ур.0=50%, ур.5=100%,
+  ур.10=150%. Скорость влияет и на дальность, и на урон при попадании. Двойная
+  стрела (ур.5+) и так проходит через тот же `EntityJoinLevelEvent` → масштабируется.
+  ⚠️ Визуальная скорость натяжения лука НЕ меняется (требует клиентского миксина
+  на model-property `pull` — не делалось).
+- **Закалка распространена на дерево/камень.** Дерево → Мастеровой
+  (`CraftsmanTemperMap`, unlock 1/full 3), камень → Кузнец (`BlacksmithTemperMap`,
+  unlock 1/full 4).
+
+### Иконки (логотип мода + иконка окна)
+
+- **Логотип мода** (список Mods): `logoFile="logo.png"` в `neoforge.mods.toml`,
+  файл `src/main/resources/logo.png` (квадрат, 128×128 PNG).
+- **Иконка окна игры**: ваниль ставит её один раз в конструкторе `Minecraft` из
+  КОРНЯ game-jar (`icons/icon_*.png`, `Window.setIcon`/`IconSet`) — мод туда не
+  пишет. Поэтому переустанавливаем сами: `WindowIcon.apply()` грузит PNG из
+  `src/main/resources/icons/icon_{16x16,32x32,48x48,128x128,256x256}.png` и зовёт
+  `GLFW.glfwSetWindowIcon`. Запуск — `ClientModEvents.onClientSetup`
+  (`FMLClientSetupEvent` → `enqueueWork`, главный поток, окно уже создано).
+  Отсутствующие размеры пропускаются, ошибки не валят старт.
 
 ### Geймдизайн
 
@@ -966,19 +1028,21 @@ public static void onBlockBreak(BlockEvent.BreakEvent event) {
 
 ## Текущее состояние
 
+**Платформа: NeoForge 1.21.1** (переезд с 1.20.1 завершён — `BUILD SUCCESSFUL`,
+клиент грузится, все 18 микстинов применяются без ошибок). Детали миграции,
+замечания и план тестирования — `docs/MIGRATION_1.20_to_1.21.md`.
+
 **Реализовано и закрыто** (по 4-пунктовому формату): все 5 путей и их спеки —
 Добыча (Шахтёр+Лесоруб), Война (Воин+Лучник), Промысел (Фермер+Рыбак+Повар),
-Магия (Алхимик+Зачарователь), Ремесло (Плотник+Кузнец+Мастеровой). Инфраструктура:
-capability/network/config, mixin, команды `/krp`, HUD-полоска опыта.
+Магия (Алхимик+Зачарователь), Ремесло (Плотник+Кузнец+Мастеровой). Инфраструктура
+1.21: Data Attachment / PayloadRegistrar / ModConfigSpec / LayeredDraw, mixin
+(нативный `[[mixins]]`), команды `/krp`, HUD-полоска опыта.
 
-**Mixin-подсистема работает** — конфиг регистрируется атрибутом манифеста
-`MixinConfigs` (см. «Стек»). Подтверждено логом запуска: все микстины применяются.
+⚠️ **Требуется полный ретест геймплея после миграции** — компиляция и применение
+микстинов подтверждены, но игровое поведение каждой фичи нужно проверить вживую
+(чеклист — в `MIGRATION_1.20_to_1.21.md`). Известные правки баланса/поведения от
+1.21: XP Зачарователя считается по ВЕСУ чары (rarity убрана); молоко снимает
+дебафф опыта (`getCurativeItems` удалён).
 
-⚠️ **Требуется полный ретест геймплея в рантайме.** Mixin-фичи (закалка крафта,
-все магические гейты — брю/зачар/наковальня/точило/кузнечный стол, гейты печи
-cook/smelt, заряд лука, ускоренный клёв рыбалки, гейт крафта `SlotMixin.mayPickup`)
-проверены на применение микстинов, но игровое поведение каждого ещё нужно
-подтвердить вживую.
-
-**Следующее**: балансировка специализаций; геймплейные системы (гильдии,
-территории) отложены до завершения баланса.
+**Следующее**: ретест после миграции; затем балансировка специализаций;
+геймплейные системы (гильдии, территории) отложены до завершения баланса.
