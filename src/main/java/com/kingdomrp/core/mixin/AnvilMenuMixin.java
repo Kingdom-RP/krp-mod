@@ -1,6 +1,6 @@
 package com.kingdomrp.core.mixin;
 
-import com.kingdomrp.core.capability.PlayerDataProvider;
+import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.data.EnchantTierMap;
 import com.kingdomrp.core.data.EnchantXPMap;
 import com.kingdomrp.core.data.Path;
@@ -51,12 +51,12 @@ public class AnvilMenuMixin {
     private boolean krp$isBookApply(Container inputs) {
         ItemStack book = inputs.getItem(1);
         return book.is(Items.ENCHANTED_BOOK)
-                && !EnchantmentHelper.getEnchantments(book).isEmpty();
+                && !EnchantmentHelper.getEnchantmentsForCrafting(book).isEmpty();
     }
 
     @Unique
     private int krp$requiredFor(Container inputs) {
-        Map<Enchantment, Integer> bookEnch = EnchantmentHelper.getEnchantments(inputs.getItem(1));
+        var bookEnch = EnchantmentHelper.getEnchantmentsForCrafting(inputs.getItem(1));
         return Math.max(EnchantSystem.ANVIL_LEVEL, EnchantTierMap.requiredForEnchants(bookEnch));
     }
 
@@ -73,18 +73,26 @@ public class AnvilMenuMixin {
 
         Player player = ((ItemCombinerMenuAccessor) (Object) this).getPlayer();
         int level = EnchantSystem.getEnchanterLevel(player);
-        if (level >= krp$requiredFor(inputs)) return;
+        int required = krp$requiredFor(inputs);
+        if (level >= required) return;
 
         self.getSlot(residx).set(ItemStack.EMPTY);
         self.setMaximumCost(0);
 
+        // createResult выполняется И на клиентском, И на серверном меню (одиночная
+        // игра) — сообщение слать только с сервера, иначе дублируется в чат.
+        if (player.level().isClientSide()) return;
+
         int hash = Objects.hash(inputs.getItem(0).getItem(), inputs.getItem(1).getItem(),
-                EnchantmentHelper.getEnchantments(inputs.getItem(1)));
+                EnchantmentHelper.getEnchantmentsForCrafting(inputs.getItem(1)));
         if (hash != krp$gateHash) {
             krp$gateHash = hash;
+            // Показываем РЕАЛЬНОЕ требование: для мощных чар (макс. уровень,
+            // проклятия) тир выше базового ANVIL_LEVEL — иначе сообщение врёт
+            // (напр. книга «Приманка III» требует ур.7, а не 5).
             EnchantSystem.msg(player,
-                    "§c[Kingdom RP] Зачарование книгой на наковальне доступно с уровня "
-                            + EnchantSystem.ANVIL_LEVEL + " навыка «Зачарователь».");
+                    "§c[Kingdom RP] Зачарование этой книгой на наковальне доступно с уровня "
+                            + required + " навыка «Зачарователь».");
         }
         self.broadcastChanges();
     }
@@ -101,8 +109,7 @@ public class AnvilMenuMixin {
         AnvilMenu self = (AnvilMenu) (Object) this;
         int cost = self.getCost();
         if (cost <= 0) return;
-        int level = player.getCapability(PlayerDataProvider.PLAYER_DATA)
-                .map(d -> d.getSpecializationLevel(Spec.BLACKSMITH.id)).orElse(0);
+        int level = player.getData(KRPAttachments.PLAYER_DATA).getSpecializationLevel(Spec.BLACKSMITH.id);
         if (level <= 0) return;
         int refund = Math.round(cost * Math.min(0.5f, level * 0.05f));
         if (refund > 0 && !player.getAbilities().instabuild) {
@@ -150,7 +157,7 @@ public class AnvilMenuMixin {
         int cost = self.getCost();
 
         // XP по ценности чар книги — и при успехе, и при провале.
-        float xp = EnchantXPMap.xp(EnchantmentHelper.getEnchantments(inputs.getItem(1)));
+        float xp = EnchantXPMap.xp(EnchantmentHelper.getEnchantmentsForCrafting(inputs.getItem(1)));
         if (xp > 0f) XPSystem.giveXP(serverPlayer, Path.MAGIC, xp);
 
         float chance = EnchantSystem.successChance(level, required, EnchantSystem.anvilBaseChance());

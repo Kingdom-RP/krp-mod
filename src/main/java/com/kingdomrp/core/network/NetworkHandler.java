@@ -1,43 +1,21 @@
 package com.kingdomrp.core.network;
 
-import com.kingdomrp.core.KingdomRPCore;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.simple.SimpleChannel;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 public class NetworkHandler {
 
     private static final String PROTOCOL_VERSION = "1";
-    public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
-            new ResourceLocation(KingdomRPCore.MODID, "main"),
-            () -> PROTOCOL_VERSION,
-            PROTOCOL_VERSION::equals,
-            PROTOCOL_VERSION::equals
-    );
 
-    private static int packetId = 0;
+    // Вызывается из RegisterPayloadHandlersEvent (шина мода).
+    public static void register(RegisterPayloadHandlersEvent event) {
+        PayloadRegistrar registrar = event.registrar(PROTOCOL_VERSION);
 
-    public static void register() {
-        CHANNEL.registerMessage(
-                packetId++,
-                SyncPlayerDataPacket.class,
-                SyncPlayerDataPacket::encode,
-                SyncPlayerDataPacket::decode,
-                SyncPlayerDataPacket::handle
-        );
-        CHANNEL.registerMessage(
-                packetId++,
-                ChooseSpecializationPacket.class,
-                ChooseSpecializationPacket::encode,
-                ChooseSpecializationPacket::decode,
-                ChooseSpecializationPacket::handle
-        );
-        CHANNEL.registerMessage(
-                packetId++,
-                XPGainPacket.class,
-                XPGainPacket::encode,
-                XPGainPacket::decode,
-                XPGainPacket::handle
-        );
+        registrar.playToClient(SyncPlayerDataPacket.TYPE, SyncPlayerDataPacket.STREAM_CODEC,
+                SyncPlayerDataPacket::handle);
+        registrar.playToClient(XPGainPacket.TYPE, XPGainPacket.STREAM_CODEC,
+                XPGainPacket::handle);
+        registrar.playToServer(ChooseSpecializationPacket.TYPE, ChooseSpecializationPacket.STREAM_CODEC,
+                ChooseSpecializationPacket::handle);
     }
 }

@@ -1,6 +1,6 @@
 package com.kingdomrp.core.system;
 
-import com.kingdomrp.core.capability.PlayerDataProvider;
+import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.config.KRPConfig;
 import com.kingdomrp.core.data.FoodCookMap;
 import com.kingdomrp.core.data.FoodTierEntry;
@@ -33,9 +33,7 @@ public class CookSystem {
 
     /** Уровень специализации Повар у игрока (0, если не прокачан). */
     public static int cookLevel(Player player) {
-        return player.getCapability(PlayerDataProvider.PLAYER_DATA)
-                .map(data -> data.getSpecializationLevel(Spec.COOK.id))
-                .orElse(0);
+        return player.getData(KRPAttachments.PLAYER_DATA).getSpecializationLevel(Spec.COOK.id);
     }
 
     /**
@@ -69,7 +67,7 @@ public class CookSystem {
      */
     public static Item campfireResult(Level level, CampfireBlockEntity campfire, ItemStack stack) {
         return campfire.getCookableRecipe(stack)
-                .map(recipe -> recipe.getResultItem(level.registryAccess()).getItem())
+                .map(recipe -> recipe.value().getResultItem(level.registryAccess()).getItem())
                 .orElse(null);
     }
 
@@ -81,8 +79,9 @@ public class CookSystem {
     public static Item smeltResult(Level level, ItemStack stack) {
         if (stack.isEmpty()) return null;
         return level.getRecipeManager()
-                .getRecipeFor(RecipeType.SMELTING, new SimpleContainer(stack), level)
-                .map(recipe -> recipe.getResultItem(level.registryAccess()).getItem())
+                .getRecipeFor(RecipeType.SMELTING,
+                        new net.minecraft.world.item.crafting.SingleRecipeInput(stack), level)
+                .map(recipe -> recipe.value().getResultItem(level.registryAccess()).getItem())
                 .orElse(null);
     }
 

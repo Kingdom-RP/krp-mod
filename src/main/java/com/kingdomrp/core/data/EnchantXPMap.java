@@ -1,48 +1,45 @@
 package com.kingdomrp.core.data;
 
+import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-
-import java.util.Map;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 
 /**
- * Маппинг XP Зачарователя (path {@link Path#MAGIC}) за наложенные/применённые
- * чары. XP считается по редкости чары × её уровень и суммируется по всем
- * чарам результата (аналог {@link BrewXPMap} по тирам зелий).
+ * Маппинг XP Зачарователя (path {@link Path#MAGIC}) за наложенные/применённые чары.
+ * XP = baseXP(вес чары) × её уровень, сумма по всем чарам результата.
  * <p>
- * Тиры (XP за уровень I):
+ * 1.21: {@code Enchantment.Rarity} убрана — тир по ВЕСУ чары
+ * ({@code definition().weight()}). Вес ванильных чар совпадает со старыми бакетами
+ * редкости, поэтому значения XP сохраняются:
  * <ul>
- *   <li>COMMON = 3 (Protection, Sharpness, Efficiency, Unbreaking)</li>
- *   <li>UNCOMMON = 5 (Fire Aspect, Knockback, Respiration)</li>
- *   <li>RARE = 9 (Fortune, Looting, Thorns)</li>
- *   <li>VERY_RARE = 16 (Silk Touch, Mending, Infinity)</li>
+ *   <li>вес ≥10 (COMMON) = 3</li>
+ *   <li>вес ≥5 (UNCOMMON) = 5</li>
+ *   <li>вес ≥2 (RARE) = 9</li>
+ *   <li>вес 1 (VERY_RARE) = 16</li>
  * </ul>
- * XP за чару уровня N = baseXP(rarity) × N. Грубо коррелирует с ценностью.
  */
 public class EnchantXPMap {
 
-    private static float baseXP(Enchantment.Rarity rarity) {
-        return switch (rarity) {
-            case COMMON    -> 3f;
-            case UNCOMMON  -> 5f;
-            case RARE      -> 9f;
-            case VERY_RARE -> 16f;
-        };
+    private static float baseXP(int weight) {
+        if (weight >= 10) return 3f;
+        if (weight >= 5)  return 5f;
+        if (weight >= 2)  return 9f;
+        return 16f;
     }
 
-    /** XP за карту чар (например, разница после применения книги). */
-    public static float xp(Map<Enchantment, Integer> enchantments) {
+    /** XP за набор чар (например, разница после применения книги). */
+    public static float xp(ItemEnchantments enchantments) {
         float total = 0f;
-        for (Map.Entry<Enchantment, Integer> e : enchantments.entrySet()) {
-            total += baseXP(e.getKey().getRarity()) * e.getValue();
+        for (var e : enchantments.entrySet()) {
+            total += baseXP(e.getKey().value().getWeight()) * e.getIntValue();
         }
         return total;
     }
 
-    /** XP за все чары предмета. */
+    /** XP за все чары предмета (для книг — stored enchantments). */
     public static float xp(ItemStack stack) {
-        return xp(EnchantmentHelper.getEnchantments(stack));
+        return xp(EnchantmentHelper.getEnchantmentsForCrafting(stack));
     }
 
     /**
@@ -51,9 +48,9 @@ public class EnchantXPMap {
      */
     public static float xpNonCurse(ItemStack stack) {
         float total = 0f;
-        for (Map.Entry<Enchantment, Integer> e : EnchantmentHelper.getEnchantments(stack).entrySet()) {
-            if (!e.getKey().isCurse()) {
-                total += baseXP(e.getKey().getRarity()) * e.getValue();
+        for (var e : EnchantmentHelper.getEnchantmentsForCrafting(stack).entrySet()) {
+            if (!e.getKey().is(EnchantmentTags.CURSE)) {
+                total += baseXP(e.getKey().value().getWeight()) * e.getIntValue();
             }
         }
         return total;

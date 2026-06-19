@@ -1,53 +1,50 @@
 package com.kingdomrp.core.network;
 
-import com.kingdomrp.core.capability.PlayerDataProvider;
+import com.kingdomrp.core.KingdomRPCore;
+import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.specialization.SpecializationRegistry;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-import java.util.function.Supplier;
+/** Клиент → сервер: выбор/улучшение специализации. */
+public record ChooseSpecializationPacket(String specId) implements CustomPacketPayload {
 
-public class ChooseSpecializationPacket {
+    public static final Type<ChooseSpecializationPacket> TYPE =
+            new Type<>(ResourceLocation.fromNamespaceAndPath(KingdomRPCore.MODID, "choose_specialization"));
 
-    private final String specId;
+    public static final StreamCodec<RegistryFriendlyByteBuf, ChooseSpecializationPacket> STREAM_CODEC =
+            StreamCodec.composite(
+                    ByteBufCodecs.STRING_UTF8, ChooseSpecializationPacket::specId,
+                    ChooseSpecializationPacket::new);
 
-    public ChooseSpecializationPacket(String specId) {
-        this.specId = specId;
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static void encode(ChooseSpecializationPacket packet, FriendlyByteBuf buf) {
-        buf.writeUtf(packet.specId);
-    }
+    public static void handle(ChooseSpecializationPacket packet, IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player)) return;
 
-    public static ChooseSpecializationPacket decode(FriendlyByteBuf buf) {
-        return new ChooseSpecializationPacket(buf.readUtf());
-    }
+        var specOpt = SpecializationRegistry.get(packet.specId());
+        if (specOpt.isEmpty()) return;
+        var spec = specOpt.get();
 
-    public static void handle(ChooseSpecializationPacket packet,
-                              Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> {
-            ServerPlayer player = ctx.get().getSender();
-            if (player == null) return;
+        var data = player.getData(KRPAttachments.PLAYER_DATA);
+        if (!data.canAffordSpecialization(spec.getPath(), packet.specId())) return;
 
-            var specOpt = SpecializationRegistry.get(packet.specId);
-            if (specOpt.isEmpty()) return;
+        data.levelUpSpecialization(packet.specId());
+        PacketHelper.syncPlayer(player);
 
-            var spec = specOpt.get();
-
-            player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
-                if (!data.canAffordSpecialization(spec.getPath(), packet.specId)) return;
-
-                data.levelUpSpecialization(packet.specId);
-                PacketHelper.syncPlayer(player);
-
-                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                        "§6[Kingdom RP] §eСпециализация «" + spec.getName()
-                                + "» улучшена до уровня "
-                                + data.getSpecializationLevel(packet.specId) + "!"
-                ));
-            });
-        });
-        ctx.get().setPacketHandled(true);
+        player.sendSystemMessage(Component.literal(
+                "§6[Kingdom RP] §eСпециализация «" + spec.getName()
+                        + "» улучшена до уровня "
+                        + data.getSpecializationLevel(packet.specId()) + "!"
+        ));
     }
 }

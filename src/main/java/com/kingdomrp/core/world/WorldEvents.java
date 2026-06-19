@@ -1,7 +1,7 @@
 package com.kingdomrp.core.world;
 
 import com.kingdomrp.core.KingdomRPCore;
-import com.kingdomrp.core.capability.PlayerDataProvider;
+import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.data.Path;
 import com.kingdomrp.core.data.PlantEntry;
 import com.kingdomrp.core.data.PlantTierMap;
@@ -11,11 +11,11 @@ import com.kingdomrp.core.system.XPSystem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.event.level.BlockEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 
-@Mod.EventBusSubscriber(modid = KingdomRPCore.MODID)
+@EventBusSubscriber(modid = KingdomRPCore.MODID)
 public class WorldEvents {
 
     @SubscribeEvent
@@ -27,9 +27,8 @@ public class WorldEvents {
         PlantEntry plant = PlantTierMap.get(placed);
 
         if (plant != null) {
-            int specLevel = player.getCapability(PlayerDataProvider.PLAYER_DATA)
-                    .map(data -> data.getSpecializationLevel(plant.spec().id))
-                    .orElse(0);
+            int specLevel = player.getData(KRPAttachments.PLAYER_DATA)
+                    .getSpecializationLevel(plant.spec().id);
 
             // Гейтинг посадки по уровню Фермера
             if (specLevel < plant.level()) {

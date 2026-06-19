@@ -3,18 +3,19 @@ package com.kingdomrp.core.client;
 import com.kingdomrp.core.KingdomRPCore;
 import com.kingdomrp.core.data.Path;
 import com.kingdomrp.core.system.XPSystem;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.LayeredDraw;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
-import net.minecraftforge.client.gui.overlay.ForgeGui;
-import net.minecraftforge.client.gui.overlay.IGuiOverlay;
-import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
 /**
  * Полоска прогресса уровня пути сверху экрана. Появляется при получении XP
@@ -22,10 +23,12 @@ import net.minecraftforge.fml.common.Mod;
  * к следующему уровню. Светло-синяя при обычном начислении, жёлтая при левел-апе
  * (плюс дефолтный звук левел-апа). На экране всегда не больше одной полоски —
  * состояние единое и статическое, каждый новый пакет его перезаписывает.
+ * <p>
+ * 1.21: GUI-оверлей — слой {@link LayeredDraw.Layer}, регистрируется через
+ * {@link RegisterGuiLayersEvent}.
  */
-@Mod.EventBusSubscriber(modid = KingdomRPCore.MODID, bus = Mod.EventBusSubscriber.Bus.MOD,
-        value = Dist.CLIENT)
-public class XPHudOverlay implements IGuiOverlay {
+@EventBusSubscriber(modid = KingdomRPCore.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+public class XPHudOverlay implements LayeredDraw.Layer {
 
     private static final long DISPLAY_MS = 3000L; // сколько держится полоска
     private static final long FADE_MS    = 500L;  // длительность затухания в конце
@@ -69,12 +72,14 @@ public class XPHudOverlay implements IGuiOverlay {
     }
 
     @SubscribeEvent
-    public static void onRegisterOverlays(RegisterGuiOverlaysEvent event) {
-        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "krp_xp_bar", new XPHudOverlay());
+    public static void onRegisterLayers(RegisterGuiLayersEvent event) {
+        event.registerAbove(VanillaGuiLayers.HOTBAR,
+                ResourceLocation.fromNamespaceAndPath(KingdomRPCore.MODID, "xp_bar"),
+                new XPHudOverlay());
     }
 
     @Override
-    public void render(ForgeGui gui, GuiGraphics g, float partialTick, int screenWidth, int screenHeight) {
+    public void render(GuiGraphics g, DeltaTracker deltaTracker) {
         if (pathIndex < 0) return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.options.hideGui) return;
@@ -89,6 +94,7 @@ public class XPHudOverlay implements IGuiOverlay {
         }
         int a = Math.max(0, Math.min(255, (int) (alpha * 255)));
 
+        int screenWidth = g.guiWidth();
         int x = (screenWidth - BAR_WIDTH) / 2;
         int y = TOP_Y;
 

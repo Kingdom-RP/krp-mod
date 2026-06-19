@@ -31,7 +31,7 @@ public class ItemCombinerMenuMixin {
 
         Container inputs = ((ItemCombinerMenuAccessor) (Object) this).getInputSlots();
         ItemStack book = inputs.getItem(1);
-        if (book.is(Items.ENCHANTED_BOOK) && !EnchantmentHelper.getEnchantments(book).isEmpty()) {
+        if (book.is(Items.ENCHANTED_BOOK) && !EnchantmentHelper.getEnchantmentsForCrafting(book).isEmpty()) {
             cir.setReturnValue(ItemStack.EMPTY);
         }
     }

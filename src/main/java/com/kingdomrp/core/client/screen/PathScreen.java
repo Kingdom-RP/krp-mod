@@ -1,7 +1,7 @@
 package com.kingdomrp.core.client.screen;
 
 import com.kingdomrp.core.capability.PlayerData;
-import com.kingdomrp.core.capability.PlayerDataProvider;
+import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.data.Path;
 import com.kingdomrp.core.system.XPSystem;
 import net.minecraft.client.Minecraft;
@@ -20,13 +20,18 @@ public class PathScreen extends Screen {
         super(Component.literal("Пути развития"));
     }
 
+    private static void withData(net.minecraft.world.entity.player.Player player,
+                                 java.util.function.Consumer<PlayerData> action) {
+        action.accept(player.getData(KRPAttachments.PLAYER_DATA));
+    }
+
     // Выносим построение кнопок отдельно чтобы корректно считать btnY
     private void rebuildButtons(int x) {
         var player = Minecraft.getInstance().player;
         if (player == null) return;
 
         int[] count = {0};
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             for (Path path : Path.values()) {
                 if (data.hasAvailablePoints(path)) count[0]++;
             }
@@ -36,7 +41,7 @@ public class PathScreen extends Screen {
         int y = (this.height - totalHeight) / 2;
         int[] btnY = {y + BASE_HEIGHT};
 
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             for (Path path : Path.values()) {
                 if (data.hasAvailablePoints(path)) {
                     this.addRenderableWidget(Button.builder(
@@ -61,13 +66,17 @@ public class PathScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(graphics);
+        // 1.21: Screen.renderBackground блюрит мир позади экрана, и размытая
+        // картинка просвечивает сквозь полупрозрачную панель под текстом (текст
+        // выглядит «замыленным»). Для внутриигрового оверлея блюр не нужен —
+        // затемняем экран простой заливкой.
+        graphics.fill(0, 0, this.width, this.height, 0xC0101010);
 
         var player = Minecraft.getInstance().player;
         if (player == null) return;
 
         int[] count = {0};
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             for (Path path : Path.values()) {
                 if (data.hasAvailablePoints(path)) count[0]++;
             }
@@ -92,7 +101,7 @@ public class PathScreen extends Screen {
                     x + BG_WIDTH - 10, y + BASE_HEIGHT - 1, 0xFF555555);
         }
 
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             for (Path path : Path.values()) {
                 renderPath(graphics, data, path, x + 15, y + 32 + path.index * 36);
             }
@@ -158,6 +167,16 @@ public class PathScreen extends Screen {
             case MAGIC   -> "✨";
         };
     }
+
+    // Внутриигровой оверлей: глушим ванильный блюр и фон-текстуру меню. Иначе
+    // Screen.render вызывает renderBackground ПОСЛЕ нашего рендера, и блюр-шейдер
+    // пост-обрабатывает уже нарисованный текст («замыливает» его), а кнопки,
+    // рисующиеся после блюра, остаются чёткими. Затемнение делаем сами в render().
+    @Override
+    protected void renderBlurredBackground(float partialTick) {}
+
+    @Override
+    protected void renderMenuBackground(GuiGraphics graphics) {}
 
     @Override
     public boolean isPauseScreen() { return false; }
