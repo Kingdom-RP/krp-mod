@@ -37,7 +37,8 @@ public class CraftingResultMixin {
             remap = false)
     private static void krp$temperCraftResult(ResultContainer resultContainer, int index, ItemStack stack,
                                               AbstractContainerMenu menu, Level level, Player player,
-                                              CraftingContainer craftSlots, ResultContainer resultSlots) {
+                                              CraftingContainer craftSlots, ResultContainer resultSlots,
+                                              net.minecraft.world.item.crafting.RecipeHolder<net.minecraft.world.item.crafting.CraftingRecipe> recipe) {
         SpecializationEffects.applyTemperingToCraftResult(player, stack);
         resultContainer.setItem(index, stack);
     }

@@ -1,6 +1,6 @@
 package com.kingdomrp.core.mixin.client;
 
-import com.kingdomrp.core.capability.PlayerDataProvider;
+import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.data.EnchantTierMap;
 import com.kingdomrp.core.data.Spec;
 import net.minecraft.client.Minecraft;
@@ -27,10 +27,7 @@ public class EnchantmentScreenMixin {
     private static int krp$allowedSlots() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return 3;
-        int level = mc.player.getCapability(PlayerDataProvider.PLAYER_DATA)
-                .resolve()
-                .map(d -> d.getSpecializationLevel(Spec.ENCHANTER.id))
-                .orElse(0);
+        int level = mc.player.getData(KRPAttachments.PLAYER_DATA).getSpecializationLevel(Spec.ENCHANTER.id);
         return EnchantTierMap.slotCount(level);
     }
 

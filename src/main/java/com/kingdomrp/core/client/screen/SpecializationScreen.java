@@ -1,8 +1,8 @@
 package com.kingdomrp.core.client.screen;
 
-import com.kingdomrp.core.capability.PlayerDataProvider;
+import com.kingdomrp.core.capability.PlayerData;
+import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.data.Path;
-import com.kingdomrp.core.network.NetworkHandler;
 import com.kingdomrp.core.network.ChooseSpecializationPacket;
 import com.kingdomrp.core.specialization.Specialization;
 import com.kingdomrp.core.specialization.SpecializationRegistry;
@@ -12,6 +12,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
 
@@ -78,19 +79,19 @@ public class SpecializationScreen extends Screen {
     private boolean canAfford(Specialization spec) {
         var player = Minecraft.getInstance().player;
         if (player == null) return false;
-        return player.getCapability(PlayerDataProvider.PLAYER_DATA)
-                .map(d -> d.canAffordSpecialization(path, spec.getId()))
-                .orElse(false);
+        return player.getData(KRPAttachments.PLAYER_DATA).canAffordSpecialization(path, spec.getId());
     }
 
     private void chooseSpecialization(String specId) {
-        NetworkHandler.CHANNEL.sendToServer(new ChooseSpecializationPacket(specId));
+        PacketDistributor.sendToServer(new ChooseSpecializationPacket(specId));
         Minecraft.getInstance().setScreen(null);
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(graphics);
+        // 1.21: renderBackground блюрит мир — размытие просвечивает сквозь панель
+        // под текстом. Для оверлея затемняем простой заливкой без блюра (как PathScreen).
+        graphics.fill(0, 0, this.width, this.height, 0xC0101010);
 
         int x = (this.width - BG_WIDTH) / 2;
         int y = (this.height - calculatedHeight) / 2;
@@ -111,12 +112,11 @@ public class SpecializationScreen extends Screen {
         // Свободные очки
         var player = Minecraft.getInstance().player;
         if (player != null) {
-            player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
-                int available = data.getLevel(path) - data.getTotalSpentInPath(path);
-                graphics.drawCenteredString(this.font,
-                        "§7Свободных очков: §f" + available,
-                        this.width / 2, y + 22, 0xAAAAAA);
-            });
+            PlayerData data = player.getData(KRPAttachments.PLAYER_DATA);
+            int available = data.getLevel(path) - data.getTotalSpentInPath(path);
+            graphics.drawCenteredString(this.font,
+                    "§7Свободных очков: §f" + available,
+                    this.width / 2, y + 22, 0xAAAAAA);
         }
 
         // Описания под кнопками
@@ -143,10 +143,16 @@ public class SpecializationScreen extends Screen {
     private int getSpecLevel(String specId) {
         var player = Minecraft.getInstance().player;
         if (player == null) return 0;
-        return player.getCapability(PlayerDataProvider.PLAYER_DATA)
-                .map(d -> d.getSpecializationLevel(specId))
-                .orElse(0);
+        return player.getData(KRPAttachments.PLAYER_DATA).getSpecializationLevel(specId);
     }
+
+    // Глушим ванильный блюр и фон-текстуру меню (см. PathScreen): блюр-шейдер из
+    // renderBackground (его зовёт Screen.render после нашего рендера) замыливал текст.
+    @Override
+    protected void renderBlurredBackground(float partialTick) {}
+
+    @Override
+    protected void renderMenuBackground(GuiGraphics graphics) {}
 
     @Override
     public boolean isPauseScreen() { return false; }

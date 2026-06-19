@@ -1,6 +1,6 @@
 package com.kingdomrp.core.mixin;
 
-import com.kingdomrp.core.capability.PlayerDataProvider;
+import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.config.KRPConfig;
 import com.kingdomrp.core.data.BlacksmithTemperMap;
 import com.kingdomrp.core.data.Path;
@@ -44,8 +44,7 @@ public class SmithingMenuMixin {
 
     @Unique
     private int krp$blacksmithLevel(Player player) {
-        return player.getCapability(PlayerDataProvider.PLAYER_DATA)
-                .map(d -> d.getSpecializationLevel(Spec.BLACKSMITH.id)).orElse(0);
+        return player.getData(KRPAttachments.PLAYER_DATA).getSpecializationLevel(Spec.BLACKSMITH.id);
     }
 
     /** Это незерит-апгрейд (а не трим): предмет меняется на незеритовый. */

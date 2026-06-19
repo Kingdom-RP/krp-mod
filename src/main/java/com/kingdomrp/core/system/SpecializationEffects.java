@@ -1,8 +1,9 @@
 package com.kingdomrp.core.system;
 
 import com.kingdomrp.core.KingdomRPCore;
-import com.kingdomrp.core.capability.PlayerDataProvider;
+import com.kingdomrp.core.capability.PlayerData;
 import com.kingdomrp.core.data.*;
+import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.specialization.Specialization;
 import com.kingdomrp.core.util.ScalingFormula;
 import com.kingdomrp.core.world.PlacedBlockTracker;
@@ -15,19 +16,24 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.level.BlockEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
 
 import java.util.HashSet;
 import java.util.Queue;
 import java.util.Set;
 
-@Mod.EventBusSubscriber(modid = KingdomRPCore.MODID)
+@EventBusSubscriber(modid = KingdomRPCore.MODID)
 public class SpecializationEffects {
+
+    // Доступ к данным игрока (Data Attachment) с сохранением лямбда-стиля старого кода.
+    private static void withData(Player player, java.util.function.Consumer<PlayerData> action) {
+        action.accept(player.getData(KRPAttachments.PLAYER_DATA));
+    }
 
     private static final int MAX_TREE_BLOCKS = 64;
 
@@ -62,7 +68,7 @@ public class SpecializationEffects {
     }
 
     @SubscribeEvent
-    public static void onLivingHurt(LivingHurtEvent event) {
+    public static void onLivingHurt(LivingIncomingDamageEvent event) {
         if (event.getSource().getEntity() instanceof Player attacker) {
             if (attacker.level().isClientSide()) return;
             boolean isProjectile = event.getSource().getDirectEntity()
@@ -102,19 +108,17 @@ public class SpecializationEffects {
     }
 
     @SubscribeEvent
-    public static void onArrowLoose(net.minecraftforge.event.entity.player.ArrowLooseEvent event) {
+    public static void onArrowLoose(net.neoforged.neoforge.event.entity.player.ArrowLooseEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (player.level().isClientSide()) return;
 
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             int archerLevel = data.getSpecializationLevel(Spec.ARCHER.id);
             if (archerLevel <= 0) return;
 
-            // Скорость зарядки +3% за уровень, макс +30% на ур.10
-            // Увеличиваем charge — лук считает что натянут дольше
-            float speedBonus = 1.0f + archerLevel * 0.03f;
-            int newCharge = Math.min(20, (int)(event.getCharge() * speedBonus));
-            event.setCharge(newCharge);
+            // Дальность полёта стрелы масштабируется в onArrowSpawn (ур.0=50% …
+            // ур.10=150%). Механический бонус скорости зарядки убран: он давал
+            // рассинхрон (механика быстрее визуала) и абуз быстрого спама.
 
             // Двойная стрела с 5 уровня
             if (archerLevel < 5) return;
@@ -131,7 +135,7 @@ public class SpecializationEffects {
                             ? a : (net.minecraft.world.item.ArrowItem) net.minecraft.world.item.Items.ARROW;
 
             net.minecraft.world.entity.projectile.AbstractArrow arrow =
-                    arrowItem.createArrow(player.level(), ammo, player);
+                    arrowItem.createArrow(player.level(), ammo, player, bow);
             arrow.shootFromRotation(player,
                     player.getXRot(), player.getYRot(),
                     0f, event.getCharge() / 20f * 3f, 1f);
@@ -140,12 +144,33 @@ public class SpecializationEffects {
         });
     }
 
+    /**
+     * Лучник — дальность полёта стрелы. Масштабируем скорость стрелы при спавне:
+     * ур.0 = 50%, ур.5 = 100%, ур.10 = 150% от дефолтной (factor = 0.5 + 0.1·ур).
+     * Скорость определяет и дальность, и урон при попадании, так что низкоуровневый
+     * лучник стреляет слабее и ближе, прокачанный — дальше и сильнее. Применяется ко
+     * всем стрелам игрока (обычная + двойная из {@link #onArrowLoose}).
+     */
     @SubscribeEvent
-    public static void onFishing(net.minecraftforge.event.entity.player.ItemFishedEvent event) {
+    public static void onArrowSpawn(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event) {
+        if (event.getLevel().isClientSide()) return;
+        if (!(event.getEntity() instanceof net.minecraft.world.entity.projectile.AbstractArrow arrow)) return;
+        if (!(arrow.getOwner() instanceof ServerPlayer player)) return;
+
+        int archerLevel = player.getData(KRPAttachments.PLAYER_DATA)
+                .getSpecializationLevel(Spec.ARCHER.id);
+        if (archerLevel <= 0) return;
+
+        float factor = 0.5f + archerLevel * 0.1f;
+        arrow.setDeltaMovement(arrow.getDeltaMovement().scale(factor));
+    }
+
+    @SubscribeEvent
+    public static void onFishing(net.neoforged.neoforge.event.entity.player.ItemFishedEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (player.level().isClientSide()) return;
 
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             int level = data.getSpecializationLevel(Spec.FISHERMAN.id);
             if (level <= 0) return;
 
@@ -189,17 +214,17 @@ public class SpecializationEffects {
     }
 
     @SubscribeEvent
-    public static void onBonemeal(net.minecraftforge.event.entity.player.BonemealEvent event) {
+    public static void onBonemeal(net.neoforged.neoforge.event.entity.player.BonemealEvent event) {
         if (event.getLevel().isClientSide()) return;
-        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        if (!(event.getPlayer() instanceof ServerPlayer player)) return;
 
-        var state = event.getBlock();
+        var state = event.getState();
         if (!(state.getBlock() instanceof net.minecraft.world.level.block.BonemealableBlock bm)) return;
 
         ServerLevel level = (ServerLevel) event.getLevel();
         BlockPos pos = event.getPos();
         // Реагируем только на валидные цели (не даём XP за тык по камню)
-        if (!bm.isValidBonemealTarget(level, pos, state, false)) return;
+        if (!bm.isValidBonemealTarget(level, pos, state)) return;
 
         // 1 XP за применение костной муки (путь Промысел, не зависит от спеца)
         XPSystem.giveXP(player, Path.HARVEST, 1f);
@@ -208,7 +233,7 @@ public class SpecializationEffects {
         // ванильного. Ваниль на культурах уже даёт +2..5 стадий за клик, поэтому
         // /2 было почти незаметно — берём полный уровень: ур.10 мгновенно
         // доводит до спелости почти любое растение, ур.1 ≈ удвоенный эффект.
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             int farmerLevel = data.getSpecializationLevel(Spec.FARMER.id);
             if (farmerLevel <= 0) return;
 
@@ -217,7 +242,7 @@ public class SpecializationEffects {
             for (int i = 0; i < extra; i++) {
                 var st = level.getBlockState(pos);
                 if (!(st.getBlock() instanceof net.minecraft.world.level.block.BonemealableBlock b2)) break;
-                if (!b2.isValidBonemealTarget(level, pos, st, false)) break;
+                if (!b2.isValidBonemealTarget(level, pos, st)) break;
                 b2.performBonemeal(level, rng, pos, st);
             }
         });
@@ -258,9 +283,8 @@ public class SpecializationEffects {
 
         if (!(milking || shearing || breedingFeed)) return;
 
-        int farmerLevel = player.getCapability(PlayerDataProvider.PLAYER_DATA)
-                .map(data -> data.getSpecializationLevel(Spec.FARMER.id))
-                .orElse(0);
+        int farmerLevel = player.getData(KRPAttachments.PLAYER_DATA)
+                .getSpecializationLevel(Spec.FARMER.id);
 
         if (farmerLevel < tier.level()) {
             event.setCanceled(true);
@@ -298,9 +322,8 @@ public class SpecializationEffects {
         BlockTierEntry tierEntry = BlockTierMap.get(block);
         if (tierEntry == null) return false;
 
-        int specLevel = player.getCapability(PlayerDataProvider.PLAYER_DATA)
-                .map(data -> data.getSpecializationLevel(tierEntry.spec().id))
-                .orElse(0);
+        int specLevel = player.getData(KRPAttachments.PLAYER_DATA)
+                .getSpecializationLevel(tierEntry.spec().id);
 
         if (specLevel >= tierEntry.level()) return false;
 
@@ -320,7 +343,7 @@ public class SpecializationEffects {
                                    BlockPos pos, BlockEvent.BreakEvent event) {
         if (!OreDropMap.isOre(block)) return;
 
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             int specLevel = data.getSpecializationLevel(Spec.MINER.id);
             if (specLevel <= 0) return;
 
@@ -338,7 +361,7 @@ public class SpecializationEffects {
                                         BlockPos pos, BlockEvent.BreakEvent event) {
         if (!isLog(block)) return;
 
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             int specLevel = data.getSpecializationLevel(Spec.LUMBERJACK.id);
             if (specLevel <= 0) return;
 
@@ -385,7 +408,7 @@ public class SpecializationEffects {
         if (entry == null || entry.path() != Path.HARVEST) return;
         if (block instanceof CropBlock crop && !crop.isMaxAge(event.getState())) return;
 
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             int farmerLevel = data.getSpecializationLevel(Spec.FARMER.id);
             if (farmerLevel <= 0) return;
 
@@ -410,7 +433,7 @@ public class SpecializationEffects {
         if (entry == null || entry.path() != Path.MINING) return;
         if (isLog(block)) return; // логи — зона лесоруба
 
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             int specLevel = data.getSpecializationLevel(Spec.MINER.id);
             if (specLevel <= 0) return;
             event.setNewSpeed(event.getOriginalSpeed() * (1.0f + specLevel * 0.05f));
@@ -423,7 +446,7 @@ public class SpecializationEffects {
         // крафтит Плотник): Лесоруб хорошо добывает дерево в любом виде.
         if (!isLog(block) && !isWorkedWood(block)) return;
 
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             int specLevel = data.getSpecializationLevel(Spec.LUMBERJACK.id);
             if (specLevel <= 0) return;
             event.setNewSpeed(event.getOriginalSpeed() * (1.0f + specLevel * 0.05f));
@@ -434,8 +457,8 @@ public class SpecializationEffects {
     // ВОЙНА
     // ================================================================
 
-    private static void applyWarriorDamage(Player player, LivingHurtEvent event) {
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+    private static void applyWarriorDamage(Player player, LivingIncomingDamageEvent event) {
+        withData(player, data -> {
             int warriorLevel = data.getSpecializationLevel(Spec.WARRIOR.id);
             if (warriorLevel <= 0) return;
             // +2.5% урона за уровень
@@ -445,8 +468,8 @@ public class SpecializationEffects {
     }
 
     // Добавь новый метод — снижение получаемого урона
-    private static void applyWarriorDefense(Player player, LivingHurtEvent event) {
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+    private static void applyWarriorDefense(Player player, LivingIncomingDamageEvent event) {
+        withData(player, data -> {
             int warriorLevel = data.getSpecializationLevel(Spec.WARRIOR.id);
             if (warriorLevel <= 0) return;
             // -2.5% урона за уровень
@@ -459,16 +482,16 @@ public class SpecializationEffects {
     // ЛУЧНИК
     // ================================================================
 
-    private static void applyArcherDamage(Player player, LivingHurtEvent event) {
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+    private static void applyArcherDamage(Player player, LivingIncomingDamageEvent event) {
+        withData(player, data -> {
             int archerLevel = data.getSpecializationLevel(Spec.ARCHER.id);
             float multiplier = 0.75f + archerLevel * 0.05f;
             event.setAmount(event.getAmount() * multiplier);
         });
     }
 
-    private static void applyArmorPierce(Player player, LivingHurtEvent event) {
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+    private static void applyArmorPierce(Player player, LivingIncomingDamageEvent event) {
+        withData(player, data -> {
             int archerLevel = data.getSpecializationLevel(Spec.ARCHER.id);
             if (archerLevel < 5) return;
 
@@ -506,7 +529,7 @@ public class SpecializationEffects {
         if (entry.spec() == Spec.COOK || entry.spec() == Spec.CARPENTER
                 || entry.spec() == Spec.BLACKSMITH || entry.spec() == Spec.CRAFTSMAN) return;
 
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             int specLevel = data.getSpecializationLevel(entry.spec().id);
             if (specLevel <= 0) return;
 
@@ -535,7 +558,7 @@ public class SpecializationEffects {
         BlacksmithTemperMap.TemperTier tier = BlacksmithTemperMap.get(result.getItem());
         if (tier == null) return;
 
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             int level = data.getSpecializationLevel(Spec.BLACKSMITH.id);
             float quality = BlacksmithTemperMap.quality(tier, level);
             if (quality >= 1.0f) return;
@@ -560,7 +583,7 @@ public class SpecializationEffects {
         if (entry == null || entry.spec() != Spec.CARPENTER) return;
         if (!(craftMatrix instanceof net.minecraft.world.inventory.CraftingContainer cc)) return;
 
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             int level = data.getSpecializationLevel(Spec.CARPENTER.id);
             if (level <= 0) return;
 
@@ -590,10 +613,12 @@ public class SpecializationEffects {
     // ингредиента.
     private static net.minecraft.world.item.Item findWoodInRecipe(
             Player player, net.minecraft.world.inventory.CraftingContainer cc) {
+        net.minecraft.world.item.crafting.CraftingInput input =
+                net.minecraft.world.item.crafting.CraftingInput.of(cc.getWidth(), cc.getHeight(), cc.getItems());
         var recipe = player.level().getRecipeManager().getRecipeFor(
-                net.minecraft.world.item.crafting.RecipeType.CRAFTING, cc, player.level());
+                net.minecraft.world.item.crafting.RecipeType.CRAFTING, input, player.level());
         if (recipe.isEmpty()) return null;
-        for (net.minecraft.world.item.crafting.Ingredient ing : recipe.get().getIngredients()) {
+        for (net.minecraft.world.item.crafting.Ingredient ing : recipe.get().value().getIngredients()) {
             if (ing.isEmpty()) continue;
             for (ItemStack candidate : ing.getItems()) {
                 if (isWoodIngredient(candidate)) return candidate.getItem();
@@ -608,7 +633,7 @@ public class SpecializationEffects {
     private static void checkCarpenterBatch(Player player, ItemStack result) {
         if (!isBaseStock(result)) return;
 
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             int level = data.getSpecializationLevel(Spec.CARPENTER.id);
             if (level <= 0) return;
 
@@ -638,24 +663,26 @@ public class SpecializationEffects {
     // Строительный размах: бонус дальности блоков. Ур.5 = +1, ур.10 = +2
     // (линейно +0.2/уровень от 5). Transient-модификатор — переустанавливается
     // при синке/респавне/смене измерения (атрибуты сбрасываются у нового entity).
-    private static final java.util.UUID CARPENTER_REACH_UUID =
-            java.util.UUID.fromString("7b2d1f0a-9c34-4e6a-bf12-3a5c6d7e8f90");
+    // 1.21: AttributeModifier теперь по ResourceLocation (не UUID+имя);
+    // дальность блоков — ванильный атрибут BLOCK_INTERACTION_RANGE.
+    private static final net.minecraft.resources.ResourceLocation CARPENTER_REACH_ID =
+            net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(KingdomRPCore.MODID, "carpenter_reach");
 
     public static void refreshBlockReach(ServerPlayer player) {
-        var attr = player.getAttribute(net.minecraftforge.common.ForgeMod.BLOCK_REACH.get());
+        var attr = player.getAttribute(
+                net.minecraft.world.entity.ai.attributes.Attributes.BLOCK_INTERACTION_RANGE);
         if (attr == null) return;
-        if (attr.getModifier(CARPENTER_REACH_UUID) != null) {
-            attr.removeModifier(CARPENTER_REACH_UUID);
+        if (attr.getModifier(CARPENTER_REACH_ID) != null) {
+            attr.removeModifier(CARPENTER_REACH_ID);
         }
 
-        int level = player.getCapability(PlayerDataProvider.PLAYER_DATA)
-                .map(d -> d.getSpecializationLevel(Spec.CARPENTER.id)).orElse(0);
+        int level = player.getData(KRPAttachments.PLAYER_DATA).getSpecializationLevel(Spec.CARPENTER.id);
         if (level < 5) return;
 
         double bonus = 1.0 + (level - 5) * 0.2;
         attr.addTransientModifier(new net.minecraft.world.entity.ai.attributes.AttributeModifier(
-                CARPENTER_REACH_UUID, "krp_carpenter_reach", bonus,
-                net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADDITION));
+                CARPENTER_REACH_ID, bonus,
+                net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE));
     }
 
     private static boolean isWoodIngredient(ItemStack stack) {
@@ -677,7 +704,7 @@ public class SpecializationEffects {
         if (entry == null || entry.spec() != Spec.CRAFTSMAN) return;
         if (!(craftMatrix instanceof net.minecraft.world.inventory.CraftingContainer cc)) return;
 
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             int level = data.getSpecializationLevel(Spec.CRAFTSMAN.id);
             if (level <= 0) return;
 
@@ -703,10 +730,12 @@ public class SpecializationEffects {
 
     private static net.minecraft.world.item.Item findNaturalInRecipe(
             Player player, net.minecraft.world.inventory.CraftingContainer cc) {
+        net.minecraft.world.item.crafting.CraftingInput input =
+                net.minecraft.world.item.crafting.CraftingInput.of(cc.getWidth(), cc.getHeight(), cc.getItems());
         var recipe = player.level().getRecipeManager().getRecipeFor(
-                net.minecraft.world.item.crafting.RecipeType.CRAFTING, cc, player.level());
+                net.minecraft.world.item.crafting.RecipeType.CRAFTING, input, player.level());
         if (recipe.isEmpty()) return null;
-        for (net.minecraft.world.item.crafting.Ingredient ing : recipe.get().getIngredients()) {
+        for (net.minecraft.world.item.crafting.Ingredient ing : recipe.get().value().getIngredients()) {
             if (ing.isEmpty()) continue;
             for (ItemStack candidate : ing.getItems()) {
                 if (isNaturalIngredient(candidate)) return candidate.getItem();
@@ -733,7 +762,7 @@ public class SpecializationEffects {
         BlacksmithTemperMap.TemperTier tier = CraftsmanTemperMap.get(result.getItem());
         if (tier == null) return;
 
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             int level = data.getSpecializationLevel(Spec.CRAFTSMAN.id);
             float quality = BlacksmithTemperMap.quality(tier, level);
             if (quality >= 1.0f) return;
@@ -750,7 +779,7 @@ public class SpecializationEffects {
     private static void checkCraftsmanBatch(Player player, ItemStack result) {
         if (!isCraftsmanBaseStock(result)) return;
 
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             int level = data.getSpecializationLevel(Spec.CRAFTSMAN.id);
             if (level <= 0) return;
 
@@ -790,7 +819,7 @@ public class SpecializationEffects {
         if (!(hoe.getItem() instanceof net.minecraft.world.item.HoeItem)) return;
         if (!hoe.isDamageableItem()) return;
 
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             int level = data.getSpecializationLevel(Spec.FARMER.id);
             if (level <= 0) return;
 
@@ -823,7 +852,7 @@ public class SpecializationEffects {
         net.minecraft.world.item.Item seed = combineSeed(state.getBlock());
         if (seed == null) return; // комбайн только для базовых культур
 
-        player.getCapability(PlayerDataProvider.PLAYER_DATA).ifPresent(data -> {
+        withData(player, data -> {
             int farmerLevel = data.getSpecializationLevel(Spec.FARMER.id);
             if (farmerLevel < 5) return;
 

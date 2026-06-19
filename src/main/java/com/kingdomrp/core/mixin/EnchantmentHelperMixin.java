@@ -27,7 +27,8 @@ import java.util.List;
 public class EnchantmentHelperMixin {
 
     @Inject(method = "getAvailableEnchantmentResults", at = @At("RETURN"), remap = false)
-    private static void krp$filterByTier(int power, ItemStack stack, boolean treasure,
+    private static void krp$filterByTier(int power, ItemStack stack,
+                                         java.util.stream.Stream<net.minecraft.core.Holder<net.minecraft.world.item.enchantment.Enchantment>> pool,
                                          CallbackInfoReturnable<List<EnchantmentInstance>> cir) {
         Integer level = EnchantSystem.tableLevel();
         if (level == null) return;

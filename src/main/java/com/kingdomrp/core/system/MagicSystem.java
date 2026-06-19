@@ -1,7 +1,7 @@
 package com.kingdomrp.core.system;
 
 import com.kingdomrp.core.KingdomRPCore;
-import com.kingdomrp.core.capability.PlayerDataProvider;
+import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.config.KRPConfig;
 import com.kingdomrp.core.data.BrewXPMap;
 import com.kingdomrp.core.data.Path;
@@ -9,18 +9,18 @@ import com.kingdomrp.core.data.PotionTierMap;
 import com.kingdomrp.core.util.ScalingFormula;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.alchemy.PotionBrewing;
-import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity;
-import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +37,7 @@ import java.util.UUID;
  * угоняет атрибуцию. Чужой может физически менять содержимое стойки — это
  * ванильное поведение, в простом пути не запрещаем.
  */
-@Mod.EventBusSubscriber(modid = KingdomRPCore.MODID)
+@EventBusSubscriber(modid = KingdomRPCore.MODID)
 public class MagicSystem {
 
     private static final float BREW_K            = 0.3f;  // кривая бонуса к шансу варки
@@ -73,11 +73,15 @@ public class MagicSystem {
     // Гейт «не запускать» (вызывается из BrewingStandMixin)
     // ============================================================
 
-    /** Реплика ванильного {@code isBrewable} (через Forge BrewingRecipeRegistry). */
-    public static boolean isVanillaBrewable(NonNullList<ItemStack> items) {
+    /** Реплика ванильного {@code BrewingStandBlockEntity.isBrewable} (1.21: через
+     *  инстанс {@link PotionBrewing} из {@code level.potionBrewing()}). */
+    public static boolean isVanillaBrewable(PotionBrewing brewing, NonNullList<ItemStack> items) {
         ItemStack ingredient = items.get(3);
-        if (ingredient.isEmpty()) return false;
-        return BrewingRecipeRegistry.canBrew(items, ingredient, BREW_INPUT_SLOTS);
+        if (ingredient.isEmpty() || !brewing.isIngredient(ingredient)) return false;
+        for (int i = 0; i < 3; i++) {
+            if (brewing.hasMix(items.get(i), ingredient)) return true;
+        }
+        return false;
     }
 
     /**
@@ -98,7 +102,7 @@ public class MagicSystem {
         ServerPlayer owner = level.getServer().getPlayerList().getPlayer(ownerUUID);
         if (owner == null) return true; // владелец оффлайн — не гейтим
 
-        int required = requiredLevelForResult(items);
+        int required = requiredLevelForResult(level.potionBrewing(), items);
         int specLevel = getAlchemistLevel(owner);
 
         if (specLevel < required) {
@@ -112,13 +116,13 @@ public class MagicSystem {
         return true;
     }
 
-    private static int requiredLevelForResult(NonNullList<ItemStack> items) {
+    private static int requiredLevelForResult(PotionBrewing brewing, NonNullList<ItemStack> items) {
         ItemStack reagent = items.get(3);
         int required = 0;
         for (int i = 0; i < 3; i++) {
             ItemStack bottle = items.get(i);
             if (bottle.isEmpty()) continue;
-            ItemStack result = PotionBrewing.mix(reagent, bottle);
+            ItemStack result = brewing.mix(reagent, bottle);
             required = Math.max(required, PotionTierMap.requiredLevel(result));
         }
         return required;
@@ -137,9 +141,9 @@ public class MagicSystem {
     private static int contentHash(NonNullList<ItemStack> items) {
         return Objects.hash(
                 items.get(3).getItem(),
-                PotionUtils.getPotion(items.get(0)),
-                PotionUtils.getPotion(items.get(1)),
-                PotionUtils.getPotion(items.get(2))
+                items.get(0).get(DataComponents.POTION_CONTENTS),
+                items.get(1).get(DataComponents.POTION_CONTENTS),
+                items.get(2).get(DataComponents.POTION_CONTENTS)
         );
     }
 
@@ -225,10 +229,7 @@ public class MagicSystem {
     // ============================================================
 
     private static int getAlchemistLevel(ServerPlayer player) {
-        return player.getCapability(PlayerDataProvider.PLAYER_DATA)
-                .resolve()
-                .map(d -> d.getSpecializationLevel("alchemist"))
-                .orElse(0);
+        return player.getData(KRPAttachments.PLAYER_DATA).getSpecializationLevel("alchemist");
     }
 
     private static float getBrewBaseChance() {

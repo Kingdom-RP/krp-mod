@@ -23,6 +23,12 @@ public class CraftsmanTemperMap {
     private static final Map<Item, BlacksmithTemperMap.TemperTier> MAP = new HashMap<>();
 
     static {
+        // Деревянные инструменты — натуральный материал (доски): нижний тир,
+        // открытие ур.1, полная прочность ур.3.
+        reg(new BlacksmithTemperMap.TemperTier(1, 3),
+                Items.WOODEN_SWORD, Items.WOODEN_AXE, Items.WOODEN_PICKAXE,
+                Items.WOODEN_SHOVEL, Items.WOODEN_HOE);
+
         // Кожаная броня. Лёгкие части (ботинки/шлем) открываются раньше тяжёлых
         // (куртка/штаны) — совпадает с лестницей доступа крафта (ур.1 / ур.2).
         reg(new BlacksmithTemperMap.TemperTier(1, 6),
