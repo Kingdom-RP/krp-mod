@@ -2,6 +2,8 @@ package com.kingdomrp.core.config;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
 
+import java.util.List;
+
 public class KRPConfig {
 
     public static final ModConfigSpec SPEC;
@@ -21,6 +23,10 @@ public class KRPConfig {
 
     // Общее
     public static final ModConfigSpec.BooleanValue RESTRICTIONS_ENABLED;
+
+    // Проверка модов клиента (анти-чит whitelist)
+    public static final ModConfigSpec.BooleanValue MOD_CHECK_ENABLED;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> MOD_WHITELIST_EXTRA;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -56,6 +62,20 @@ public class KRPConfig {
         RESTRICTIONS_ENABLED = builder
                 .comment("Включить ограничения по тирам (false = все предметы доступны всем)")
                 .define("restrictionsEnabled", true);
+        builder.pop();
+
+        builder.comment("Проверка модов подключающегося клиента (анти-чит).",
+                        "Разрешённый набор = моды СЕРВЕРА + список ниже. Клиент с любым",
+                        "модом вне этого набора получает кик во время хендшейка.")
+                .push("modCheck");
+        MOD_CHECK_ENABLED = builder
+                .comment("Кикать игроков с модами вне белого списка (false = проверка выключена)")
+                .define("enabled", true);
+        MOD_WHITELIST_EXTRA = builder
+                .comment("Дополнительно разрешённые modId на клиенте, помимо модов сервера",
+                        "(клиентские моды: миникарта, шейдеры и т.п.). Пример: [\"journeymap\", \"iris\"]")
+                .defineListAllowEmpty("extraAllowedMods", List.of(),
+                        o -> o instanceof String);
         builder.pop();
 
         SPEC = builder.build();

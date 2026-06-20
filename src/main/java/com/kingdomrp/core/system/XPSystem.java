@@ -60,6 +60,11 @@ public class XPSystem {
         Player player = event.getPlayer();
         if (player.level().isClientSide()) return;
 
+        // Гейт тира (SpecializationEffects.checkTierRestriction, приоритет HIGH)
+        // отменяет событие, если уровень недостаточен. За запрещённую добычу XP
+        // не положен — выходим. Гейт гарантированно выполняется раньше (приоритет).
+        if (event.isCanceled()) return;
+
         // Не даём XP за поставленные игроком блоки
         if (PlacedBlockTracker.isPlacedByPlayer(event.getPos())) {
             PlacedBlockTracker.onBroken(event.getPos());

@@ -41,7 +41,9 @@ public class SpecializationEffects {
     // СОБЫТИЯ
     // ================================================================
 
-    @SubscribeEvent
+    // HIGH: гейт тира (checkTierRestriction) должен отменить событие ДО того,
+    // как XPSystem.onBlockBreak начислит опыт (за запрещённую добычу XP не даём).
+    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.HIGH)
     public static void onBlockBreak(BlockEvent.BreakEvent event) {
         if (event.getLevel().isClientSide()) return;
         if (!(event.getPlayer() instanceof ServerPlayer player)) return;
