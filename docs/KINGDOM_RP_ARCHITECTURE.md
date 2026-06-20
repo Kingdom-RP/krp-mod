@@ -794,6 +794,72 @@ public static void onBlockBreak(BlockEvent.BreakEvent event) {
 
 ## История решений и частые ошибки
 
+### Лесоруб: XP при гейте + биом-локаут (2026-06-20)
+
+- **Баг: XP за заблокированную добычу.** Гейт тира (`checkTierRestriction`,
+  отменяет `BlockEvent.BreakEvent`) и начисление XP (`XPSystem.onBlockBreak`) —
+  РАЗНЫЕ `@SubscribeEvent`-обработчики. При неудачном порядке листенеров XP
+  начислялся до отмены. Фикс: гейту (`SpecializationEffects.onBlockBreak`) задан
+  `EventPriority.HIGH`, а `XPSystem.onBlockBreak` в начале делает
+  `if (event.isCanceled()) return;`. Это покрывает ВСЕ тир-гейты (руды, урожай, логи).
+  ⚠️ Грабли: два обработчика на одно событие в разных классах — порядок не
+  гарантирован без явного приоритета.
+- **Баланс: оверворлд-деревья разгейчены.** Все породы спавн-биомов (джунгли,
+  акация, тёмный дуб, мангровое, вишня) переведены в тир-0 в `BlockTierMap` —
+  иначе игрок в саванне/болоте/и т.п. не мог добыть местную древесину. Гейт
+  оставлен только на незер-стеблях и гигантских грибах (ур.6). XP за все логи
+  начисляется как прежде (`BlockXPMap`, путь Добыча).
+
+### Кастомизация главного меню (2026-06-20)
+
+Две части — рендер через миксин, виджеты через событие:
+
+`client.TitleScreenMixin` (`@Mixin(TitleScreen)`, remap=false):
+- `render` @Redirect `BrandingControl.forEachLine` → пусто: скрывает нижние-левые
+  строки версий Minecraft/NeoForge/модов.
+- `render` @Redirect `SplashRenderer.render` → пусто: ВРЕМЕННО скрыт splash-текст
+  (потом сделаем свои строки и вернём).
+- `render` @Redirect `LogoRenderer.renderLogo` → blit текстуры-логотипа
+  `assets/kingdomrpcore/textures/gui/title_logo.png` (512×160), по центру сверху,
+  ширина 380 с сохранением пропорций. Заодно убирает «Java Edition» (часть
+  renderLogo). Подход как в легаси (1.16.5 Fabric) — картинка, а не шрифт (золотой
+  ТЕКСТ выглядел плохо). Текущий PNG сгенерирован (Georgia Bold + золотой градиент +
+  обводка) как плейсхолдер — заменяется реальным артом тем же путём/размером.
+
+`ClientEvents.onTitleScreenInit` (`ScreenEvent.Init.Post`, игровая шина):
+- удаляет кнопки Realms (`menu.online`) и копирайт (`title.credits`) — скан
+  `getListenersList()` по ключу `TranslatableContents`, `event.removeListener(...)`;
+- закрывает дыру: все виджеты с `getY() >= realmsY` сдвигаются вверх на 24 px.
+- ⚠️ Грабли: **НЕ `@Shadow Screen.removeWidget`** в миксине — на унаследованный
+  метод шадоу не подцепился (`InvalidMixinException: ... was not located`, краш на
+  старте). Штатное `ScreenEvent.Init.Post` (даёт `removeListener`) — надёжнее.
+- `TitleScreen` грузится сразу — миксин НЕ ленивый; после правок нужен `runClient`.
+
+### Серверная проверка модов клиента (2026-06-20)
+
+Анти-чит белый список: сервер кикает игрока, если у того есть моды вне
+разрешённого набора. Реализовано на хендшейке NeoForge 1.21 (config-фаза):
+
+- `ModWhitelistConfigurationTask` (`ICustomConfigurationTask`) регистрируется на
+  каждое подключение через `RegisterConfigurationTasksEvent` (шина мода,
+  `ModWhitelist.onRegisterConfigurationTasks`). При запуске шлёт клиенту
+  `ModCheckRequestPayload` и НЕ завершается сразу.
+- Клиент (config-обработчик `ModCheckRequestPayload`) отвечает
+  `ModListReplyPayload` со списком своих `ModList.get().getMods()`.
+- Сервер (`ModWhitelist.validateAndProceed`, `enqueueWork`) сверяет с разрешённым
+  набором = **моды сервера ∪ `extraAllowedMods`** (конфиг). Лишние моды →
+  `context.disconnect(...)`; иначе `context.finishCurrentTask(TYPE)`.
+- Пэйлоады зарегистрированы `configurationToClient`/`configurationToServer`,
+  **обязательные** (не `optional`) — ванильные/не-Neo и Neo-без-нашего-мода
+  клиенты отсекаются хендшейком NeoForge ещё до проверки.
+- Конфиг (SERVER): `modCheck.enabled`, `modCheck.extraAllowedMods`.
+- ⚠️ Список модов сообщает сам клиент — защита от честных/казуальных клиентов,
+  не от глубоко модифицированных. finishCurrentTask/disconnect — в config-фазе,
+  на главном потоке (`enqueueWork`).
+- Грабли API: `IPayloadContext.finishCurrentTask` бросает вне config-фазы;
+  config-пэйлоады используют `FriendlyByteBuf`-кодеки (не `RegistryFriendlyByteBuf` —
+  в config-фазе нет доступа к реестрам).
+
 ### Пострелизный ретест миграции 1.21 (2026-06-19) — фиксы
 
 - **Замыленные экраны (K / выбор спец.).** В 1.21 `Screen.render` САМ вызывает

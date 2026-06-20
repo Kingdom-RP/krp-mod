@@ -17,5 +17,12 @@ public class NetworkHandler {
                 XPGainPacket::handle);
         registrar.playToServer(ChooseSpecializationPacket.TYPE, ChooseSpecializationPacket.STREAM_CODEC,
                 ChooseSpecializationPacket::handle);
+
+        // Проверка модов клиента (config-фаза). Пэйлоады обязательные (не optional) —
+        // ванильные/не-Neo клиенты отсекаются хендшейком ещё до проверки.
+        registrar.configurationToClient(ModCheckRequestPayload.TYPE, ModCheckRequestPayload.STREAM_CODEC,
+                ModCheckRequestPayload::handle);
+        registrar.configurationToServer(ModListReplyPayload.TYPE, ModListReplyPayload.STREAM_CODEC,
+                ModListReplyPayload::handle);
     }
 }

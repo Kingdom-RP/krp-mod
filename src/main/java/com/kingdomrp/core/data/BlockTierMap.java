@@ -37,15 +37,14 @@ public class BlockTierMap {
                 Blocks.NETHER_QUARTZ_ORE, Blocks.NETHER_GOLD_ORE,
                 Blocks.ANCIENT_DEBRIS);
 
-        // Лесоруб — уровень 2: джунгли, акация, тёмный дуб
-        register(new BlockTierEntry(Spec.LUMBERJACK, 2),
-                Blocks.JUNGLE_LOG, Blocks.ACACIA_LOG, Blocks.DARK_OAK_LOG);
+        // Лесоруб — ВСЕ оверворлд-деревья доступны с ур.0 (тир-гейта нет):
+        // дуб, берёза, ель, джунгли, акация, тёмный дуб, мангровое, вишня. Иначе
+        // игрок, заспавнившийся в биоме с «специфичным» деревом (саванна — только
+        // акация, болото — мангровое и т.п.), не мог бы добыть древесину вообще.
+        // XP за них всё равно начисляется (BlockXPMap, путь Добыча).
 
-        // Лесоруб — уровень 4: мангровое, вишня
-        register(new BlockTierEntry(Spec.LUMBERJACK, 4),
-                Blocks.MANGROVE_LOG, Blocks.CHERRY_LOG);
-
-        // Лесоруб — уровень 6: незер, грибы
+        // Лесоруб — уровень 6: незер-стебли и гигантские грибы (НЕ деревья
+        // спавн-биома; требуют похода в Нижний/особых условий) — гейт сохранён.
         register(new BlockTierEntry(Spec.LUMBERJACK, 6),
                 Blocks.CRIMSON_STEM, Blocks.WARPED_STEM,
                 Blocks.BROWN_MUSHROOM_BLOCK, Blocks.RED_MUSHROOM_BLOCK,
