@@ -810,6 +810,27 @@ public static void onBlockBreak(BlockEvent.BreakEvent event) {
   оставлен только на незер-стеблях и гигантских грибах (ур.6). XP за все логи
   начисляется как прежде (`BlockXPMap`, путь Добыча).
 
+### Анти-грифинг к релизу (2026-06-20)
+
+- **Жёсткий бан крафта** (`BannedCraftMap` + `RestrictionSystem.isCraftBanned`,
+  конфиг `antiGrief.craftBanEnabled`): TNT, вагонетка с TNT, кристалл Энда,
+  воронка + вагонетка с воронкой, observer, поршень/липкий поршень, раздатчик,
+  выбрасыватель. Проверяется в `isCraftBlocked` ПЕРЕД спец-гейтом, поэтому
+  работает независимо от `RESTRICTIONS_ENABLED`; блокировка изъятия — тот же
+  `SlotMixin.mayPickup`. Сообщение «крафт отключён на сервере».
+- **Закрыт Энд** (`RestrictionSystem.onTravelToDimension`,
+  `EntityTravelToDimensionEvent`, конфиг `antiGrief.closeEnd`): отменяем телепорт,
+  если `getDimension() == Level.END`. Покрывает портал и любой телепорт в Энд.
+
+### Команды /krp: путь по названию + цель-игрок (2026-06-20)
+
+- Аргумент пути теперь **название** (`craft`/`harvest`/`mining`/`war`/`magic`) с
+  автодополнением; индекс 0–4 тоже принимается (`KRPCommand.parsePath`).
+- У `addxp`/`setlevel`/`reset`/`stats`/`debug` — опциональный аргумент `target`
+  (`EntityArgument.player`): действие над другим игроком. Цель-не-себя и модиф.
+  команды требуют `permission(2)`. `resolveTarget` берёт `target` либо отправителя.
+- Вывод `stats`/`debug` идёт через `sendSuccess` (видно и при цели-игроке/консоли).
+
 ### Кастомизация главного меню (2026-06-20)
 
 Две части — рендер через миксин, виджеты через событие:
