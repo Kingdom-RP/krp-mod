@@ -17,6 +17,10 @@ on:
     branches: [main]
     tags: ["v*"]
   workflow_dispatch:
+  # Пересборка по событию из krp-modpack (новый/обновлённый Release с модами).
+  # Шлёт его workflow notify.yml в krp-modpack через repository_dispatch.
+  repository_dispatch:
+    types: [modpack-updated]
 
 permissions:
   contents: read
@@ -30,6 +34,9 @@ concurrency:
 env:
   # Адрес Pages организации Kingdom-RP (поддомен — имя владельца, в нижнем регистре).
   BASE_URL: https://kingdom-rp.github.io/krp-mod
+  # Источник сторонних модов: Release этого репо krp-modpack.
+  MODS_REPO: Kingdom-RP/krp-modpack
+  MODS_TAG: v1
 
 jobs:
   build:
@@ -75,13 +82,19 @@ jobs:
             Select-Object -First 1
           "path=$($jar.FullName)" >> $env:GITHUB_OUTPUT
 
-      - name: Build dist (NeoForge + mod + JRE + manifest)
+      - name: Build dist (NeoForge + mod + JRE + сторонние моды + manifest)
         shell: bash
         working-directory: krp-launcher
+        env:
+          # Токен для GitHub API сборщика (список ассетов Release krp-modpack) —
+          # снимает лимит анонимных запросов.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cargo run --manifest-path builder/Cargo.toml --release -- \
             --base-url "$BASE_URL" \
             --mod-jar "${{ steps.jar.outputs.path }}" \
+            --mods-release "$MODS_REPO" \
+            --mods-tag "$MODS_TAG" \
             --version "1.0.${{ github.run_number }}" \
             --out "${{ github.workspace }}/dist"
 
