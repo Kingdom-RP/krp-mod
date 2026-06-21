@@ -28,6 +28,10 @@ public class KRPConfig {
     public static final ModConfigSpec.BooleanValue MOD_CHECK_ENABLED;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> MOD_WHITELIST_EXTRA;
 
+    // Анти-грифинг
+    public static final ModConfigSpec.BooleanValue ANTIGRIEF_CRAFT_BAN;
+    public static final ModConfigSpec.BooleanValue ANTIGRIEF_CLOSE_END;
+
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
 
@@ -76,6 +80,16 @@ public class KRPConfig {
                         "(клиентские моды: миникарта, шейдеры и т.п.). Пример: [\"journeymap\", \"iris\"]")
                 .defineListAllowEmpty("extraAllowedMods", List.of(),
                         o -> o instanceof String);
+        builder.pop();
+
+        builder.comment("Анти-грифинг (на время релиза).").push("antiGrief");
+        ANTIGRIEF_CRAFT_BAN = builder
+                .comment("Запретить крафт грифинг/лаг-предметов (TNT, вагонетка с TNT, кристалл Энда,",
+                        "воронки и вагонетка с воронкой, observer, поршни, раздатчик, выбрасыватель)")
+                .define("craftBanEnabled", true);
+        ANTIGRIEF_CLOSE_END = builder
+                .comment("Закрыть доступ в измерение Энд (отмена телепорта в Энд)")
+                .define("closeEnd", true);
         builder.pop();
 
         SPEC = builder.build();

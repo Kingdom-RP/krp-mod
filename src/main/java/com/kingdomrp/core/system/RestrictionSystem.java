@@ -3,9 +3,11 @@ package com.kingdomrp.core.system;
 import com.kingdomrp.core.KingdomRPCore;
 import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.config.KRPConfig;
+import com.kingdomrp.core.data.BannedCraftMap;
 import com.kingdomrp.core.data.ItemCraftTierMap;
 import com.kingdomrp.core.data.ItemUseTierMap;
 import com.kingdomrp.core.data.SpecRequirement;
+import net.minecraft.world.level.Level;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -73,6 +75,19 @@ public class RestrictionSystem {
         }
     }
 
+    /** Анти-грифинг: закрываем доступ в Энд — отменяем телепорт в это измерение. */
+    @SubscribeEvent
+    public static void onTravelToDimension(
+            net.neoforged.neoforge.event.entity.EntityTravelToDimensionEvent event) {
+        if (!KRPConfig.ANTIGRIEF_CLOSE_END.get()) return;
+        if (event.getDimension() != Level.END) return;
+        event.setCanceled(true);
+        if (event.getEntity() instanceof Player player && !player.level().isClientSide()) {
+            player.sendSystemMessage(Component.literal(
+                    "§c[Kingdom RP] Мир Энда временно закрыт."));
+        }
+    }
+
     public static boolean meetsRequirement(Player player, SpecRequirement req) {
         return player.getData(KRPAttachments.PLAYER_DATA)
                 .getSpecializationLevel(req.spec().id) >= req.level();
@@ -108,9 +123,16 @@ public class RestrictionSystem {
 
     private static final long CRAFT_WARN_COOLDOWN_MS = 1500L;
 
-    /** Заблокирован ли крафт предмета по уровню (тир-гейт специализации ИЛИ гейт Повара). */
+    /** Жёсткий бан крафта (анти-грифинг) — независимо от тир-гейта и RESTRICTIONS_ENABLED. */
+    public static boolean isCraftBanned(ItemStack result) {
+        return KRPConfig.ANTIGRIEF_CRAFT_BAN.get() && !result.isEmpty()
+                && BannedCraftMap.isBanned(result.getItem());
+    }
+
+    /** Заблокирован ли крафт предмета (анти-грифинг бан ИЛИ тир-гейт специализации ИЛИ гейт Повара). */
     public static boolean isCraftBlocked(Player player, ItemStack result) {
         if (result.isEmpty()) return false;
+        if (isCraftBanned(result)) return true;
         List<SpecRequirement> reqs = getCraftRequirements(result);
         if (reqs != null) {
             for (SpecRequirement req : reqs) {
@@ -126,6 +148,12 @@ public class RestrictionSystem {
         Long last = CRAFT_WARN.get(player);
         if (last != null && now - last < CRAFT_WARN_COOLDOWN_MS) return;
         CRAFT_WARN.put(player, now);
+
+        if (isCraftBanned(result)) {
+            player.sendSystemMessage(Component.literal(
+                    "§c[Kingdom RP] Крафт этого предмета отключён на сервере (анти-грифинг)."));
+            return;
+        }
 
         List<SpecRequirement> reqs = getCraftRequirements(result);
         if (reqs != null) {
