@@ -18,7 +18,8 @@
     "CraftingResultMixin",
     "FishingHookMixin",
     "FurnaceResultSlotMixin",
-    "AbstractFurnaceMenuMixin"
+    "AbstractFurnaceMenuMixin",
+    "FoodDataMixin"
   ],
   "client": [
     "client.EnchantmentScreenMixin",
