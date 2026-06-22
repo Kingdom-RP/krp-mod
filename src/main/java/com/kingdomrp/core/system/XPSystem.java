@@ -107,6 +107,14 @@ public class XPSystem {
         if (event.isEndConquered()) return;
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
 
+        // Баланс: после смерти возрождаемся с неполным голодом (по умолч. 50%),
+        // без сатурации — еда/Повар становятся важнее. Делается ДО проверки
+        // дебаффа, чтобы работало и при выключенном штрафе к опыту.
+        var food = player.getFoodData();
+        food.setFoodLevel(KRPConfig.RESPAWN_FOOD_LEVEL.get());
+        food.setSaturation(0f);
+        food.setExhaustion(0f);
+
         int duration = KRPConfig.DEATH_PENALTY_DURATION.get();
         if (duration <= 0) return;
 

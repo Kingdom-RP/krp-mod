@@ -32,6 +32,10 @@ public class KRPConfig {
     public static final ModConfigSpec.BooleanValue ANTIGRIEF_CRAFT_BAN;
     public static final ModConfigSpec.BooleanValue ANTIGRIEF_CLOSE_END;
 
+    // Баланс голода (важность Повара и пути Добыча)
+    public static final ModConfigSpec.IntValue RESPAWN_FOOD_LEVEL;
+    public static final ModConfigSpec.DoubleValue EXHAUSTION_MULTIPLIER;
+
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
 
@@ -90,6 +94,15 @@ public class KRPConfig {
         ANTIGRIEF_CLOSE_END = builder
                 .comment("Закрыть доступ в измерение Энд (отмена телепорта в Энд)")
                 .define("closeEnd", true);
+        builder.pop();
+
+        builder.comment("Баланс голода — повышает важность Повара и пути Добыча.").push("balance");
+        RESPAWN_FOOD_LEVEL = builder
+                .comment("Уровень голода после возрождения (0–20; 10 = 50%)")
+                .defineInRange("respawnFoodLevel", 10, 0, 20);
+        EXHAUSTION_MULTIPLIER = builder
+                .comment("Множитель расхода голода за все действия (2.0 = вдвое быстрее)")
+                .defineInRange("exhaustionMultiplier", 2.0, 1.0, 10.0);
         builder.pop();
 
         SPEC = builder.build();

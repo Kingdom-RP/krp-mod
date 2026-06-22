@@ -119,6 +119,11 @@ jobs:
           # Токен для GitHub API сборщика (список ассетов Release krp-modpack) —
           # снимает лимит анонимных запросов.
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Секретный ключ minisign для подписи manifest.json (содержимое .key-файла).
+          # Если секрет не задан — сборщик просто не подпишет манифест (лаунчер тогда
+          # тоже не требует подпись). См. docs/manifest-signing.md в krp-launcher.
+          KRP_MANIFEST_SECRET_KEY: ${{ secrets.KRP_MANIFEST_SECRET_KEY }}
+          KRP_MANIFEST_SECRET_KEY_PASSWORD: ${{ secrets.KRP_MANIFEST_SECRET_KEY_PASSWORD }}
         run: |
           # При попадании в кэш build-work (installer-вывод + JRE уже есть)
           # пропускаем установку NeoForge; при промахе — полная установка.
