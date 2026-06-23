@@ -56,6 +56,12 @@ jobs:
           path: krp-launcher
           # token: ${{ secrets.LAUNCHER_PAT }}   # раскомментировать, если krp-launcher приватный
 
+      - name: Checkout krp-modpack (sides.toml — стороны модов)
+        uses: actions/checkout@v5
+        with:
+          repository: Kingdom-RP/krp-modpack
+          path: krp-modpack
+
       - name: Setup JDK 21 (Temurin)
         uses: actions/setup-java@v5
         with:
@@ -138,6 +144,7 @@ jobs:
             --neoforge "$NEO_VERSION" \
             --mods-release "$MODS_REPO" \
             --mods-tag "$MODS_TAG" \
+            --sides "${{ github.workspace }}/krp-modpack/sides.toml" \
             --version "1.0.${{ github.run_number }}" \
             --out "${{ github.workspace }}/dist" \
             $SKIP_INSTALL
