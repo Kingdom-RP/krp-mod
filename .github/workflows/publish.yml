@@ -27,9 +27,13 @@ permissions:
   pages: write
   id-token: write
 
+# Один деплой Pages за раз. НЕ отменяем текущий (cancel-in-progress: false) —
+# иначе обрыв деплоя на полпути оставляет environment github-pages с подвисшим
+# queued-деплоем, и следующий прогон надолго застревает в "deployment_queued".
+# Параллельные прогоны просто ждут завершения текущего (рекоменд. GitHub для Pages).
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   # Адрес Pages организации Kingdom-RP (поддомен — имя владельца, в нижнем регистре).
