@@ -174,33 +174,34 @@ public class BlockXPMap {
         // XP коррелирует с уровнем доступа (BlockTierMap, Spec.FARMER)
 
         // Ур.0 — стартовые культуры
-        register(new BlockEntry(Path.HARVEST, 2f),
+        // (XP повышен после отмены XP за посадку — награда только за сбор созревшего)
+        register(new BlockEntry(Path.HARVEST, 3f),
                 Blocks.WHEAT, Blocks.SWEET_BERRY_BUSH);
 
         // Ур.1 — корнеплоды, бамбук
-        register(new BlockEntry(Path.HARVEST, 3f),
+        register(new BlockEntry(Path.HARVEST, 4f),
                 Blocks.CARROTS, Blocks.POTATOES);
         register(new BlockEntry(Path.HARVEST, 1f),
                 Blocks.BAMBOO);
 
         // Ур.2 — свёкла, тростник, кактус
-        register(new BlockEntry(Path.HARVEST, 3f),
+        register(new BlockEntry(Path.HARVEST, 4f),
                 Blocks.BEETROOTS);
         register(new BlockEntry(Path.HARVEST, 2f),
                 Blocks.SUGAR_CANE, Blocks.CACTUS);
 
         // Ур.3 — крупные плоды, грибы
-        register(new BlockEntry(Path.HARVEST, 4f),
+        register(new BlockEntry(Path.HARVEST, 5f),
                 Blocks.PUMPKIN, Blocks.MELON);
         register(new BlockEntry(Path.HARVEST, 3f),
                 Blocks.BROWN_MUSHROOM, Blocks.RED_MUSHROOM);
 
         // Ур.4 — какао
-        register(new BlockEntry(Path.HARVEST, 4f),
+        register(new BlockEntry(Path.HARVEST, 5f),
                 Blocks.COCOA);
 
         // Ур.5 — нижний варт
-        register(new BlockEntry(Path.HARVEST, 6f),
+        register(new BlockEntry(Path.HARVEST, 7f),
                 Blocks.NETHER_WART);
 
         // Ур.6 — светящиеся ягоды, грибы Нижнего
