@@ -16,7 +16,6 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 @EventBusSubscriber(modid = KingdomRPCore.MODID, value = Dist.CLIENT)
 public class ClientEvents {
 
-    // 1.21: TickEvent удалён → ClientTickEvent.Post (фаза END уже подразумевается).
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();

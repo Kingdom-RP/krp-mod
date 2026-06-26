@@ -19,9 +19,8 @@ import java.util.List;
  * открыто меню верстака ({@link CraftingMenu}), а не при наведении на предмет в
  * инвентаре, сундуке или где-либо ещё.
  * <p>
- * Вынесена в клиентский класс ({@code Dist.CLIENT}), т.к. нужен доступ к текущему
- * меню ({@code Minecraft.getInstance}); на выделенном сервере не грузится (грабли
- * №0). Требование для НОШЕНИЯ показывается всегда — оно в общем
+ * Клиентский класс ({@code Dist.CLIENT}) — нужен доступ к текущему меню
+ * ({@code Minecraft.getInstance}). Требование для НОШЕНИЯ показывает общий
  * {@code RestrictionSystem.onTooltip}.
  */
 @EventBusSubscriber(modid = KingdomRPCore.MODID, value = Dist.CLIENT)

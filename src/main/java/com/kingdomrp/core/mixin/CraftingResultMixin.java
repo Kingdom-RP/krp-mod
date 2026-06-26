@@ -13,19 +13,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 /**
- * Закалка результата крафта (Кузнец/Мастеровой) применяется при СБОРКЕ результата
- * в слоте, а не на {@code ItemCraftedEvent}.
- * <p>
- * Причина (грабли №15): при shift-click {@code quickMoveStack} перемещает результат
- * в инвентарь отдельным стаком ДО вызова {@code onTake}/{@code ItemCraftedEvent},
- * поэтому правка {@code event.getCrafting()} не доходит до игрока (закалка терялась,
- * предмет выходил на 100%). Если же закалить стак результата в момент его сборки
- * ({@link CraftingMenu#slotChangedCraftingGrid}), то оба пути изъятия — обычный клик
- * и shift-click (через {@code split}/{@code copy}) — берут уже закалённый предмет.
- * Через этот же путь проходит и сетка 2×2 ({@code InventoryMenu} зовёт тот же метод).
- * <p>
- * Закаляем стак ДО {@code ResultContainer.setItem(0, result)} — так клиент получает
- * корректную прочность в превью слота результата.
+ * Закалка результата крафта (Кузнец/Мастеровой) при СБОРКЕ результата в
+ * {@link CraftingMenu#slotChangedCraftingGrid} (ДО {@code ResultContainer.setItem}).
+ * Так оба пути изъятия (клик и shift-click) берут уже закалённый предмет, и превью
+ * слота показывает корректную прочность. Через этот же метод идёт и сетка 2×2.
  */
 @Mixin(value = CraftingMenu.class, remap = false)
 public class CraftingResultMixin {

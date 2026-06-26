@@ -8,12 +8,9 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 /**
- * События жизненного цикла данных игрока. Само хранилище — Data Attachment
- * (см. {@link com.kingdomrp.core.registry.KRPAttachments}): прикрепление и
- * копирование при смерти ({@code copyOnDeath}) делает система аттачментов, ручные
- * обработчики больше не нужны. Здесь — только синк клиенту при входе. Синк на
- * респаун/смену измерения делает {@code SpecializationEffects} (через
- * {@code PacketHelper.syncPlayer}).
+ * Синк данных игрока клиенту при входе. Прикрепление/копирование при смерти —
+ * система Data Attachment ({@link com.kingdomrp.core.registry.KRPAttachments}); синк
+ * на респаун/смену измерения — {@code SpecializationEffects}.
  */
 @EventBusSubscriber(modid = KingdomRPCore.MODID)
 public class PlayerDataEvents {

@@ -7,11 +7,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Заголовок окна игры — «Kingdom RP» вместо ванильного «Minecraft* 1.20.1».
- * <p>
- * {@code Minecraft.createTitle()} формирует строку заголовка; её результат идёт
- * и при создании окна, и в {@code updateTitle()} (вызывается при смене мира и т.п.),
- * поэтому одна точка на {@code RETURN} покрывает все обновления заголовка.
+ * Заголовок окна игры — «Kingdom RP». Инжект на {@code RETURN}
+ * {@code Minecraft.createTitle()} покрывает все обновления заголовка.
  */
 @Mixin(Minecraft.class)
 public class MinecraftTitleMixin {

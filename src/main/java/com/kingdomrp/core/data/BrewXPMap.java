@@ -16,9 +16,7 @@ import java.util.Map;
  * Маппинг XP Алхимика (path {@link Path#MAGIC}) за варку зелья. XP за ШТУКУ
  * полученного зелья (×количество бутылок), по ценности эффекта.
  * <p>
- * 1.21: данные зелья — компонент {@link DataComponents#POTION_CONTENTS}
- * ({@code PotionContents}); эффекты — {@code getAllEffects()}, ключ —
- * {@code Holder<MobEffect>}.
+ * Эффекты зелья — из {@link DataComponents#POTION_CONTENTS}, ключ {@code Holder<MobEffect>}.
  * <ul>
  *   <li>База (awkward/mundane/thick) = 2</li>
  *   <li>T1 (night vision/swiftness/leaping/slow falling/water breathing) = 5</li>

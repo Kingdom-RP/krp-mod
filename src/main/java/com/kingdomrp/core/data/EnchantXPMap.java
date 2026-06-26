@@ -9,9 +9,7 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
  * Маппинг XP Зачарователя (path {@link Path#MAGIC}) за наложенные/применённые чары.
  * XP = baseXP(вес чары) × её уровень, сумма по всем чарам результата.
  * <p>
- * 1.21: {@code Enchantment.Rarity} убрана — тир по ВЕСУ чары
- * ({@code definition().weight()}). Вес ванильных чар совпадает со старыми бакетами
- * редкости, поэтому значения XP сохраняются:
+ * XP по ВЕСУ чары ({@code definition().weight()}):
  * <ul>
  *   <li>вес ≥10 (COMMON) = 3</li>
  *   <li>вес ≥5 (UNCOMMON) = 5</li>

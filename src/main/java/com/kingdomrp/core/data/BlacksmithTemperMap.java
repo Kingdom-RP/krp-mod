@@ -11,11 +11,9 @@ import java.util.Map;
  * ({@code unlock}) и уровень полной прочности ({@code full}). Прочность
  * свежескованного предмета растёт линейно от 50% на {@code unlock} до 100% на
  * {@code full}.
- * <p>
- * Это замена шансу провала крафта: вместо «сгорело/не сгорело» низкоуровневый
- * Кузнец делает рабочий, но менее долговечный предмет. Применяется на крафте
- * (верстак, см. {@code SpecializationEffects.applyBlacksmithTempering}) и на
- * незерит-апгрейде (кузнечный стол, см. {@code SmithingMenuMixin}).
+ * Низкоуровневый Кузнец делает рабочий, но менее долговечный предмет. Применяется
+ * на крафте ({@code SpecializationEffects.applyBlacksmithTempering}) и незерит-
+ * апгрейде ({@code SmithingMenuMixin}).
  */
 public class BlacksmithTemperMap {
 
