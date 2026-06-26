@@ -66,10 +66,8 @@ public class PathScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        // 1.21: Screen.renderBackground блюрит мир позади экрана, и размытая
-        // картинка просвечивает сквозь полупрозрачную панель под текстом (текст
-        // выглядит «замыленным»). Для внутриигрового оверлея блюр не нужен —
-        // затемняем экран простой заливкой.
+        // Затемнение без блюра (блюр renderBackground замыливает текст). См.
+        // переопределённые renderBlurredBackground/renderMenuBackground ниже.
         graphics.fill(0, 0, this.width, this.height, 0xC0101010);
 
         var player = Minecraft.getInstance().player;
@@ -169,9 +167,7 @@ public class PathScreen extends Screen {
     }
 
     // Внутриигровой оверлей: глушим ванильный блюр и фон-текстуру меню. Иначе
-    // Screen.render вызывает renderBackground ПОСЛЕ нашего рендера, и блюр-шейдер
-    // пост-обрабатывает уже нарисованный текст («замыливает» его), а кнопки,
-    // рисующиеся после блюра, остаются чёткими. Затемнение делаем сами в render().
+    // Глушим блюр и фон-текстуру меню (замыливают текст). Затемнение — в render().
     @Override
     protected void renderBlurredBackground(float partialTick) {}
 

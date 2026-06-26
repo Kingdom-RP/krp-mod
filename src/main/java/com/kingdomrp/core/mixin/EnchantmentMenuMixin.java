@@ -109,7 +109,6 @@ public class EnchantmentMenuMixin {
                 .krp$getEnchantmentList(player.registryAccess(), item, buttonId, this.costs[buttonId]);
 
         boolean isBook = item.is(Items.BOOK);
-        // 1.21: EnchantmentInstance.enchantment — это Holder<Enchantment>.
         int required = isBook ? EnchantSystem.BOOK_TABLE_LEVEL : 0;
         for (EnchantmentInstance ei : list) {
             required = Math.max(required, EnchantTierMap.requiredForEnchant(ei.enchantment, ei.level));
@@ -188,8 +187,7 @@ public class EnchantmentMenuMixin {
         // и EnchantmentHelper.setEnchantments писал бы не тот тег).
         if (!krp$wasBook) {
             float boost = level * EnchantSystem.ENCHANT_BOOST_PER_LEVEL;
-            // 1.21: чары — компонент ItemEnchantments (ключ Holder<Enchantment>);
-            // решаем, что усилить, по снимку, применяем через updateEnchantments.
+            // Усиливаем чары по снимку, применяем через updateEnchantments.
             var current = EnchantmentHelper.getEnchantmentsForCrafting(result);
             java.util.Map<net.minecraft.core.Holder<net.minecraft.world.item.enchantment.Enchantment>, Integer> ups =
                     new java.util.HashMap<>();

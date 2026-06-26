@@ -15,18 +15,11 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Зачарователь (path {@link Path#MAGIC}) — извлечение чар на точильном камне.
- * Символический XP за снятые НЕ-проклятые чары (точильный камень снимает только
- * их). Цель — расширить набор действий Зачарователя; XP половинный
- * ({@value EnchantSystem#GRINDSTONE_XP_FRACTION}), чтобы не абузить цикл
- * «зачаровал-снял».
- * <p>
- * Кузнец (path {@link Path#CRAFT}) — XP за ремонт (объединение двух одинаковых
- * предметов в один с суммарной прочностью). XP по материалу ({@link RepairXPMap}).
- * <p>
- * Цель — анонимный класс слота результата {@code GrindstoneMenu$4} (его
- * {@code onTake}); проверено по байткоду 1.20.1 (поле-инициализатор контейнера =
- * $1, поэтому слот результата — $4, а не $3).
+ * XP на точильном камне (слот результата {@code GrindstoneMenu$4.onTake}):
+ * Зачарователь — половинный XP за снятые НЕ-проклятые чары
+ * ({@value EnchantSystem#GRINDSTONE_XP_FRACTION}); Кузнец — XP за ремонт
+ * (объединение двух предметов) по материалу ({@link RepairXPMap}).
+ * ⚠️ Номер анонимного класса ($4) перепроверять по байткоду при обновлениях.
  */
 @Mixin(targets = "net.minecraft.world.inventory.GrindstoneMenu$4", remap = false)
 public class GrindstoneMenuMixin {

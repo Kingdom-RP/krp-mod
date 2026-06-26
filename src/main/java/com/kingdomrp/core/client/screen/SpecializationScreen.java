@@ -89,8 +89,7 @@ public class SpecializationScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        // 1.21: renderBackground блюрит мир — размытие просвечивает сквозь панель
-        // под текстом. Для оверлея затемняем простой заливкой без блюра (как PathScreen).
+        // Затемнение без блюра (см. PathScreen).
         graphics.fill(0, 0, this.width, this.height, 0xC0101010);
 
         int x = (this.width - BG_WIDTH) / 2;
@@ -146,8 +145,7 @@ public class SpecializationScreen extends Screen {
         return player.getData(KRPAttachments.PLAYER_DATA).getSpecializationLevel(specId);
     }
 
-    // Глушим ванильный блюр и фон-текстуру меню (см. PathScreen): блюр-шейдер из
-    // renderBackground (его зовёт Screen.render после нашего рендера) замыливал текст.
+    // Глушим блюр и фон-текстуру меню (см. PathScreen).
     @Override
     protected void renderBlurredBackground(float partialTick) {}
 

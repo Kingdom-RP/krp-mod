@@ -13,16 +13,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Повар: начисление XP за готовку при изъятии готового продукта из печи/коптильни.
- * <p>
- * Гейтинг готовки теперь на ВХОДЕ (см. {@link AbstractFurnaceMenuMixin}), поэтому
- * на выходе ограничений нет — любой продукт в печи был приготовлен из разрешённого
- * сырья, забрать его можно всегда.
- * <p>
- * XP вешаем на {@code checkTakeAchievements} — единую точку всех путей изъятия
- * ({@code onTake} и {@code onQuickCraft}); {@code removeCount} на момент вызова =
- * фактически забранное количество (ваниль обнуляет его сразу после, поэтому
- * повторный вызов в shift-click даёт 0 и не двоит XP).
+ * XP за готовку/плавку при изъятии продукта из печи/коптильни (гейтинг — на входе,
+ * {@link AbstractFurnaceMenuMixin}). Инжект в {@code checkTakeAchievements} — единая
+ * точка всех путей изъятия; {@code removeCount} = фактически забранное количество.
  */
 @Mixin(value = FurnaceResultSlot.class, remap = false)
 public abstract class FurnaceResultSlotMixin {

@@ -18,7 +18,7 @@ public class KingdomRPCore {
     public static final String MODID = "kingdomrpcore";
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    // NeoForge 1.21: конструктор @Mod-класса получает шину мода и ModContainer.
+    // Конструктор @Mod-класса получает шину мода и ModContainer.
     public KingdomRPCore(IEventBus modEventBus, ModContainer modContainer) {
         KRPAttachments.register(modEventBus);
         KRPEffects.register(modEventBus);

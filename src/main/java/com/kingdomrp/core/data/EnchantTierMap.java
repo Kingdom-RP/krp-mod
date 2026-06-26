@@ -10,10 +10,8 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
  * гейтинг ЗАЧАРОВАНИЯ по уровню специализации. Возвращает требуемый уровень для
  * получения данного результата; гейт «не запускать» сравнивает его с уровнем игрока.
  * <p>
- * 1.21: {@code Enchantment.Rarity} убрана — тир считается по ВЕСУ чары
- * ({@code definition().weight()}). Вес ванильных чар совпадает со старыми бакетами
- * редкости (COMMON=10, UNCOMMON=5, RARE=2, VERY_RARE=1), поэтому баланс сохраняется,
- * а модовые чары покрываются автоматически. Проклятия — тег {@link EnchantmentTags#CURSE}.
+ * Тир по ВЕСУ чары ({@code definition().weight()}): вес 10/5/2/1 ≈ бакеты
+ * COMMON/UNCOMMON/RARE/VERY_RARE. Проклятия — тег {@link EnchantmentTags#CURSE}.
  * <ul>
  *   <li>вес ≥5 (COMMON/UNCOMMON) → 0</li>
  *   <li>вес ≥2 (RARE) → 3</li>

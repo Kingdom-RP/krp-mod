@@ -11,23 +11,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Гейт КРАФТА по уровню специализации — блокировка ИЗЪЯТИЯ результата (результат
- * ВИДЕН в слоте, но забрать его нельзя, пока не хватает уровня).
- * <p>
- * Цель — базовый {@link Slot} (его {@code mayPickup} наследует {@link ResultSlot},
- * не переопределяя), guard {@code instanceof ResultSlot} ограничивает гейт слотами
- * результата крафта (верстак + сетка 2×2). Возвращаем {@code false} при
- * {@link RestrictionSystem#isCraftBlocked} → результат нельзя взять НИКАК: все
- * способы изъятия в ванили проходят через {@code Slot.mayPickup}:
- * <ul>
- *   <li>обычный клик / выброс по Q / double-click — через {@code tryRemove};</li>
- *   <li>shift-click — {@code AbstractContainerMenu.doClick} в ветке QUICK_MOVE
- *       проверяет {@code slot.mayPickup(player)} и выходит ДО {@code quickMoveStack},
- *       если он {@code false} (проверено по исходнику 1.20.1);</li>
- *   <li>свап цифрами — там же.</li>
- * </ul>
- * Сообщение в чат — на попытку (троттлится по времени), только на сервере.
- * {@code mayPickup} зовётся лишь при взаимодействии (не в тик/рендер) — спама нет.
+ * Гейт крафта по уровню специализации: результат виден в слоте, но недоступен к
+ * изъятию. Цель — базовый {@link Slot} с guard {@code instanceof ResultSlot};
+ * {@code mayPickup == false} перекрывает все пути изъятия (клик/shift/Q/свап).
+ * Сообщение — только на сервере, троттлится.
  */
 @Mixin(value = Slot.class, remap = false)
 public class SlotMixin {

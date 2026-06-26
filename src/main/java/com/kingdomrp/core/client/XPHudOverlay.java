@@ -23,9 +23,7 @@ import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
  * к следующему уровню. Светло-синяя при обычном начислении, жёлтая при левел-апе
  * (плюс дефолтный звук левел-апа). На экране всегда не больше одной полоски —
  * состояние единое и статическое, каждый новый пакет его перезаписывает.
- * <p>
- * 1.21: GUI-оверлей — слой {@link LayeredDraw.Layer}, регистрируется через
- * {@link RegisterGuiLayersEvent}.
+ * GUI-слой {@link LayeredDraw.Layer}, регистрируется через {@link RegisterGuiLayersEvent}.
  */
 @EventBusSubscriber(modid = KingdomRPCore.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class XPHudOverlay implements LayeredDraw.Layer {

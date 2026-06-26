@@ -10,12 +10,9 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import java.util.function.Supplier;
 
 /**
- * Хранилище данных игрока через систему Data Attachments (1.21 заменила
- * capability). {@link PlayerData} прикрепляется к каждому игроку, сериализуется
- * в NBT и копируется при возрождении ({@code copyOnDeath}). Доступ:
- * {@code player.getData(KRPAttachments.PLAYER_DATA)} (всегда не-null, создаётся
- * лениво), запись — {@code player.setData(...)} (для примитивов мутация на месте
- * + ручной sync-пакет тоже достаточны).
+ * Хранилище данных игрока (Data Attachment). {@link PlayerData} прикрепляется к
+ * игроку, сериализуется в NBT, копируется при смерти ({@code copyOnDeath}). Доступ:
+ * {@code player.getData(PLAYER_DATA)} (не-null, лениво) / {@code setData(...)}.
  */
 public class KRPAttachments {
 

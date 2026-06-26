@@ -15,8 +15,7 @@ public class ClientModEvents {
 
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
-        // GLFW-вызовы — на главном потоке: enqueueWork выполняет работу на нём.
-        // К этому моменту окно уже создано (ваниль ставит свою иконку раньше).
+        // GLFW-вызовы — на главном потоке (enqueueWork); окно уже создано.
         event.enqueueWork(WindowIcon::apply);
     }
 }

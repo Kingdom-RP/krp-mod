@@ -73,8 +73,7 @@ public class MagicSystem {
     // Гейт «не запускать» (вызывается из BrewingStandMixin)
     // ============================================================
 
-    /** Реплика ванильного {@code BrewingStandBlockEntity.isBrewable} (1.21: через
-     *  инстанс {@link PotionBrewing} из {@code level.potionBrewing()}). */
+    /** Реплика {@code BrewingStandBlockEntity.isBrewable} через {@link PotionBrewing}. */
     public static boolean isVanillaBrewable(PotionBrewing brewing, NonNullList<ItemStack> items) {
         ItemStack ingredient = items.get(3);
         if (ingredient.isEmpty() || !brewing.isIngredient(ingredient)) return false;

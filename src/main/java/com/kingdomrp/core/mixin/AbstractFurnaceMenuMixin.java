@@ -13,22 +13,15 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 /**
- * Повар: гейтинг готовки на входе печи/коптильни. Подменяем ванильный слот
- * сырья (индекс 0) на {@link CookGatedInputSlot}, который запрещает класть
- * сырьё с недоступным по уровню результатом выплавки.
+ * Повар: гейтинг готовки на входе печи/коптильни. Слот сырья (индекс 0) подменяем
+ * на {@link CookGatedInputSlot}, запрещающий класть сырьё с недоступным по уровню
+ * результатом. Гейт на входе (не на выходе) убирает софтлок; {@code moveItemStackTo}
+ * уважает {@code mayPlace}, поэтому покрывает и укладку, и shift-click.
  * <p>
- * Гейт на входе (а не на выходе) убирает софтлок печи и обход через её
- * разрушение, а ванильный {@code moveItemStackTo} уважает {@code mayPlace} —
- * поэтому одна проверка покрывает и обычную укладку, и shift-click.
- * <p>
- * Игрока добываем без MixinExtras/{@code @Inject} в конструктор (Mixin запрещает
- * инжект в конструктор, а MixinExtras `@Local` нет на classpath): в конструкторе
- * есть строка {@code this.level = inventory.player.level()} ДО создания слотов —
- * перехватываем чтение поля {@code Inventory.player} и кэшируем игрока в
- * {@code @Unique}-поле. Затем redirect ловит все {@code new Slot(...)}: слоты
- * инвентаря (контейнер {@link Inventory}) оставляем ванильными, единственный
- * не-{@code Inventory} — слот сырья печи — подменяем. Слоты топлива/результата —
- * отдельные классы, под redirect не попадают.
+ * Игрок кэшируется через redirect чтения {@code Inventory.player} в конструкторе
+ * (инжект в конструктор запрещён). Redirect на {@code new Slot(...)} подменяет
+ * единственный не-{@code Inventory} слот — сырьё печи; слоты топлива/результата —
+ * другие классы, не затрагиваются.
  */
 @Mixin(value = AbstractFurnaceMenu.class, remap = false)
 public abstract class AbstractFurnaceMenuMixin {

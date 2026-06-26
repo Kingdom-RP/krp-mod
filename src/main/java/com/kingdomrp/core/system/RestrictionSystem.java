@@ -34,9 +34,7 @@ public class RestrictionSystem {
         if (!meetsRequirement(player, req)) {
             event.setCanceled(true);
             sendRestrictionMessage(player, req);
-            // Клиент предсказал надевание брони по ПКМ — без ресинка остаётся
-            // фантом (визуально надета, в инвентаре "испаряется" при клике).
-            // Принудительно ресинкаем инвентарь (грабли №12).
+            // Ресинк инвентаря: клиент предсказал надевание брони по ПКМ, иначе фантом.
             if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
                 sp.containerMenu.sendAllDataToRemote();
             }

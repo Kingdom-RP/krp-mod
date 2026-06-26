@@ -17,8 +17,7 @@ import java.util.Map;
  * гейтинг ВАРКИ по уровню специализации. Требуемый уровень = максимум из базового
  * уровня эффекта (ключ — {@code Holder<MobEffect>}), модификаторов long(5)/strong(6),
  * splash(7), lingering(9). Turtle Master гейтится по resistance(6). База — ур.0.
- * <p>
- * 1.21: данные зелья — {@link DataComponents#POTION_CONTENTS}.
+ * Данные зелья — из {@link DataComponents#POTION_CONTENTS}.
  */
 public class PotionTierMap {
 
