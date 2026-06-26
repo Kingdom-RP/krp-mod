@@ -296,4 +296,11 @@ public class ItemCraftTierMap {
     public static List<SpecRequirement> get(Item item) {
         return MAP.get(item);
     }
+
+    /** Регистрация крафт-гейта по ID (мод-совместимость). No-op если предмета нет. */
+    public static void addById(String id, SpecRequirement... reqs) {
+        net.minecraft.core.registries.BuiltInRegistries.ITEM
+                .getOptional(net.minecraft.resources.ResourceLocation.parse(id))
+                .ifPresent(it -> MAP.put(it, List.of(reqs)));
+    }
 }

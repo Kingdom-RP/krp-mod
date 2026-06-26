@@ -80,4 +80,14 @@ public class PlantTierMap {
     public static boolean isGrowable(Block block) {
         return GROWABLE.contains(block);
     }
+
+    /** Регистрация культуры по ID (мод-совместимость, напр. Farmer's Delight). No-op если блока нет. */
+    public static void addById(String id, int level, float xp, boolean growableFlag) {
+        net.minecraft.core.registries.BuiltInRegistries.BLOCK
+                .getOptional(net.minecraft.resources.ResourceLocation.parse(id))
+                .ifPresent(b -> {
+                    MAP.put(b, new PlantEntry(Spec.FARMER, level, xp));
+                    if (growableFlag) GROWABLE.add(b);
+                });
+    }
 }

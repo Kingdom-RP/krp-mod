@@ -1,5 +1,7 @@
 package com.kingdomrp.core.data;
 
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
@@ -98,5 +100,11 @@ public class BlockTierMap {
 
     public static BlockTierEntry get(Block block) {
         return MAP.get(block);
+    }
+
+    /** Регистрация блока по ID (мод-совместимость, напр. Farmer's Delight). No-op если блок отсутствует. */
+    public static void addById(String id, Spec spec, int level) {
+        BuiltInRegistries.BLOCK.getOptional(ResourceLocation.parse(id))
+                .ifPresent(b -> MAP.put(b, new BlockTierEntry(spec, level)));
     }
 }

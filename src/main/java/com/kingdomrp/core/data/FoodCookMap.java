@@ -43,4 +43,11 @@ public class FoodCookMap {
     public static float get(Item item) {
         return MAP.getOrDefault(item, 0f);
     }
+
+    /** Регистрация XP за готовку по ID (мод-совместимость). No-op если предмета нет. */
+    public static void addById(String id, float xp) {
+        net.minecraft.core.registries.BuiltInRegistries.ITEM
+                .getOptional(net.minecraft.resources.ResourceLocation.parse(id))
+                .ifPresent(it -> MAP.put(it, xp));
+    }
 }

@@ -14,6 +14,11 @@ logoFile="logo.png"
 [[mixins]]
 config="${mod_id}.mixins.json"
 
+# Опциональная совместимость с Farmer's Delight (применяется только если мод
+# загружен — см. FDMixinPlugin). Без FD мизины не применяются и не падают.
+[[mixins]]
+config="${mod_id}.farmersdelight.mixins.json"
+
 [[dependencies.${mod_id}]]
     modId="neoforge"
     type="required"

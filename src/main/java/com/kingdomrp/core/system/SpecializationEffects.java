@@ -102,11 +102,8 @@ public class SpecializationEffects {
         checkCarpenterBatch(player, result);
         checkCraftsmanEconomy(player, result, event.getInventory());
         checkCraftsmanBatch(player, result);
-        // Закалка (Кузнец/Мастеровой) НЕ здесь: ItemCraftedEvent для shift-click
-        // срабатывает уже ПОСЛЕ перемещения результата в инвентарь отдельным стаком
-        // (грабли №15) — модификация result не доходит до игрока. Закалка применяется
-        // при СБОРКЕ результата в слоте (CraftingResultMixin → applyTemperingToCraftResult),
-        // поэтому оба пути изъятия (клик и shift) берут уже закалённый предмет.
+        // Закалка — не здесь, а при сборке результата (CraftingResultMixin):
+        // ItemCraftedEvent при shift-click срабатывает уже после перемещения стака.
     }
 
     @SubscribeEvent
@@ -231,10 +228,8 @@ public class SpecializationEffects {
         // 1 XP за применение костной муки (путь Промысел, не зависит от спеца)
         XPSystem.giveXP(player, Path.HARVEST, 1f);
 
-        // Усиленная костная мука: +level доп. применений костной муки поверх
-        // ванильного. Ваниль на культурах уже даёт +2..5 стадий за клик, поэтому
-        // /2 было почти незаметно — берём полный уровень: ур.10 мгновенно
-        // доводит до спелости почти любое растение, ур.1 ≈ удвоенный эффект.
+        // Усиленная костная мука: +level доп. применений за клик (ур.10 ≈ мгновенная
+        // спелость почти любого растения, ур.1 ≈ удвоенный эффект).
         withData(player, data -> {
             int farmerLevel = data.getSpecializationLevel(Spec.FARMER.id);
             if (farmerLevel <= 0) return;
@@ -408,7 +403,7 @@ public class SpecializationEffects {
                                     BlockPos pos, BlockEvent.BreakEvent event) {
         BlockEntry entry = BlockXPMap.get(block);
         if (entry == null || entry.path() != Path.HARVEST) return;
-        if (block instanceof CropBlock crop && !crop.isMaxAge(event.getState())) return;
+        if (XPSystem.isImmatureCrop(event.getState())) return;
 
         withData(player, data -> {
             int farmerLevel = data.getSpecializationLevel(Spec.FARMER.id);
@@ -542,9 +537,8 @@ public class SpecializationEffects {
         });
     }
 
-    // Применяется при СБОРКЕ результата крафта в слоте (CraftingResultMixin),
-    // ДО изъятия — поэтому работает и для обычного клика, и для shift-click
-    // (см. грабли №15). Закаляет и металл (Кузнец), и натуральную броню (Мастеровой).
+    // Вызывается при сборке результата крафта (CraftingResultMixin), до изъятия.
+    // Закаляет металл (Кузнец) и натуральную броню (Мастеровой).
     public static void applyTemperingToCraftResult(Player player, ItemStack result) {
         if (player == null || result == null || result.isEmpty()) return;
         applyBlacksmithTempering(player, result);
@@ -665,8 +659,7 @@ public class SpecializationEffects {
     // Строительный размах: бонус дальности блоков. Ур.5 = +1, ур.10 = +2
     // (линейно +0.2/уровень от 5). Transient-модификатор — переустанавливается
     // при синке/респавне/смене измерения (атрибуты сбрасываются у нового entity).
-    // 1.21: AttributeModifier теперь по ResourceLocation (не UUID+имя);
-    // дальность блоков — ванильный атрибут BLOCK_INTERACTION_RANGE.
+    // Дальность блоков Плотника — модификатор атрибута BLOCK_INTERACTION_RANGE.
     private static final net.minecraft.resources.ResourceLocation CARPENTER_REACH_ID =
             net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(KingdomRPCore.MODID, "carpenter_reach");
 

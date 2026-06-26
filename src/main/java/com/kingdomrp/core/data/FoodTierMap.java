@@ -64,4 +64,11 @@ public class FoodTierMap {
     public static FoodTierEntry get(Item item) {
         return MAP.get(item);
     }
+
+    /** Регистрация еды по ID (мод-совместимость, напр. Farmer's Delight). No-op если предмета нет. */
+    public static void addById(String id, Spec spec, int level) {
+        net.minecraft.core.registries.BuiltInRegistries.ITEM
+                .getOptional(net.minecraft.resources.ResourceLocation.parse(id))
+                .ifPresent(it -> MAP.put(it, new FoodTierEntry(spec, level)));
+    }
 }
