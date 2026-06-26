@@ -60,9 +60,8 @@ public class XPSystem {
         Player player = event.getPlayer();
         if (player.level().isClientSide()) return;
 
-        // Гейт тира (SpecializationEffects.checkTierRestriction, приоритет HIGH)
-        // отменяет событие, если уровень недостаточен. За запрещённую добычу XP
-        // не положен — выходим. Гейт гарантированно выполняется раньше (приоритет).
+        // Гейт тира (SpecializationEffects, приоритет HIGH) отменяет событие при
+        // нехватке уровня — за запрещённую добычу XP не даём.
         if (event.isCanceled()) return;
 
         // Не даём XP за поставленные игроком блоки
@@ -77,12 +76,29 @@ public class XPSystem {
         // Недозрелый урожай XP не даёт (как и двойной дроп Фермера, см.
         // SpecializationEffects.checkFarmer). Иначе можно фармить опыт, ломая
         // ростки сразу после посадки.
-        if (event.getState().getBlock() instanceof net.minecraft.world.level.block.CropBlock crop
-                && !crop.isMaxAge(event.getState())) {
-            return;
-        }
+        if (isImmatureCrop(event.getState())) return;
 
         giveXP(player, entry.path(), entry.xpReward());
+    }
+
+    /**
+     * Незрелая ли культура. Ванильные {@code CropBlock} — по {@code isMaxAge};
+     * модовые культуры (Farmer's Delight и др.) — обобщённо по свойству-целому
+     * {@code age} (не на максимуме). Если свойства возраста нет — считаем зрелым.
+     */
+    public static boolean isImmatureCrop(net.minecraft.world.level.block.state.BlockState state) {
+        if (state.getBlock() instanceof net.minecraft.world.level.block.CropBlock crop) {
+            return !crop.isMaxAge(state);
+        }
+        for (var prop : state.getProperties()) {
+            if (prop instanceof net.minecraft.world.level.block.state.properties.IntegerProperty ageProp
+                    && "age".equals(prop.getName())) {
+                int value = state.getValue(ageProp);
+                int max = ageProp.getPossibleValues().stream().mapToInt(Integer::intValue).max().orElse(value);
+                return value < max;
+            }
+        }
+        return false;
     }
 
     @SubscribeEvent
@@ -97,19 +113,13 @@ public class XPSystem {
         giveXP(player, entry.path(), entry.xpReward());
     }
 
-    /**
-     * Дебафф к опыту после смерти. Накладывается при возрождении (не при выходе
-     * из Энда). Список curative-items очищается → молоко его не снимает, но все
-     * ванильные эффекты молоко убирает как обычно.
-     */
+    /** Дебафф к опыту + неполный голод при возрождении (не при выходе из Энда). */
     @SubscribeEvent
     public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
         if (event.isEndConquered()) return;
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
 
-        // Баланс: после смерти возрождаемся с неполным голодом (по умолч. 50%),
-        // без сатурации — еда/Повар становятся важнее. Делается ДО проверки
-        // дебаффа, чтобы работало и при выключенном штрафе к опыту.
+        // Неполный голод после смерти (по умолч. 50%), без сатурации.
         var food = player.getFoodData();
         food.setFoodLevel(KRPConfig.RESPAWN_FOOD_LEVEL.get());
         food.setSaturation(0f);
@@ -123,13 +133,7 @@ public class XPSystem {
         player.addEffect(inst);
     }
 
-    /**
-     * 1.21: {@code MobEffectInstance.getCurativeItems()} удалён, лечение идёт через
-     * систему {@link net.neoforged.neoforge.common.EffectCure}. Молоко снимает
-     * эффекты с {@link net.neoforged.neoforge.common.EffectCures#MILK}. Отменяем
-     * удаление штрафа к опыту именно молоком — дебафф должен дожить до истечения
-     * (воспроизводит поведение 1.20.1, где curative-items очищался).
-     */
+    /** Молоко ({@code EffectCures.MILK}) НЕ снимает штраф к опыту — отменяем удаление. */
     @SubscribeEvent
     public static void onEffectRemove(net.neoforged.neoforge.event.entity.living.MobEffectEvent.Remove event) {
         if (event.getEffect() != KRPEffects.DEATH_XP_PENALTY) return;

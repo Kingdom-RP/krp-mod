@@ -286,4 +286,11 @@ public class BlockXPMap {
     public static BlockEntry get(Block block) {
         return MAP.get(block);
     }
+
+    /** Регистрация блока по ID (мод-совместимость). No-op если блок отсутствует. */
+    public static void addById(String id, Path path, float xp) {
+        net.minecraft.core.registries.BuiltInRegistries.BLOCK
+                .getOptional(net.minecraft.resources.ResourceLocation.parse(id))
+                .ifPresent(b -> MAP.put(b, new BlockEntry(path, xp)));
+    }
 }
