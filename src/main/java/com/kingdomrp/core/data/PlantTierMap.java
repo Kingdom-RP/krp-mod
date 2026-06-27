@@ -3,13 +3,14 @@ package com.kingdomrp.core.data;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * Гейтинг ПОСАДКИ растений по уровню Фермера + XP за посадку.
+ * Гейтинг ПОСАДКИ растений по уровню Фермера (XP за посадку не выдаётся).
  * Ключ — блок, который появляется в мире при посадке (результат EntityPlaceEvent).
  *
  * GROWABLE — культуры, которые ОБЯЗАНЫ вырасти перед сбором. Их клетки НЕ
@@ -25,34 +26,34 @@ public class PlantTierMap {
 
     static {
         // Ур.0 — стартовые культуры
-        plant(0, 0.5f, Blocks.WHEAT, Blocks.SWEET_BERRY_BUSH);
+        plant(0, Blocks.WHEAT, Blocks.SWEET_BERRY_BUSH);
 
         // Ур.1 — корнеплоды, бамбук
-        plant(1, 0.5f, Blocks.CARROTS, Blocks.POTATOES,
+        plant(1, Blocks.CARROTS, Blocks.POTATOES,
                 Blocks.BAMBOO_SAPLING, Blocks.BAMBOO);
 
         // Ур.2 — свёкла, тростник, кактус
-        plant(2, 0.5f, Blocks.BEETROOTS, Blocks.SUGAR_CANE, Blocks.CACTUS);
+        plant(2, Blocks.BEETROOTS, Blocks.SUGAR_CANE, Blocks.CACTUS);
 
         // Ур.3 — крупные плоды (стебли), грибы
-        plant(3, 0.7f, Blocks.PUMPKIN_STEM, Blocks.MELON_STEM,
+        plant(3, Blocks.PUMPKIN_STEM, Blocks.MELON_STEM,
                 Blocks.BROWN_MUSHROOM, Blocks.RED_MUSHROOM);
 
         // Ур.4 — какао
-        plant(4, 0.7f, Blocks.COCOA);
+        plant(4, Blocks.COCOA);
 
         // Ур.5 — нижний варт
-        plant(5, 1f, Blocks.NETHER_WART);
+        plant(5, Blocks.NETHER_WART);
 
         // Ур.6 — светящиеся ягоды, грибы Нижнего
-        plant(6, 1f, Blocks.CAVE_VINES, Blocks.CAVE_VINES_PLANT,
+        plant(6, Blocks.CAVE_VINES, Blocks.CAVE_VINES_PLANT,
                 Blocks.CRIMSON_FUNGUS, Blocks.WARPED_FUNGUS);
 
         // Ур.7 — торчфлауэр
-        plant(7, 1.5f, Blocks.TORCHFLOWER_CROP);
+        plant(7, Blocks.TORCHFLOWER_CROP);
 
         // Ур.8 — pitcher plant
-        plant(8, 1.5f, Blocks.PITCHER_CROP);
+        plant(8, Blocks.PITCHER_CROP);
 
         // Растущие культуры — исключаются из PlacedBlockTracker
         growable(Blocks.WHEAT, Blocks.CARROTS, Blocks.POTATOES, Blocks.BEETROOTS,
@@ -61,16 +62,14 @@ public class PlantTierMap {
                 Blocks.TORCHFLOWER_CROP, Blocks.PITCHER_CROP);
     }
 
-    private static void plant(int level, float xp, Block... blocks) {
+    private static void plant(int level, Block... blocks) {
         for (Block b : blocks) {
-            MAP.put(b, new PlantEntry(Spec.FARMER, level, xp));
+            MAP.put(b, new PlantEntry(Spec.FARMER, level));
         }
     }
 
     private static void growable(Block... blocks) {
-        for (Block b : blocks) {
-            GROWABLE.add(b);
-        }
+        Collections.addAll(GROWABLE, blocks);
     }
 
     public static PlantEntry get(Block block) {
@@ -82,11 +81,11 @@ public class PlantTierMap {
     }
 
     /** Регистрация культуры по ID (мод-совместимость, напр. Farmer's Delight). No-op если блока нет. */
-    public static void addById(String id, int level, float xp, boolean growableFlag) {
+    public static void addById(String id, int level, boolean growableFlag) {
         net.minecraft.core.registries.BuiltInRegistries.BLOCK
                 .getOptional(net.minecraft.resources.ResourceLocation.parse(id))
                 .ifPresent(b -> {
-                    MAP.put(b, new PlantEntry(Spec.FARMER, level, xp));
+                    MAP.put(b, new PlantEntry(Spec.FARMER, level));
                     if (growableFlag) GROWABLE.add(b);
                 });
     }

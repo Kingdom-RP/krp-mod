@@ -1,6 +1,5 @@
 package com.kingdomrp.core.data;
 
-import com.kingdomrp.core.capability.PlayerData;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 

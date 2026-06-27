@@ -2,7 +2,6 @@ package com.kingdomrp.core.capability;
 
 import com.kingdomrp.core.config.KRPConfig;
 import com.kingdomrp.core.data.Path;
-import com.kingdomrp.core.data.Spec;
 import com.kingdomrp.core.specialization.SpecializationRegistry;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;

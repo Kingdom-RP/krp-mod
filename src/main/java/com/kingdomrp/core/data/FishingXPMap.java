@@ -3,6 +3,7 @@ package com.kingdomrp.core.data;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -39,7 +40,7 @@ public class FishingXPMap {
     }
 
     private static void register(Set<Item> set, Item... items) {
-        for (Item item : items) set.add(item);
+        Collections.addAll(set, items);
     }
 
     /** XP за конкретный предмет улова. */

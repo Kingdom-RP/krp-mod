@@ -8,29 +8,31 @@ import java.util.Map;
 
 /**
  * Маппинг опыта за ГОТОВКУ (термообработку) еды для пути Промысел
- * (специализация Повар). Ключ — результат готовки в печи/коптильне/костре.
- * XP начисляется за штуку готового продукта (× количество при изъятии).
+ * (специализация Повар). Ключ — результат готовки в печи/коптильне/костре/котелке.
+ * XP за штуку × количество при изъятии.
  * <p>
- * Тиры по пищевой ценности: базовое (1) &lt; рыба (2) &lt; мясо (3) &lt;
- * жирное мясо (4). XP за готовку намеренно ниже, чем за крафт составных
- * блюд (см. {@link ItemCraftMap}) — готовка масштабируется количеством.
+ * Шкала единая с Farmer's Delight и кривой уровней — геометрическая
+ * {@link #CURVE}× за тир (см. {@link #xpForTier}). Тир — по {@link FoodTierMap}.
  */
 public class FoodCookMap {
+
+    /** Рост XP за тир — как кривая уровней (baseXP × curve^level). */
+    private static final double CURVE = 1.5;
 
     private static final Map<Item, Float> MAP = new HashMap<>();
 
     static {
-        // Базовое
-        register(1f, Items.DRIED_KELP, Items.BAKED_POTATO);
+        register(xpForTier(0), Items.DRIED_KELP);
+        register(xpForTier(1), Items.BAKED_POTATO, Items.COOKED_COD, Items.COOKED_RABBIT);
+        register(xpForTier(2), Items.COOKED_CHICKEN);
+        register(xpForTier(3), Items.COOKED_SALMON, Items.COOKED_MUTTON);
+        register(xpForTier(4), Items.COOKED_BEEF, Items.COOKED_PORKCHOP);
+    }
 
-        // Рыба
-        register(2f, Items.COOKED_COD, Items.COOKED_SALMON);
-
-        // Мясо
-        register(3f, Items.COOKED_CHICKEN, Items.COOKED_RABBIT, Items.COOKED_MUTTON);
-
-        // Жирное мясо
-        register(4f, Items.COOKED_BEEF, Items.COOKED_PORKCHOP);
+    /** XP за готовку для тира: тир0 = 1, далее 2 × {@link #CURVE}^(тир−1) (дробное). */
+    public static float xpForTier(int tier) {
+        if (tier <= 0) return 1f;
+        return (float) (2 * Math.pow(CURVE, tier - 1));
     }
 
     private static void register(float xp, Item... items) {

@@ -25,8 +25,7 @@ public class ItemCombinerMenuMixin {
     @Inject(method = "quickMoveStack", at = @At("HEAD"), cancellable = true, remap = false)
     private void krp$blockBookApplyShiftTake(Player player, int index,
                                              CallbackInfoReturnable<ItemStack> cir) {
-        if (!((Object) this instanceof AnvilMenu)) return;
-        ItemCombinerMenu self = (ItemCombinerMenu) (Object) this;
+        if (!((Object) this instanceof AnvilMenu self)) return;
         if (index != self.getResultSlot()) return;
 
         Container inputs = ((ItemCombinerMenuAccessor) (Object) this).getInputSlots();

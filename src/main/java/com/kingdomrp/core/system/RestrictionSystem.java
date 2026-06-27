@@ -52,6 +52,51 @@ public class RestrictionSystem {
                     "§7Требует: §e" + XPSystem.getSpecName(useReq.spec().id) + " §7ур. §f" + useReq.level()
             ));
         }
+
+        // F3+H (advanced): показываем ВСЕ настроенные ограничения предмета.
+        if (event.getFlags().isAdvanced()) {
+            addAdvancedRestrictions(event.getItemStack(), event.getToolTip());
+        }
+    }
+
+    /** Полный список ограничений предмета из всех карт (для advanced-тултипа). */
+    private static void addAdvancedRestrictions(ItemStack stack, List<Component> tip) {
+        var item = stack.getItem();
+        List<String> lines = new java.util.ArrayList<>();
+
+        if (com.kingdomrp.core.data.BannedCraftMap.isBanned(item)) {
+            lines.add("§cкрафт запрещён (анти-грифинг)");
+        }
+        List<SpecRequirement> craft = ItemCraftTierMap.get(item);
+        if (craft != null) {
+            StringBuilder sb = new StringBuilder("крафт: ");
+            for (int i = 0; i < craft.size(); i++) {
+                SpecRequirement r = craft.get(i);
+                if (i > 0) sb.append(", ");
+                sb.append(XPSystem.getSpecName(r.spec().id)).append(" ур.").append(r.level());
+            }
+            lines.add(sb.toString());
+        }
+        SpecRequirement use = ItemUseTierMap.get(item);
+        if (use != null) lines.add("ношение: " + XPSystem.getSpecName(use.spec().id) + " ур." + use.level());
+
+        var food = com.kingdomrp.core.data.FoodTierMap.get(item);
+        if (food != null) lines.add("еда (произв.): " + XPSystem.getSpecName(food.spec().id) + " ур." + food.level());
+
+        SpecRequirement smelt = com.kingdomrp.core.data.SmeltTierMap.get(item);
+        if (smelt != null) lines.add("переплавка: " + XPSystem.getSpecName(smelt.spec().id) + " ур." + smelt.level());
+
+        if (item instanceof net.minecraft.world.item.BlockItem bi) {
+            var block = bi.getBlock();
+            var plant = com.kingdomrp.core.data.PlantTierMap.get(block);
+            if (plant != null) lines.add("посадка: " + XPSystem.getSpecName(plant.spec().id) + " ур." + plant.level());
+            var harvest = com.kingdomrp.core.data.BlockTierMap.get(block);
+            if (harvest != null) lines.add("добыча: " + XPSystem.getSpecName(harvest.spec().id) + " ур." + harvest.level());
+        }
+
+        if (lines.isEmpty()) return;
+        tip.add(Component.literal("§8[KRP] ограничения:"));
+        for (String l : lines) tip.add(Component.literal("§8• " + l));
     }
 
     @SubscribeEvent

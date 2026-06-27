@@ -36,13 +36,13 @@ public record ChooseSpecializationPacket(String specId) implements CustomPacketP
         var spec = specOpt.get();
 
         var data = player.getData(KRPAttachments.PLAYER_DATA);
-        if (!data.canAffordSpecialization(spec.getPath(), packet.specId())) return;
+        if (!data.canAffordSpecialization(spec.path(), packet.specId())) return;
 
         data.levelUpSpecialization(packet.specId());
         PacketHelper.syncPlayer(player);
 
         player.sendSystemMessage(Component.literal(
-                "§6[Kingdom RP] §eСпециализация «" + spec.getName()
+                "§6[Kingdom RP] §eСпециализация «" + spec.name()
                         + "» улучшена до уровня "
                         + data.getSpecializationLevel(packet.specId()) + "!"
         ));

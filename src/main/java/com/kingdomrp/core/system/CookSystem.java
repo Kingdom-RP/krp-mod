@@ -11,7 +11,6 @@ import com.kingdomrp.core.specialization.Specialization;
 import com.kingdomrp.core.specialization.SpecializationRegistry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -54,7 +53,7 @@ public class CookSystem {
         FoodTierEntry tier = FoodTierMap.get(item);
         if (tier == null) return;
         String specName = SpecializationRegistry.get(Spec.COOK.id)
-                .map(Specialization::getName).orElse("Повар");
+                .map(Specialization::name).orElse("Повар");
         player.sendSystemMessage(Component.literal(
                 "§c[Kingdom RP] Чтобы готовить это блюдо, прокачайте навык «"
                         + specName + "» до " + tier.level() + " уровня."));

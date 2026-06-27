@@ -35,7 +35,7 @@ public class SpecializationScreen extends Screen {
             currentY += 22; // высота кнопки
 
             // Считаем сколько строк займёт описание
-            String desc = specs.get(i).getDescription();
+            String desc = specs.get(i).description();
             var lines = this.font.split(
                     net.minecraft.network.chat.Component.literal(desc),
                     BG_WIDTH - PADDING * 2
@@ -67,8 +67,8 @@ public class SpecializationScreen extends Screen {
             boolean canAfford = canAfford(spec);
 
             this.addRenderableWidget(Button.builder(
-                            Component.literal(spec.getName()),
-                            btn -> chooseSpecialization(spec.getId()))
+                            Component.literal(spec.name()),
+                            btn -> chooseSpecialization(spec.id()))
                     .pos(x + PADDING, y + buttonYPositions[i])
                     .size(BG_WIDTH - PADDING * 2, 20)
                     .build()
@@ -79,7 +79,7 @@ public class SpecializationScreen extends Screen {
     private boolean canAfford(Specialization spec) {
         var player = Minecraft.getInstance().player;
         if (player == null) return false;
-        return player.getData(KRPAttachments.PLAYER_DATA).canAffordSpecialization(path, spec.getId());
+        return player.getData(KRPAttachments.PLAYER_DATA).canAffordSpecialization(path, spec.id());
     }
 
     private void chooseSpecialization(String specId) {
@@ -122,9 +122,9 @@ public class SpecializationScreen extends Screen {
         for (int i = 0; i < specs.size(); i++) {
             Specialization spec = specs.get(i);
             int descY = y + buttonYPositions[i] + 22; // сразу под кнопкой
-            int currentLevel = getSpecLevel(spec.getId());
+            int currentLevel = getSpecLevel(spec.id());
             String lvlText = currentLevel > 0 ? " (ур. " + currentLevel + ")" : "";
-            String fullDesc = spec.getDescription() + lvlText;
+            String fullDesc = spec.description() + lvlText;
 
             var lines = this.font.split(
                     net.minecraft.network.chat.Component.literal(fullDesc),

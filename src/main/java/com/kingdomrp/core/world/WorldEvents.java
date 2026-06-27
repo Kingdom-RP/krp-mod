@@ -32,7 +32,7 @@ public class WorldEvents {
             if (specLevel < plant.level()) {
                 event.setCanceled(true);
                 String specName = SpecializationRegistry.get(plant.spec().id)
-                        .map(Specialization::getName)
+                        .map(Specialization::name)
                         .orElse(plant.spec().id);
                 player.sendSystemMessage(Component.literal(
                         "§c[Kingdom RP] Для посадки этого растения прокачайте навык «"

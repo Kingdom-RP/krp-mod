@@ -31,7 +31,7 @@ public class EffectTooltipMixin {
         if (lines.isEmpty()) return lines;
 
         String wanted = KRPEffects.DEATH_XP_PENALTY.value().getDisplayName().getString();
-        if (!lines.get(0).getString().startsWith(wanted)) return lines;
+        if (!lines.getFirst().getString().startsWith(wanted)) return lines;
 
         List<Component> copy = new ArrayList<>(lines);
         copy.add(Component.translatable("effect.kingdomrpcore.death_xp_penalty.desc")

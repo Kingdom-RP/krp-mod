@@ -25,7 +25,7 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
  * Тиры подобраны по аналогии с ванилью (культуры — по сложности, еда — по
  * сытости/составу). Всё в одном месте — правится здесь.
  */
-@EventBusSubscriber(modid = KingdomRPCore.MODID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = KingdomRPCore.MODID)
 public final class FarmersDelightCompat {
 
     public static final String MODID = "farmersdelight";
@@ -63,9 +63,9 @@ public final class FarmersDelightCompat {
         crop("red_mushroom_colony", 3, 4f);
     }
 
-    /** Полный набор для растущей культуры: посадка + добыча + XP (Фермер). */
+    /** Полный набор для растущей культуры: посадка (без XP) + добыча + XP за сбор. */
     private static void crop(String path, int level, float xp) {
-        PlantTierMap.addById(id(path), level, xp, true);
+        PlantTierMap.addById(id(path), level, true);
         BlockTierMap.addById(id(path), Spec.FARMER, level);
         BlockXPMap.addById(id(path), Path.HARVEST, xp);
     }
@@ -127,8 +127,8 @@ public final class FarmersDelightCompat {
 
     private static void cook(int level, String... paths) {
         for (String p : paths) {
-            FoodTierMap.addById(id(p), Spec.COOK, level);     // гейт производства по уровню
-            FoodCookMap.addById(id(p), level * 2f);            // XP за готовку (как ванильная еда)
+            FoodTierMap.addById(id(p), Spec.COOK, level);          // гейт производства по уровню
+            FoodCookMap.addById(id(p), FoodCookMap.xpForTier(level)); // XP за готовку (как ваниль)
         }
     }
 

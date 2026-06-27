@@ -11,7 +11,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -291,7 +290,7 @@ public class SpecializationEffects {
             player.containerMenu.sendAllDataToRemote();
 
             String specName = com.kingdomrp.core.specialization.SpecializationRegistry
-                    .get(Spec.FARMER.id).map(Specialization::getName).orElse("Фермер");
+                    .get(Spec.FARMER.id).map(Specialization::name).orElse("Фермер");
             String action = milking ? "доить это животное"
                     : shearing ? "стричь это животное"
                     : "разводить это животное";
@@ -327,7 +326,7 @@ public class SpecializationEffects {
         event.setCanceled(true);
         String specName = com.kingdomrp.core.specialization.SpecializationRegistry
                 .get(tierEntry.spec().id)
-                .map(Specialization::getName)
+                .map(Specialization::name)
                 .orElse(tierEntry.spec().id);
         player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
                 "§c[Kingdom RP] Для добычи этого блока прокачайте навык «"
