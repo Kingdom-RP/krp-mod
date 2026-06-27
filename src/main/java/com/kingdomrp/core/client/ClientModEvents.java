@@ -10,7 +10,7 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
  * Клиентские события МОД-шины (setup-фаза). Отдельно от {@link ClientEvents}
  * (игровая шина), т.к. разные шины.
  */
-@EventBusSubscriber(modid = KingdomRPCore.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@EventBusSubscriber(modid = KingdomRPCore.MODID, value = Dist.CLIENT)
 public class ClientModEvents {
 
     @SubscribeEvent

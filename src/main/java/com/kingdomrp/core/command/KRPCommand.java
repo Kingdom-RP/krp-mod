@@ -158,16 +158,29 @@ public class KRPCommand {
         return 1;
     }
 
-    private static int cmdAddXp(CommandContext<CommandSourceStack> ctx, boolean hasTarget)
+    /** Цель + путь для команд addxp/setlevel. */
+    private record TargetPath(ServerPlayer player, Path path) {}
+
+    /** Резолв игрока-цели и пути из аргументов, либо null с сообщением об ошибке. */
+    private static TargetPath resolveTargetPath(CommandContext<CommandSourceStack> ctx, boolean hasTarget)
             throws CommandSyntaxException {
         ServerPlayer target = resolveTarget(ctx, hasTarget);
-        if (target == null) return 0;
+        if (target == null) return null;
         Path path = parsePath(StringArgumentType.getString(ctx, "path"));
         if (path == null) {
             ctx.getSource().sendFailure(Component.literal("§cНеизвестный путь. Доступно: "
                     + pathNamesHint()));
-            return 0;
+            return null;
         }
+        return new TargetPath(target, path);
+    }
+
+    private static int cmdAddXp(CommandContext<CommandSourceStack> ctx, boolean hasTarget)
+            throws CommandSyntaxException {
+        TargetPath tp = resolveTargetPath(ctx, hasTarget);
+        if (tp == null) return 0;
+        ServerPlayer target = tp.player();
+        Path path = tp.path();
         float amount = FloatArgumentType.getFloat(ctx, "amount");
         XPSystem.giveXP(target, path, amount);
         ctx.getSource().sendSuccess(() -> Component.literal(
@@ -178,14 +191,10 @@ public class KRPCommand {
 
     private static int cmdSetLevel(CommandContext<CommandSourceStack> ctx, boolean hasTarget)
             throws CommandSyntaxException {
-        ServerPlayer target = resolveTarget(ctx, hasTarget);
-        if (target == null) return 0;
-        Path path = parsePath(StringArgumentType.getString(ctx, "path"));
-        if (path == null) {
-            ctx.getSource().sendFailure(Component.literal("§cНеизвестный путь. Доступно: "
-                    + pathNamesHint()));
-            return 0;
-        }
+        TargetPath tp = resolveTargetPath(ctx, hasTarget);
+        if (tp == null) return 0;
+        ServerPlayer target = tp.player();
+        Path path = tp.path();
         int level = IntegerArgumentType.getInteger(ctx, "level");
         withData(target, data -> {
             while (data.getLevel(path) < level) {

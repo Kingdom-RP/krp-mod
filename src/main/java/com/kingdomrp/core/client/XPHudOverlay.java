@@ -25,7 +25,7 @@ import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
  * состояние единое и статическое, каждый новый пакет его перезаписывает.
  * GUI-слой {@link LayeredDraw.Layer}, регистрируется через {@link RegisterGuiLayersEvent}.
  */
-@EventBusSubscriber(modid = KingdomRPCore.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@EventBusSubscriber(modid = KingdomRPCore.MODID, value = Dist.CLIENT)
 public class XPHudOverlay implements LayeredDraw.Layer {
 
     private static final long DISPLAY_MS = 3000L; // сколько держится полоска
@@ -59,7 +59,7 @@ public class XPHudOverlay implements LayeredDraw.Layer {
         XPHudOverlay.shownAt = System.currentTimeMillis();
 
         float f = requiredXP > 0f ? currentXP / requiredXP : 0f;
-        XPHudOverlay.fraction = Math.max(0f, Math.min(1f, f));
+        XPHudOverlay.fraction = (float) Math.clamp(f, 0f, 1f);
 
         if (leveledUp) {
             // При новом уровне полоска заполнена и жёлтая + дефолтный звук левел-апа
@@ -90,7 +90,7 @@ public class XPHudOverlay implements LayeredDraw.Layer {
         if (elapsed > DISPLAY_MS - FADE_MS) {
             alpha = (DISPLAY_MS - elapsed) / (float) FADE_MS;
         }
-        int a = Math.max(0, Math.min(255, (int) (alpha * 255)));
+        int a = Math.clamp((int) (alpha * 255), 0, 255);
 
         int screenWidth = g.guiWidth();
         int x = (screenWidth - BAR_WIDTH) / 2;

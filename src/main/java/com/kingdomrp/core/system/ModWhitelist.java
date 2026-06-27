@@ -5,6 +5,7 @@ import com.kingdomrp.core.network.ModWhitelistConfigurationTask;
 import com.mojang.logging.LogUtils;
 import net.minecraft.network.chat.Component;
 import net.neoforged.fml.ModList;
+import net.neoforged.neoforgespi.language.IModInfo;
 import net.neoforged.neoforge.network.event.RegisterConfigurationTasksEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.slf4j.Logger;
@@ -38,18 +39,16 @@ public final class ModWhitelist {
     /** Список modId, установленных на ТЕКУЩЕЙ стороне (клиент или сервер). */
     public static List<String> localModIds() {
         return ModList.get().getMods().stream()
-                .map(info -> info.getModId())
+                .map(IModInfo::getModId)
                 .collect(Collectors.toList());
     }
 
     /** Разрешённый набор модов: моды сервера + extraAllowedMods из конфига. */
     private static Set<String> allowedMods() {
         Set<String> allowed = ModList.get().getMods().stream()
-                .map(info -> info.getModId())
+                .map(IModInfo::getModId)
                 .collect(Collectors.toSet());
-        for (String extra : KRPConfig.MOD_WHITELIST_EXTRA.get()) {
-            allowed.add(extra);
-        }
+        allowed.addAll(KRPConfig.MOD_WHITELIST_EXTRA.get());
         return allowed;
     }
 

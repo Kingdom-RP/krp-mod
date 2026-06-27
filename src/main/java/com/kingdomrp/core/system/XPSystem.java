@@ -356,7 +356,7 @@ public class XPSystem {
     public static String getSpecName(String specId) {
         return com.kingdomrp.core.specialization.SpecializationRegistry
                 .get(specId)
-                .map(com.kingdomrp.core.specialization.Specialization::getName)
+                .map(com.kingdomrp.core.specialization.Specialization::name)
                 .orElse(specId);
     }
 

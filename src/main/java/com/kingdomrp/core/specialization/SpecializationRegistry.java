@@ -34,8 +34,8 @@ public class SpecializationRegistry {
     }
 
     private static void register(Specialization spec) {
-        ALL.put(spec.getId(), spec);
-        BY_PATH.computeIfAbsent(spec.getPath(), k -> new ArrayList<>()).add(spec);
+        ALL.put(spec.id(), spec);
+        BY_PATH.computeIfAbsent(spec.path(), k -> new ArrayList<>()).add(spec);
     }
 
     public static List<Specialization> getForPath(Path path) {

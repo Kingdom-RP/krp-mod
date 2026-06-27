@@ -25,19 +25,23 @@ public class PathScreen extends Screen {
         action.accept(player.getData(KRPAttachments.PLAYER_DATA));
     }
 
-    // Выносим построение кнопок отдельно чтобы корректно считать btnY
-    private void rebuildButtons(int x) {
-        var player = Minecraft.getInstance().player;
-        if (player == null) return;
-
+    /** Сколько путей имеют доступные для траты очки. */
+    private static int countAvailablePaths(net.minecraft.world.entity.player.Player player) {
         int[] count = {0};
         withData(player, data -> {
             for (Path path : Path.values()) {
                 if (data.hasAvailablePoints(path)) count[0]++;
             }
         });
+        return count[0];
+    }
 
-        int totalHeight = BASE_HEIGHT + count[0] * BUTTON_H;
+    // Выносим построение кнопок отдельно чтобы корректно считать btnY
+    private void rebuildButtons(int x) {
+        var player = Minecraft.getInstance().player;
+        if (player == null) return;
+
+        int totalHeight = BASE_HEIGHT + countAvailablePaths(player) * BUTTON_H;
         int y = (this.height - totalHeight) / 2;
         int[] btnY = {y + BASE_HEIGHT};
 
@@ -73,14 +77,8 @@ public class PathScreen extends Screen {
         var player = Minecraft.getInstance().player;
         if (player == null) return;
 
-        int[] count = {0};
-        withData(player, data -> {
-            for (Path path : Path.values()) {
-                if (data.hasAvailablePoints(path)) count[0]++;
-            }
-        });
-
-        int totalHeight = BASE_HEIGHT + count[0] * BUTTON_H;
+        int count = countAvailablePaths(player);
+        int totalHeight = BASE_HEIGHT + count * BUTTON_H;
         int x = (this.width - BG_WIDTH) / 2;
         int y = (this.height - totalHeight) / 2;
 
@@ -94,7 +92,7 @@ public class PathScreen extends Screen {
                 this.width / 2, y + 10, 0xFFFFFF);
         graphics.fill(x + 10, y + 22, x + BG_WIDTH - 10, y + 23, 0xFFAA8855);
 
-        if (count[0] > 0) {
+        if (count > 0) {
             graphics.fill(x + 10, y + BASE_HEIGHT - 2,
                     x + BG_WIDTH - 10, y + BASE_HEIGHT - 1, 0xFF555555);
         }
