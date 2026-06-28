@@ -1,4 +1,6 @@
 {
   "effect.kingdomrpcore.death_xp_penalty": "XP Penalty",
-  "effect.kingdomrpcore.death_xp_penalty.desc": "After death. Reduced XP gain. Not removed by milk."
+  "effect.kingdomrpcore.death_xp_penalty.desc": "After death. Reduced XP gain. Not removed by milk.",
+  "key.categories.kingdomrpcore": "Kingdom RP",
+  "key.kingdomrpcore.open_paths": "Open Paths Menu"
 }

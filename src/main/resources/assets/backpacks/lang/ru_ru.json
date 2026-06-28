@@ -1,0 +1,8 @@
+{
+  "item.backpacks.backpack": "Рюкзак",
+  "item.backpacks.large_backpack": "Большой рюкзак",
+  "key.backpacks.open_backpack": "Открыть рюкзак",
+  "subtitles.backpack.open": "Рюкзак открывается",
+  "subtitles.backpack.close": "Рюкзак закрывается",
+  "backpacks.configuration.backpackNesting": "Разрешить вложение рюкзаков"
+}

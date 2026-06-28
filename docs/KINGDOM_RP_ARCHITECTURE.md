@@ -410,9 +410,11 @@ public static void onBlockBreak(BlockEvent.BreakEvent event) {
     ингредиентов); для gated недостижим, т.к. `mayPickup` не даёт взять результат →
     `ItemCraftedEvent` не стреляет.
 - Подсказки о требуемом уровне в тултипе: «Требует: …» (ношение) — всегда,
-  `RestrictionSystem.onTooltip` (общий). «Крафт требует: …» — ТОЛЬКО когда открыто
-  меню верстака (`CraftingMenu`), вынесено в клиентский `client/CraftTooltipClient`
-  (`Dist.CLIENT`, нужен доступ к открытому экрану; на сервере не грузится — грабли №0).
+  `RestrictionSystem.onTooltip` (общий). «Крафт требует: …» — когда открыта крафт-сетка:
+  верстак (`CraftingMenu`) ИЛИ 2×2 в инвентаре (`InventoryMenu`), вынесено в клиентский
+  `client/CraftTooltipClient` (`Dist.CLIENT`, нужен доступ к открытому экрану; на сервере
+  не грузится — грабли №0). Раньше проверялся только `CraftingMenu` → в 2×2 подсказка не
+  показывалась.
 - Двойной результат крафта: `ScalingFormula(level, 0.4, 0.5)` — НИ У КОГО на пути
   Ремесло (`checkCraftBonus` пропускает COOK, CARPENTER, BLACKSMITH и CRAFTSMAN);
   фактически бонус остаётся только у магических спеков (Алхимик/Зачарователь),
@@ -564,8 +566,11 @@ public static void onBlockBreak(BlockEvent.BreakEvent event) {
      ур.2 кожаные куртка/штаны+крашеная терракота; ур.3 decorated pot+цветное
      стекло (витражи); ур.4 узорная отделка камня (chiseled/mossy); ур.5 дипслейт;
      ур.6 блэкстоун+кварц; ур.7 призмарин+пурпур+энд-камень.
-     Будущие модовые предметы из натуральных материалов (рюкзаки и т.п.)
-     добавляются в эту же лестницу.
+     Будущие модовые предметы из натуральных материалов добавляются в эту же
+     лестницу. Мод **Backpacks** (`compat/BackpacksCompat`, soft-зависимость по
+     `ModList.isLoaded`): крафт `backpacks:backpack` = Мастеровой 3,
+     `backpacks:large_backpack` = Мастеровой 5 (через `ItemCraftTierMap.addById`).
+     Конфиг мода `backpackNesting` выставлен в `false` (запрет вложения рюкзаков).
      ⚠️ Кожаную броню **носит** Воин (ур.1, `ItemUseTierMap`), а **крафтит**
      Мастеровой — тот же дуал-паттерн, что «незеритовый меч: крафт Кузнец / ношение Воин».
    - **Активный эффект — экономия материала** (`checkCraftsmanEconomy`): шанс
@@ -667,48 +672,53 @@ public static void onBlockBreak(BlockEvent.BreakEvent event) {
     bow/fishing_rod). `FishingXPMap.get(item)` — XP за предмет, берётся максимум
     по улову. Вынесен из `XPSystem` в отдельный класс `data/` по аналогии с
     остальными маппингами.
-  - Сохранение прочности удочки: `level*0.03` (макс 30% на ур.10), через
-    `event.damageRodBy(0)` (`ItemFishedEvent`) — обнуляет урон до применения,
-    корректно стакается с Unbreaking
-  - Двойной улов: линейно `level*0.05` (5%/ур., ур.10=50%) — дублирует
-    не-сокровищный улов прямо в инвентарь (сокровища не дюпаются)
   - XP за сбор натуральной морской флоры (`BlockXPMap`, path=HARVEST,
     с проверкой `PlacedBlockTracker`): kelp/seagrass/tall_seagrass/lily_pad/
     sea_pickle = 1. Кораллы остались в секции Фермера (не переносились).
     Губка (sponge/wet_sponge) — у Шахтёра (добывается киркой из храмов).
-  - Ускоренный клёв: `FishingHookMixin`, `@Redirect` на **запись** поля
-    `timeUntilLured` (4-й PUTFIELD, ordinal=3 — строка `timeUntilLured -=
-    lureSpeed*20*5`). `value` приходит уже как ванильный итог регенерации
-    (`nextInt(100,600) − lureSpeed*100`). Для не-рыбака пишем как есть. Для
-    рыбака: задаём собственное время как **центр ± случайное отклонение**.
-    Центр линейно убывает: `350 − level*19` тиков, не ниже `LURED_CENTER_MIN=160`
-    (ур.10 → 160 тиков = **в среднем 8с без чар**). Отклонение
-    ±`LURED_JITTER_FRAC=15%` от центра. Поверх вычитается чара Lure, **ослабленная
-    до 3с/уровень** (`LURE_TICKS_PER_LEVEL=60`, ванила 5с): ур.10 + Lure I ≈ 5с,
-    Lure III → упор в пол. Пол = `LURED_SAFETY_FLOOR=60` тиков = **минимум 3с**
-    (и страховка от перегенерации). Уровень 0 = чистая ванила (с поправкой Lure
-    до 3с — см. ниже). Нерф Lure глобальный: и не-рыбакам пишется
-    `value + (100−60)*lureSpeed` (без чары = ванила).
-    **ВАЖНО — перехватываем именно запись, а не
-    чтение `lureSpeed`**: `-=` грузит старое значение поля ДО вычисления правой
-    части, поэтому redirect на чтение `lureSpeed` (как было сначала) затирался
-    обратной записью `-=` и бонус НЕ применялся (см. «Частые ошибки» №10).
-    Верхний предел срезает хвост больших бросков; нижний пол не даёт уйти в <=0
-    (иначе бесконечная перегенерация в else-ветке). Чисто серверный эффект.
-  - Игнор «закрытого неба» (с `OPEN_SKY_IGNORE_LEVEL=5`): второй `@Redirect` на
-    `Level.canSeeSky` в `catchingFish` возвращает `true` для рыбака ≥5 ур. →
-    ванильный штраф `--i` (50% шанс на тиках без видимости неба) не применяется,
-    таймеры идут с нормальной скоростью независимо от перекрытия над водой.
-  - Ловля сокровищ без «открытой воды» (с `OPEN_WATER_IGNORE_LEVEL=5`):
-    `@Redirect` на `calculateOpenWater` в `tick()` → `true` для рыбака ≥5 ур.
-    Сокровища ванилой гейтятся флагом `openWater` (область 5×5 вокруг поплавка) —
-    это ОТДЕЛЬНАЯ механика от «открытого неба» (`canSeeSky`, влияет только на
-    скорость таймеров). Прокачанный рыбак ловит сокровища и в прудах/у берега.
-  - Качество улова: `@Redirect` на чтение поля `luck` в `retrieve()` (строка
-    `withLuck((float)this.luck + player.getLuck())`) — прибавляем
-    `Math.round(level * 0.5)` luck (ур.10 ≈ +5, как Luck of the Sea, стакается с
-    реальной чарой). В ванильной loot-таблице это снижает вес хлама (`10−2·luck`)
-    и повышает вес сокровищ (`5+2·luck`): на ур.10 хлам ≈ исчезает, сокровищ ~15%.
+  - **Рыбалка идёт через мод Tide** (опциональная интеграция, `compat/TideCompat`
+    + `compat/TideMixinPlugin`). Tide заменяет ванильный крючок своим
+    `TideFishingHook extends Projectile`, поэтому эффекты, завязанные на ванильную
+    таблицу/крючок, **удалены**: сохранение прочности удочки, двойной улов,
+    luck-качество, игнор закрытого неба, ловля сокровищ без открытой воды. Старый
+    `FishingHookMixin` (ванильный) удалён.
+  - **Ускоренный клёв (под Tide)** — `compat/mixin/TideFishingHookMixin`
+    (soft-mixin по строке-цели, активен только если Tide загружен —
+    `kingdomrpcore.tide.mixins.json` + `TideMixinPlugin`). MixinExtras
+    `@ModifyExpressionValue` на **чтение** `GETFIELD lureSpeed` в
+    `TideFishingHook.catchingFish` → с 5 уровня Рыбака возвращает `lureSpeed + 1`
+    (как одна ступень Lure), ниже 5 — без бонуса. Tide вычитает из `timeUntilLured`
+    логистику от `lureSpeed`, так что бонус ускоряет поклёвку и стакается с
+    удочкой/наживкой/чарой Lure. Владелец берётся через `Projectile.getOwner()`
+    (каст `(Projectile)(Object)this`, без shadow Tide-методов).
+    ⚠️ Здесь НЕЛЬЗЯ `@Redirect` на GETFIELD: его хендлер обязан принимать ТОЧНО
+    тип-владелец поля (`TideFishingHook`), а его не назвать без хард-зависимости —
+    Mixin падает `InvalidInjectionException` при загрузке класса (boot-краш на
+    `Items.<clinit>` через Tide ItemsMixin). `@ModifyExpressionValue` принимает
+    `(int original)` и достаёт инстанс через `this` — проблема снята.
+  - XP-маппинг рыбалки (`XPSystem.onFishing` ← `ItemFishedEvent`) работает: Tide
+    постит это событие read-only с пойманными предметами. Ванильный маппинг
+    (`FishingXPMap`) действует и имеет приоритет; рыба Tide размечается по редкости
+    автоматически — `TideCompat` на `AddReloadListenerEvent` читает датапак Tide
+    `data/<ns>/fishing/fish/**.json` (`journal_profile.rarity`, `fish`=ID) и строит
+    `volatile Map<Item,Float>`; `FishingXPMap.get` спрашивает `TideCompat.fishXP`
+    после ванильных карт, перед `JUNK_XP`. 5 редкостей → 5 уровней: common→5,
+    uncommon→8, rare→10, very_rare→15, legendary→25 (константы в `FishingXPMap`).
+    Хлам в Tide остаётся (`surface_junk`/`underground_junk`/`lava_junk`) → `JUNK_XP=3`.
+    Виды не перечисляются вручную — подхватывается всё из датапаков.
+  - **Гейт снастей Tide** (`TideCompat`, по ID, soft): крафт — `ItemCraftTierMap`
+    (наживки 1–7, крючки 1–8, лески 1–5, стол оснастки 1); использование удочек
+    (каст) — `ItemUseTierMap` (ваниль 0, камень 1, железо 2, золото/кристалл 3,
+    алмаз 4, echo 5, незерит/призмарин 6, деревня/blazing 7, медовая 8, подсолнух 9,
+    Мидас 10). Бобберы (косметика) не гейтятся.
+  - **Готовка рыбы Tide** — гейт по уровню Повара (`FoodTierMap` + XP `FoodCookMap`,
+    как ванильная/FD еда): small_cooked_fish/cooked_fish_slice=тир1, cooked_fish=2,
+    grilled_tuna=4, large_cooked_fish=5 (по пищевой ценности). Ключ — результат.
+  - **OP-предметы Tide** (enchanted_pocket_watch / starlight_bow / dragonfin_boots)
+    отключены оверрайдом рецептов в `data/tide/recipe/*` с условием `neoforge:false`
+    (наш датапак грузится ПОСЛЕ Tide через optional-зависимость `ordering=AFTER`).
+  - **Журнал**: выдача `fishing_journal` новичку отключена в `config/tide.json5`
+    (`journal.giveJournal=false`).
 - Повар (ЗАКРЫТ ✅):
   - **Действия для XP**: готовка в печи/коптильне (XP при изъятии результата),
     готовка на костре (XP при укладке сырья), крафт еды на верстаке.

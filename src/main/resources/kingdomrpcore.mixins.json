@@ -16,7 +16,6 @@
     "SmithingMenuMixin",
     "SlotMixin",
     "CraftingResultMixin",
-    "FishingHookMixin",
     "FurnaceResultSlotMixin",
     "AbstractFurnaceMenuMixin",
     "FoodDataMixin"

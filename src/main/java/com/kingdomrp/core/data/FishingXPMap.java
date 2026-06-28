@@ -17,21 +17,24 @@ import java.util.Set;
  */
 public class FishingXPMap {
 
-    public static final float JUNK_XP    = 3f;  // палка, кожа, нить, кость, гнилая плоть и т.п.
-    public static final float COMMON_XP  = 5f;  // обычная рыба (cod/salmon)
-    public static final float RARE_XP    = 8f;  // редкая рыба (tropical/pufferfish)
-    public static final float TREASURE_XP = 25f; // сокровища
+    // Шкала XP по редкости (общая с рыбой Tide — см. TideCompat.xpForRarity):
+    public static final float JUNK_XP      = 3f;  // хлам: палка, кожа, нить, кость, гнилая плоть
+    public static final float COMMON_XP    = 5f;  // обычная рыба (cod/salmon) + common Tide
+    public static final float UNCOMMON_XP  = 8f;  // tropical/pufferfish + uncommon Tide
+    public static final float RARE_XP      = 10f; // rare Tide
+    public static final float VERY_RARE_XP = 15f; // very_rare Tide
+    public static final float TREASURE_XP  = 25f; // сокровища + legendary Tide
 
     private static final Set<Item> COMMON_FISH = new HashSet<>();
-    private static final Set<Item> RARE_FISH = new HashSet<>();
+    private static final Set<Item> UNCOMMON_FISH = new HashSet<>();
     private static final Set<Item> TREASURE = new HashSet<>();
 
     static {
         // Обычная рыба
         register(COMMON_FISH, Items.COD, Items.SALMON);
 
-        // Редкая рыба
-        register(RARE_FISH, Items.TROPICAL_FISH, Items.PUFFERFISH);
+        // Необычная рыба
+        register(UNCOMMON_FISH, Items.TROPICAL_FISH, Items.PUFFERFISH);
 
         // Сокровища — редкий и ценный улов
         register(TREASURE, Items.ENCHANTED_BOOK, Items.NAME_TAG,
@@ -46,8 +49,10 @@ public class FishingXPMap {
     /** XP за конкретный предмет улова. */
     public static float get(Item item) {
         if (TREASURE.contains(item)) return TREASURE_XP;
-        if (RARE_FISH.contains(item)) return RARE_XP;
+        if (UNCOMMON_FISH.contains(item)) return UNCOMMON_XP;
         if (COMMON_FISH.contains(item)) return COMMON_XP;
+        float tide = com.kingdomrp.core.compat.TideCompat.fishXP(item); // рыба Tide по редкости
+        if (tide > 0f) return tide;
         return JUNK_XP;
     }
 

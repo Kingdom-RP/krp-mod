@@ -7,6 +7,7 @@ import com.kingdomrp.core.system.XPSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.CraftingMenu;
+import net.minecraft.world.inventory.InventoryMenu;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -16,8 +17,8 @@ import java.util.List;
 
 /**
  * Клиентская подсказка о требуемом уровне для КРАФТА — показывается ТОЛЬКО когда
- * открыто меню верстака ({@link CraftingMenu}), а не при наведении на предмет в
- * инвентаре, сундуке или где-либо ещё.
+ * открыта крафт-сетка: верстак ({@link CraftingMenu}) или 2×2 в инвентаре
+ * ({@link InventoryMenu}), а не при наведении на предмет в сундуке или где-либо ещё.
  * <p>
  * Клиентский класс ({@code Dist.CLIENT}) — нужен доступ к текущему меню
  * ({@code Minecraft.getInstance}). Требование для НОШЕНИЯ показывает общий
@@ -30,7 +31,8 @@ public class CraftTooltipClient {
     public static void onTooltip(ItemTooltipEvent event) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
-        if (!(mc.player.containerMenu instanceof CraftingMenu)) return;
+        var menu = mc.player.containerMenu;
+        if (!(menu instanceof CraftingMenu) && !(menu instanceof InventoryMenu)) return;
 
         List<SpecRequirement> reqs = RestrictionSystem.getCraftRequirements(event.getItemStack());
         if (reqs == null) return;
