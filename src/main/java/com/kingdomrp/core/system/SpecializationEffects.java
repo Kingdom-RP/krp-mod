@@ -163,37 +163,10 @@ public class SpecializationEffects {
         arrow.setDeltaMovement(arrow.getDeltaMovement().scale(factor));
     }
 
-    @SubscribeEvent
-    public static void onFishing(net.neoforged.neoforge.event.entity.player.ItemFishedEvent event) {
-        if (!(event.getEntity() instanceof ServerPlayer player)) return;
-        if (player.level().isClientSide()) return;
-
-        withData(player, data -> {
-            int level = data.getSpecializationLevel(Spec.FISHERMAN.id);
-            if (level <= 0) return;
-
-            // Сохранение прочности удочки: 3%/уровень, макс 30% на ур.10.
-            // damageRodBy(0) обнуляет урон ДО его применения — стакается с Unbreaking
-            // (если не сработало, ванильный hurtAndBreak отрабатывает Unbreaking сам).
-            float keepChance = Math.min(0.3f, level * 0.03f);
-            if (player.level().random.nextFloat() < keepChance) {
-                event.damageRodBy(0);
-            }
-
-            // Двойной улов: линейно 5%/уровень, макс 50% на ур.10, сокровища не дублируются
-            float doubleChance = Math.min(0.5f, level * 0.05f);
-            if (player.level().random.nextFloat() < doubleChance) {
-                for (ItemStack drop : new java.util.ArrayList<>(event.getDrops())) {
-                    if (FishingXPMap.isTreasure(drop.getItem())) continue;
-                    ItemStack extra = drop.copy();
-                    if (!player.getInventory().add(extra)) {
-                        player.drop(extra, false);
-                    }
-                }
-            }
-        });
-        // Ускоренный клёв — см. FishingHookMixin (бонус к lureSpeed по уровню)
-    }
+    // Эффекты рыбалки перенесены на Tide: ускоренный клёв — TideFishingHookMixin
+    // (бонус к lureSpeed по уровню Рыбака). Двойной улов / сохранение прочности /
+    // luck-качество убраны (Tide постит ItemFishedEvent read-only — модификации
+    // улова игнорируются; vanilla FishingHook не используется).
 
     @SubscribeEvent
     public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {

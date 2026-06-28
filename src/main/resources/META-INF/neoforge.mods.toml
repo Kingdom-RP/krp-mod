@@ -19,6 +19,11 @@ config="${mod_id}.mixins.json"
 [[mixins]]
 config="${mod_id}.farmersdelight.mixins.json"
 
+# Опциональная совместимость с Tide (рыбалка) — применяется только если мод
+# загружен (см. TideMixinPlugin). Ускоренный клёв Рыбака под TideFishingHook.
+[[mixins]]
+config="${mod_id}.tide.mixins.json"
+
 [[dependencies.${mod_id}]]
     modId="neoforge"
     type="required"
@@ -31,4 +36,14 @@ config="${mod_id}.farmersdelight.mixins.json"
     type="required"
     versionRange="${minecraft_version_range}"
     ordering="NONE"
+    side="BOTH"
+
+# Optional + ordering=AFTER: наш датапак грузится ПОСЛЕ Tide, поэтому оверрайды
+# рецептов (data/tide/recipe/*) перекрывают оригиналы — отключение OP-предметов
+# (enchanted_pocket_watch / starlight_bow / dragonfin_boots).
+[[dependencies.${mod_id}]]
+    modId="tide"
+    type="optional"
+    versionRange="*"
+    ordering="AFTER"
     side="BOTH"

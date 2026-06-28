@@ -59,4 +59,11 @@ public class ItemUseTierMap {
     public static SpecRequirement get(Item item) {
         return MAP.get(item);
     }
+
+    /** Регистрация гейта использования по ID (мод-совместимость). No-op если предмета нет. */
+    public static void addById(String id, SpecRequirement req) {
+        net.minecraft.core.registries.BuiltInRegistries.ITEM
+                .getOptional(net.minecraft.resources.ResourceLocation.parse(id))
+                .ifPresent(it -> MAP.put(it, req));
+    }
 }
