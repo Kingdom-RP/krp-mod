@@ -26,7 +26,7 @@ public class ItemUseTierMap {
         register(new SpecRequirement(Spec.WARRIOR, 2),
                 Items.CHAINMAIL_HELMET, Items.CHAINMAIL_CHESTPLATE,
                 Items.CHAINMAIL_LEGGINGS, Items.CHAINMAIL_BOOTS,
-                Items.SHIELD);
+                Items.SHIELD, Items.TURTLE_HELMET);
 
         register(new SpecRequirement(Spec.WARRIOR, 3),
                 Items.IRON_HELMET, Items.IRON_CHESTPLATE,
@@ -45,7 +45,8 @@ public class ItemUseTierMap {
         register(new SpecRequirement(Spec.WARRIOR, 7),
                 Items.NETHERITE_HELMET, Items.NETHERITE_CHESTPLATE,
                 Items.NETHERITE_LEGGINGS, Items.NETHERITE_BOOTS,
-                Items.NETHERITE_SWORD, Items.NETHERITE_AXE);
+                Items.NETHERITE_SWORD, Items.NETHERITE_AXE,
+                Items.MACE); // булава 1.21 — мощное ближнее оружие из Trial Chambers
 
         // Лучник — арбалет
         register(new SpecRequirement(Spec.ARCHER, 3),

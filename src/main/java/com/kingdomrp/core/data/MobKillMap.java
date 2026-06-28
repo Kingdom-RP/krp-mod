@@ -31,7 +31,8 @@ public class MobKillMap {
                 EntityType.ZOGLIN, EntityType.ENDERMAN,
                 EntityType.SKELETON, EntityType.STRAY,
                 EntityType.DROWNED, EntityType.CAVE_SPIDER,
-                EntityType.MAGMA_CUBE);
+                EntityType.MAGMA_CUBE,
+                EntityType.BREEZE, EntityType.BOGGED); // 1.21
 
         // C тир
         register(new KillEntry(Path.WAR, 5f),
@@ -73,7 +74,7 @@ public class MobKillMap {
                 EntityType.CHICKEN, EntityType.RABBIT,
                 EntityType.TURTLE, EntityType.FOX,
                 EntityType.PANDA, EntityType.POLAR_BEAR,
-                EntityType.GOAT);
+                EntityType.GOAT, EntityType.ARMADILLO); // armadillo 1.20.5
 
         register(new KillEntry(Path.HARVEST, 5f),
                 EntityType.BEE, EntityType.SQUID,

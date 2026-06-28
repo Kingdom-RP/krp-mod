@@ -32,7 +32,8 @@ public class MobDamageMap {
                 EntityType.ZOGLIN, EntityType.ENDERMAN,
                 EntityType.SKELETON, EntityType.STRAY,
                 EntityType.DROWNED, EntityType.CAVE_SPIDER,
-                EntityType.MAGMA_CUBE);
+                EntityType.MAGMA_CUBE,
+                EntityType.BREEZE, EntityType.BOGGED); // 1.21
 
         // C тир
         register(1f,
