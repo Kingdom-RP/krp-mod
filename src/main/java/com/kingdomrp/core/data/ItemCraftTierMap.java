@@ -116,9 +116,41 @@ public class ItemCraftTierMap {
         // здесь его нет. Незеритовый слиток/магнетит крафтятся на верстаке — ур.7.
         // ============================================================
 
-        // Тир 1 — медь
+        // Тир 1 — медь (+ декоративные медные блоки 1.21 во всех состояниях)
         gate(new SpecRequirement(Spec.BLACKSMITH, 1),
-                Items.LIGHTNING_ROD, Items.SPYGLASS, Items.BRUSH);
+                Items.LIGHTNING_ROD, Items.SPYGLASS, Items.BRUSH,
+                Items.CHISELED_COPPER, Items.EXPOSED_CHISELED_COPPER,
+                Items.WEATHERED_CHISELED_COPPER, Items.OXIDIZED_CHISELED_COPPER,
+                Items.WAXED_CHISELED_COPPER, Items.WAXED_EXPOSED_CHISELED_COPPER,
+                Items.WAXED_WEATHERED_CHISELED_COPPER, Items.WAXED_OXIDIZED_CHISELED_COPPER,
+                Items.COPPER_GRATE, Items.EXPOSED_COPPER_GRATE,
+                Items.WEATHERED_COPPER_GRATE, Items.OXIDIZED_COPPER_GRATE,
+                Items.WAXED_COPPER_GRATE, Items.WAXED_EXPOSED_COPPER_GRATE,
+                Items.WAXED_WEATHERED_COPPER_GRATE, Items.WAXED_OXIDIZED_COPPER_GRATE,
+                Items.COPPER_BULB, Items.EXPOSED_COPPER_BULB,
+                Items.WEATHERED_COPPER_BULB, Items.OXIDIZED_COPPER_BULB,
+                Items.WAXED_COPPER_BULB, Items.WAXED_EXPOSED_COPPER_BULB,
+                Items.WAXED_WEATHERED_COPPER_BULB, Items.WAXED_OXIDIZED_COPPER_BULB,
+                Items.COPPER_DOOR, Items.EXPOSED_COPPER_DOOR,
+                Items.WEATHERED_COPPER_DOOR, Items.OXIDIZED_COPPER_DOOR,
+                Items.WAXED_COPPER_DOOR, Items.WAXED_EXPOSED_COPPER_DOOR,
+                Items.WAXED_WEATHERED_COPPER_DOOR, Items.WAXED_OXIDIZED_COPPER_DOOR,
+                Items.COPPER_TRAPDOOR, Items.EXPOSED_COPPER_TRAPDOOR,
+                Items.WEATHERED_COPPER_TRAPDOOR, Items.OXIDIZED_COPPER_TRAPDOOR,
+                Items.WAXED_COPPER_TRAPDOOR, Items.WAXED_EXPOSED_COPPER_TRAPDOOR,
+                Items.WAXED_WEATHERED_COPPER_TRAPDOOR, Items.WAXED_OXIDIZED_COPPER_TRAPDOOR,
+                Items.CUT_COPPER, Items.EXPOSED_CUT_COPPER,
+                Items.WEATHERED_CUT_COPPER, Items.OXIDIZED_CUT_COPPER,
+                Items.WAXED_CUT_COPPER, Items.WAXED_EXPOSED_CUT_COPPER,
+                Items.WAXED_WEATHERED_CUT_COPPER, Items.WAXED_OXIDIZED_CUT_COPPER,
+                Items.CUT_COPPER_SLAB, Items.EXPOSED_CUT_COPPER_SLAB,
+                Items.WEATHERED_CUT_COPPER_SLAB, Items.OXIDIZED_CUT_COPPER_SLAB,
+                Items.WAXED_CUT_COPPER_SLAB, Items.WAXED_EXPOSED_CUT_COPPER_SLAB,
+                Items.WAXED_WEATHERED_CUT_COPPER_SLAB, Items.WAXED_OXIDIZED_CUT_COPPER_SLAB,
+                Items.CUT_COPPER_STAIRS, Items.EXPOSED_CUT_COPPER_STAIRS,
+                Items.WEATHERED_CUT_COPPER_STAIRS, Items.OXIDIZED_CUT_COPPER_STAIRS,
+                Items.WAXED_CUT_COPPER_STAIRS, Items.WAXED_EXPOSED_CUT_COPPER_STAIRS,
+                Items.WAXED_WEATHERED_CUT_COPPER_STAIRS, Items.WAXED_OXIDIZED_CUT_COPPER_STAIRS);
 
         // Тир 2 — золото (инструменты + броня)
         gate(new SpecRequirement(Spec.BLACKSMITH, 2),
@@ -183,8 +215,9 @@ public class ItemCraftTierMap {
                 Items.LEATHER, Items.BOOK,
                 Items.LEATHER_BOOTS, Items.LEATHER_HELMET);
 
-        // Тир 2 — тяжёлая кожаная броня + крашеная терракота
+        // Тир 2 — тяжёлая кожаная броня + крашеная терракота + черепаший шлем (скют)
         gate(new SpecRequirement(Spec.CRAFTSMAN, 2),
+                Items.TURTLE_HELMET,
                 Items.LEATHER_CHESTPLATE, Items.LEATHER_LEGGINGS,
                 Items.WHITE_TERRACOTTA, Items.ORANGE_TERRACOTTA, Items.MAGENTA_TERRACOTTA,
                 Items.LIGHT_BLUE_TERRACOTTA, Items.YELLOW_TERRACOTTA, Items.LIME_TERRACOTTA,
@@ -211,7 +244,7 @@ public class ItemCraftTierMap {
         // Тир 4 — узорная отделка камня (резьба, мшистость)
         gate(new SpecRequirement(Spec.CRAFTSMAN, 4),
                 Items.CHISELED_STONE_BRICKS, Items.CHISELED_SANDSTONE, Items.CHISELED_RED_SANDSTONE,
-                Items.CHISELED_NETHER_BRICKS,
+                Items.CHISELED_NETHER_BRICKS, Items.CHISELED_TUFF, Items.CHISELED_TUFF_BRICKS,
                 Items.MOSSY_STONE_BRICKS, Items.MOSSY_STONE_BRICK_SLAB,
                 Items.MOSSY_STONE_BRICK_STAIRS, Items.MOSSY_STONE_BRICK_WALL,
                 Items.MOSSY_COBBLESTONE_SLAB, Items.MOSSY_COBBLESTONE_STAIRS, Items.MOSSY_COBBLESTONE_WALL);

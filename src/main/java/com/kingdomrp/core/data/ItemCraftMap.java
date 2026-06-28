@@ -210,6 +210,49 @@ public class ItemCraftMap {
         register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 2f),
                 Items.BRUSH);
 
+        // Медные декоративные блоки 1.21 (chiseled/grate/bulb/door/trapdoor во всех
+        // степенях окисления + восковые) — медь, XP 2
+        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 2f),
+                Items.CHISELED_COPPER, Items.EXPOSED_CHISELED_COPPER,
+                Items.WEATHERED_CHISELED_COPPER, Items.OXIDIZED_CHISELED_COPPER,
+                Items.WAXED_CHISELED_COPPER, Items.WAXED_EXPOSED_CHISELED_COPPER,
+                Items.WAXED_WEATHERED_CHISELED_COPPER, Items.WAXED_OXIDIZED_CHISELED_COPPER,
+                Items.COPPER_GRATE, Items.EXPOSED_COPPER_GRATE,
+                Items.WEATHERED_COPPER_GRATE, Items.OXIDIZED_COPPER_GRATE,
+                Items.WAXED_COPPER_GRATE, Items.WAXED_EXPOSED_COPPER_GRATE,
+                Items.WAXED_WEATHERED_COPPER_GRATE, Items.WAXED_OXIDIZED_COPPER_GRATE,
+                Items.COPPER_BULB, Items.EXPOSED_COPPER_BULB,
+                Items.WEATHERED_COPPER_BULB, Items.OXIDIZED_COPPER_BULB,
+                Items.WAXED_COPPER_BULB, Items.WAXED_EXPOSED_COPPER_BULB,
+                Items.WAXED_WEATHERED_COPPER_BULB, Items.WAXED_OXIDIZED_COPPER_BULB,
+                Items.COPPER_DOOR, Items.EXPOSED_COPPER_DOOR,
+                Items.WEATHERED_COPPER_DOOR, Items.OXIDIZED_COPPER_DOOR,
+                Items.WAXED_COPPER_DOOR, Items.WAXED_EXPOSED_COPPER_DOOR,
+                Items.WAXED_WEATHERED_COPPER_DOOR, Items.WAXED_OXIDIZED_COPPER_DOOR,
+                Items.COPPER_TRAPDOOR, Items.EXPOSED_COPPER_TRAPDOOR,
+                Items.WEATHERED_COPPER_TRAPDOOR, Items.OXIDIZED_COPPER_TRAPDOOR,
+                Items.WAXED_COPPER_TRAPDOOR, Items.WAXED_EXPOSED_COPPER_TRAPDOOR,
+                Items.WAXED_WEATHERED_COPPER_TRAPDOOR, Items.WAXED_OXIDIZED_COPPER_TRAPDOOR);
+
+        // Полированная медь (cut copper) — блок/плита/ступени во всех состояниях, XP 2
+        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 2f),
+                Items.CUT_COPPER, Items.EXPOSED_CUT_COPPER,
+                Items.WEATHERED_CUT_COPPER, Items.OXIDIZED_CUT_COPPER,
+                Items.WAXED_CUT_COPPER, Items.WAXED_EXPOSED_CUT_COPPER,
+                Items.WAXED_WEATHERED_CUT_COPPER, Items.WAXED_OXIDIZED_CUT_COPPER,
+                Items.CUT_COPPER_SLAB, Items.EXPOSED_CUT_COPPER_SLAB,
+                Items.WEATHERED_CUT_COPPER_SLAB, Items.OXIDIZED_CUT_COPPER_SLAB,
+                Items.WAXED_CUT_COPPER_SLAB, Items.WAXED_EXPOSED_CUT_COPPER_SLAB,
+                Items.WAXED_WEATHERED_CUT_COPPER_SLAB, Items.WAXED_OXIDIZED_CUT_COPPER_SLAB,
+                Items.CUT_COPPER_STAIRS, Items.EXPOSED_CUT_COPPER_STAIRS,
+                Items.WEATHERED_CUT_COPPER_STAIRS, Items.OXIDIZED_CUT_COPPER_STAIRS,
+                Items.WAXED_CUT_COPPER_STAIRS, Items.WAXED_EXPOSED_CUT_COPPER_STAIRS,
+                Items.WAXED_WEATHERED_CUT_COPPER_STAIRS, Items.WAXED_OXIDIZED_CUT_COPPER_STAIRS);
+
+        // Черепаший шлем — крафт из скюта (натуральный материал), XP 3; носит Воин
+        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 3f),
+                Items.TURTLE_HELMET);
+
         // ---- Золото (тир 2): инструменты + броня ----
         register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 15f),
                 Items.GOLDEN_SWORD, Items.GOLDEN_AXE, Items.GOLDEN_PICKAXE,
@@ -382,6 +425,14 @@ public class ItemCraftMap {
                 Items.RED_SANDSTONE_WALL, Items.CUT_RED_SANDSTONE, Items.CUT_RED_SANDSTONE_SLAB,
                 Items.SMOOTH_RED_SANDSTONE_SLAB, Items.SMOOTH_RED_SANDSTONE_STAIRS);
 
+        // Туф 1.21 (полировка/кирпич/плиты/ступени/стены) — резьба chiseled на тире 4
+        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f),
+                Items.TUFF_SLAB, Items.TUFF_STAIRS, Items.TUFF_WALL,
+                Items.POLISHED_TUFF, Items.POLISHED_TUFF_SLAB,
+                Items.POLISHED_TUFF_STAIRS, Items.POLISHED_TUFF_WALL,
+                Items.TUFF_BRICKS, Items.TUFF_BRICK_SLAB,
+                Items.TUFF_BRICK_STAIRS, Items.TUFF_BRICK_WALL);
+
         // ================== Тир 1 (CRAFTSMAN 1): кожа, книги ==================
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 2f),
                 Items.LEATHER, Items.BOOK);
@@ -421,7 +472,7 @@ public class ItemCraftMap {
         // ================== Тир 4 (CRAFTSMAN 4): узорная отделка камня, XP 3 ==================
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 3f),
                 Items.CHISELED_STONE_BRICKS, Items.CHISELED_SANDSTONE, Items.CHISELED_RED_SANDSTONE,
-                Items.CHISELED_NETHER_BRICKS,
+                Items.CHISELED_NETHER_BRICKS, Items.CHISELED_TUFF, Items.CHISELED_TUFF_BRICKS,
                 Items.MOSSY_STONE_BRICKS, Items.MOSSY_STONE_BRICK_SLAB,
                 Items.MOSSY_STONE_BRICK_STAIRS, Items.MOSSY_STONE_BRICK_WALL,
                 Items.MOSSY_COBBLESTONE_SLAB, Items.MOSSY_COBBLESTONE_STAIRS, Items.MOSSY_COBBLESTONE_WALL);

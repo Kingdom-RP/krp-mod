@@ -24,9 +24,9 @@ public class AnimalTierMap {
         // Ур.3 — корова/овца/грибная корова (+ доение коровы, стрижка овцы)
         animal(3, 6f, EntityType.COW, EntityType.SHEEP, EntityType.MOOSHROOM);
 
-        // Ур.4 — коза (доение), лама, пчела, лягушка, аксолотль
+        // Ур.4 — коза (доение), лама, пчела, лягушка, аксолотль, броненосец (скют)
         animal(4, 8f, EntityType.GOAT, EntityType.LLAMA, EntityType.BEE,
-                EntityType.FROG, EntityType.AXOLOTL);
+                EntityType.FROG, EntityType.AXOLOTL, EntityType.ARMADILLO);
 
         // Ур.5 — транспорт
         animal(5, 8f, EntityType.HORSE, EntityType.DONKEY,
