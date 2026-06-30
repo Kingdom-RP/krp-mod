@@ -27,36 +27,21 @@ public class ClientEvents {
     }
 
     /**
-     * Чистка главного меню: убираем кнопку Realms ({@code menu.online}) и
-     * ссылку-копирайт «Mojang AB» ({@code title.credits}), затем подтягиваем все
-     * виджеты, что были НИЖЕ кнопки Realms, вверх на её высоту (24 px) — чтобы не
-     * оставалось пустого места. Делается на штатном {@code ScreenEvent.Init.Post}
-     * (а не миксином), чтобы не шадоуить {@code Screen.removeWidget}.
+     * Скрываем плашку copyright «Mojang AB» ({@code title.credits}) внизу справа.
+     * Остальную компоновку главного меню (кнопка Realms, лого, splash) отдаём моду
+     * FancyMenu — кнопки не удаляем и не сдвигаем. Делается на штатном
+     * {@code ScreenEvent.Init.Post} (а не миксином).
      */
     @SubscribeEvent
     public static void onTitleScreenInit(ScreenEvent.Init.Post event) {
         if (!(event.getScreen() instanceof TitleScreen)) return;
 
-        GuiEventListener realms = null;
-        GuiEventListener copyright = null;
         for (GuiEventListener w : event.getListenersList()) {
             if (w instanceof AbstractWidget aw
-                    && aw.getMessage().getContents() instanceof TranslatableContents tc) {
-                if ("menu.online".equals(tc.getKey())) realms = w;
-                else if ("title.credits".equals(tc.getKey())) copyright = w;
-            }
-        }
-        if (realms == null) return; // демо-меню или кнопки уже нет
-
-        int realmsY = ((AbstractWidget) realms).getY();
-        event.removeListener(realms);
-        if (copyright != null) event.removeListener(copyright);
-
-        // Сдвигаем всё, что было ниже Realms (моды/настройки/выход/язык/доступность),
-        // вверх на высоту слота Realms — закрываем образовавшуюся дыру.
-        for (GuiEventListener w : event.getListenersList()) {
-            if (w instanceof AbstractWidget aw && aw.getY() >= realmsY) {
-                aw.setY(aw.getY() - 24);
+                    && aw.getMessage().getContents() instanceof TranslatableContents tc
+                    && "title.credits".equals(tc.getKey())) {
+                event.removeListener(w);
+                break;
             }
         }
     }

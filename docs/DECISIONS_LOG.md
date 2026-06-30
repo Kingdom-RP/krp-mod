@@ -102,7 +102,7 @@ XP капал от **посадки** (`WorldEvents.onBlockPlace`): семена
 - `addxp`/`setlevel`/`reset`/`stats`/`debug` — опц. `target` (`EntityArgument.player`),
   модиф. команды и цель-не-себя требуют `permission(2)`. Вывод через `sendSuccess`.
 
-## Кастомизация главного меню (2026-06-20)
+## Кастомизация главного меню (2026-06-20) — ⚠️ УБРАНО 2026-06-29 (см. раздел ниже про FancyMenu)
 
 `client.TitleScreenMixin` (`@Mixin(TitleScreen)`, remap=false):
 - `@Redirect BrandingControl.forEachLine` → пусто (скрыть строки версий).
@@ -140,9 +140,13 @@ XP капал от **посадки** (`WorldEvents.onBlockPlace`): семена
 - **Закалка распространена**: дерево → Мастеровой (`CraftsmanTemperMap` 1/3), камень →
   Кузнец (`BlacksmithTemperMap` 1/4).
 
-## Иконки (логотип мода + иконка окна)
+## Иконки / меню / заголовок окна (2026-06-29: убрано в пользу FancyMenu)
 
-- **Логотип мода**: `logoFile="logo.png"` в `neoforge.mods.toml` (128×128 PNG).
-- **Иконка окна**: ваниль ставит её из корня game-jar — мод туда не пишет.
-  Переустанавливаем сами: `WindowIcon.apply()` грузит PNG из `src/main/resources/icons/`
-  и зовёт `GLFW.glfwSetWindowIcon` на `ClientModEvents.onClientSetup` (главный поток).
+- **Логотип мода**: `logoFile="logo.png"` в `neoforge.mods.toml` (128×128 PNG) — оставлен
+  (это иконка в списке модов, не окна).
+- **Кастомизация главного меню удалена**: `TitleScreenMixin` (скрытие брендинга/splash,
+  замена лого), удаление кнопки Realms и сдвиг виджетов — всё перенесено на мод
+  **FancyMenu**. Оставлено только **скрытие плашки copyright** (`ClientEvents.onTitleScreenInit`,
+  виджет `title.credits`).
+- **Кастомная иконка и заголовок окна удалены** (`WindowIcon`, `ClientModEvents`,
+  `MinecraftTitleMixin`) — ставятся через мод. Ассеты `icons/`, `gui/title_logo.png` удалены.
