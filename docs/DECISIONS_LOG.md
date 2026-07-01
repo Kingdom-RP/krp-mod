@@ -1,175 +1,161 @@
-# История решений (хронология)
+# Decision log (chronology)
 
-Датированные записи о доработках и фиксах. Текущее состояние систем — в
-`KINGDOM_RP_ARCHITECTURE.md`; технические грабли — в `TECH_GOTCHAS.md`.
+Dated notes on reworks + fixes. Current system state — `KINGDOM_RP_ARCHITECTURE.md`; technical
+gotchas — `TECH_GOTCHAS.md`.
 
-## Dynamic Trees: XP Лесоруба (2026-06-30)
+## Dynamic Trees: Lumberjack XP (2026-06-30)
 
-DT заменяет деревья своими `BranchBlock` — их нет в `BlockXPMap` (по ванильным
-`Blocks.*_LOG`), рубка DT не давала XP. DT worldgen по умолчанию **заменяет** ванильные
-деревья (`worldGen=true` + FeatureCanceller), т.е. природных ванильных деревьев нет;
-ванильный лог-XP оставлен (поставленные логи / не-DT-породы / worldGen off).
+DT replaces trees with its own `BranchBlock` — not in `BlockXPMap` (vanilla `Blocks.*_LOG`), so
+chopping DT gave no XP. DT worldgen default **replaces** vanilla trees (`worldGen=true` +
+FeatureCanceller), i.e. no natural vanilla trees; vanilla log-XP kept (placed logs / non-DT species
+/ worldGen off).
 
-**Итоговое решение — soft-mixin `compat/mixin/DTBranchBlockMixin`** (гейт `DTMixinPlugin`,
-`kingdomrpcore.dynamictrees.mixins.json`). Хук — `BranchBlock.destroyBranchFromNode`
-(@Inject RETURN): вызывается ОДИН раз на фактическую валку, возвращает
-`BranchDestructionData` с реальным `woodVolume` (в брёвнах). XP = `min(40, logs·2)`
-(паритет с `oak_log`=2). Типы DT читаем рефлексией (не на compile-classpath), объём —
-до умножения на Fortune. `entity` = игрок (vanilla-тип).
+**Final — soft-mixin `compat/mixin/DTBranchBlockMixin`** (gate `DTMixinPlugin`,
+`kingdomrpcore.dynamictrees.mixins.json`). Hook — `BranchBlock.destroyBranchFromNode` (@Inject
+RETURN): called ONCE per actual fell, returns `BranchDestructionData` with real `woodVolume` (in
+logs). XP = `min(40, logs·2)` (parity with `oak_log`=2). DT types via reflection (not on
+compile-classpath), volume pre-Fortune. `entity` = player (vanilla type).
 
-Почему не BlockEvent+тег/радиус (были ранние попытки, отброшены):
-- **trunk_shell** (толстый ствол) не в теге `branches` → ломка роняла дерево без XP;
-  через `destroyBranchFromNode` (shell валит core-ветку) — попадает.
-- **двойной счёт**: радиус-за-BreakEvent давал 25 и за верхнюю ветку, и за долом
-  нижнего остатка. `woodVolume` считается от разруба вверх → долом даёт объём ТОЛЬКО
-  остатка, повторной награды нет.
-⚠️ Прочие перки Лесоруба (скорость/топор/дабл-дроп/срубка) на DT не действуют — свой
-механизм валки.
+Why not BlockEvent+tag/radius (early attempts, dropped):
+- **trunk_shell** (thick trunk) not in `branches` tag → break felled tree with no XP; via
+  `destroyBranchFromNode` (shell fells core branch) — caught.
+- **double count**: radius-per-BreakEvent gave 25 for both upper branch and remainder finish.
+  `woodVolume` counts from cut upward → finishing gives ONLY remainder, no re-reward.
+⚠️ Other Lumberjack perks (speed/axe/double-drop/fell) don't apply to DT — own fell mechanism.
 
-## Tide + Backpacks + локализация (2026-06-28)
+## Tide + Backpacks + localization (2026-06-28)
 
-- **Рыбалка переведена на мод Tide** (опц. интеграция `compat/TideCompat` +
-  `TideMixinPlugin`). Tide заменяет ванильный крючок своим — удалены эффекты на
-  ванильном крючке (двойной улов, прочность, luck, небо/вода) и `FishingHookMixin`.
-- Ускоренный клёв под Tide: `TideFishingHookMixin` (`@ModifyExpressionValue` на
-  чтение `lureSpeed` в `catchingFish`), +1 с 5 уровня Рыбака.
-- XP за улов по редкости вида (читаем датапак Tide `fishing/fish` на reload):
-  common 5 / uncommon 8 / rare 10 / very_rare 15 / legendary 25.
-- Гейт снастей по уровню Рыбака (крафт наживок/крючков/лесок/удочек + использование
-  удочек); готовка рыбы Tide — под Повара. OP-предметы отключены оверрайдом рецептов
-  (`neoforge:false`, dep `ordering=AFTER`). Журнал новичку выключен в конфиге Tide.
-- **Backpacks**: крафт рюкзака = Мастеровой 3, большого = 5; перевод предметов.
-  Локализация биндинга меню путей. Фикс тултипа крафта в 2×2 (`InventoryMenu`).
+- **Fishing moved to Tide** (opt integration `compat/TideCompat` + `TideMixinPlugin`). Tide replaces
+  vanilla hook — vanilla-hook effects removed (double catch, durability, luck, sky/water) +
+  `FishingHookMixin`.
+- Faster bite under Tide: `TideFishingHookMixin` (`@ModifyExpressionValue` on read `lureSpeed` in
+  `catchingFish`), +1 from Fisher level 5.
+- Catch XP by species rarity (read Tide datapack `fishing/fish` on reload): common 5 / uncommon 8 /
+  rare 10 / very_rare 15 / legendary 25.
+- Tackle gate by Fisher level (craft baits/hooks/lines/rods + rod use); Tide fish cooking under Cook.
+  OP items disabled by recipe override (`neoforge:false`, dep `ordering=AFTER`). Journal-on-join off
+  in Tide config.
+- **Backpacks**: backpack craft = Craftsman 3, large = 5; item translations. Paths-menu keybind
+  localization. Fix craft tooltip in 2×2 (`InventoryMenu`).
 
-## Контент 1.20.5–1.21.1 в маппингах + аудит (2026-06-28)
+## 1.20.5–1.21.1 content in mappings + audit (2026-06-28)
 
-Маппинги собирались по 1.20; новый контент доведён по логике существующих карт:
-- **Туф-семейство** → Мастеровой (кладка ур.0, `chiseled` ур.4).
-- **Медь 1.21** (chiseled/grate/bulb/door/trapdoor + cut copper, все окисления/воск)
-  → Кузнец, медь тир 1.
-- **Булава (mace)** → ношение Воина ур.7. **Черепаший шлем** → крафт Мастеровой
-  тир 2, ношение Воин ур.2.
-- **Мобы**: breeze/bogged → Воин тир B; armadillo → Промысел + разведение Фермер ур.4.
-- ⚠️ **Блоки-компрессии (9→1) НЕ маппим** — крафт даёт XP → разобрал обратно → абуз.
-  Cut copper это не нарушает (1:1).
-- Аудит всех 1255 предметов (diff `Items.java` против `Items.X`+`Blocks.X`).
-  Пропущено: бетон (погружение пудры, не крафт-событие), кораллы (убраны из Промысла),
-  редстоун/рельсы/beacon/conduit (политика), семена/саженцы/листва (гейт по блоку),
-  сырьё-дропы (XP за руду/моба), crafter/vault/heavy core (не крафт/лут).
+Mappings built for 1.20; new content added by existing-map logic:
+- **Tuff family** → Craftsman (masonry L0, `chiseled` L4).
+- **Copper 1.21** (chiseled/grate/bulb/door/trapdoor + cut copper, all oxidation/wax) → Blacksmith,
+  copper tier 1.
+- **Mace** → Warrior wear L7. **Turtle helmet** → Craftsman craft tier 2, Warrior wear L2.
+- **Mobs**: breeze/bogged → Warrior tier B; armadillo → Harvest + Farmer breed L4.
+- ⚠️ **Compression blocks (9→1) NOT mapped** — craft gives XP → uncraft back → abuse. Cut copper
+  doesn't break this (1:1).
+- Audited all 1255 items (diff `Items.java` vs `Items.X`+`Blocks.X`). Skipped: concrete (powder-in-
+  water, no craft event), corals (removed from Harvest), redstone/rails/beacon/conduit (policy),
+  seeds/saplings/leaves (gate by block), raw drops (XP for ore/mob), crafter/vault/heavy core (no
+  craft/loot).
 
-## Лесоруб: XP при гейте + биом-локаут (2026-06-20)
+## Lumberjack: XP on gate + biome lockout (2026-06-20)
 
-- **Баг: XP за заблокированную добычу.** Гейт тира (`checkTierRestriction`) и XP
-  (`XPSystem.onBlockBreak`) — РАЗНЫЕ `@SubscribeEvent`. Фикс: гейту задан
-  `EventPriority.HIGH`, а `XPSystem.onBlockBreak` в начале `if (event.isCanceled()) return;`.
-  ⚠️ Два обработчика на одно событие в разных классах — порядок не гарантирован.
-- **Баланс: оверворлд-деревья разгейчены** (тир-0 в `BlockTierMap`), иначе игрок в
-  саванне/болоте не добудет местную древесину. Гейт только на незер-стеблях/гигантских
-  грибах (ур.6).
+- **Bug: XP for gated mining.** Tier gate (`checkTierRestriction`) and XP (`XPSystem.onBlockBreak`)
+  — DIFFERENT `@SubscribeEvent`. Fix: gate given `EventPriority.HIGH`, `XPSystem.onBlockBreak` starts
+  with `if (event.isCanceled()) return;`. ⚠️ Two handlers on one event in different classes — order
+  not guaranteed.
+- **Balance: overworld trees ungated** (tier-0 in `BlockTierMap`), else savanna/swamp player can't
+  get local wood. Gate only nether stems / giant mushrooms (L6).
 
-## Идеи на будущее: статистика и логирование (бэклог, 2026-06-20)
+## Future: stats + logging (backlog, 2026-06-20)
 
-Пока НЕ делаем. Хранилище прогресса — Data Attachment → NBT в `playerdata/`.
-Аналитика — аддитивный слой поверх.
-- **Логирование прогресса**: append-only event-log (CSV/JSON) в точках левел-апа.
-- **Статистика по онлайну** — итерация `server.getPlayerList().getPlayers()`.
-- **Статистика по всем (вкл. офлайн)** — вторичный индекс (SQLite/H2 «stats.db»),
-  обновляемый на logout/левел-апе.
-- Принцип: Data Attachment = источник истины; лог/БД = производная.
+Not doing yet. Progress storage — Data Attachment → NBT in `playerdata/`. Analytics = additive layer.
+- **Progress logging**: append-only event-log (CSV/JSON) at level-up points.
+- **Online stats** — iterate `server.getPlayerList().getPlayers()`.
+- **All-players stats (incl offline)** — secondary index (SQLite/H2 "stats.db"), updated on
+  logout/level-up.
+- Principle: Data Attachment = source of truth; log/DB = derived.
 
-## Интеграция Farmer's Delight (мягкая, 2026-06-21)
+## Farmer's Delight integration (soft, 2026-06-21)
 
-Паттерн кросс-мод совместимости БЕЗ хард-зависимости:
-- **Карты по ID** — `addById(String id, …)` (резолв `BuiltInRegistries.*.getOptional`,
-  no-op без контента).
-- **`compat/FarmersDelightCompat`** (`FMLCommonSetupEvent`, `enqueueWork`, гейт по
-  `ModList.isLoaded`): культуры (Фермер), еда (Повар, тиры 1–10 по ценности), ножи (Кузнец).
-- **Гейт + XP Cooking Pot** (`compat/mixin/CookingPotResultSlotMixin`, target по строке,
-  `remap=false`): гейт в `remove(int)` → `ItemStack.EMPTY` при нехватке уровня; XP в
-  `onTake` через `CookSystem.onCooked`. ⚠️ `CookingPotMealSlot` — слот-превью; реальное
-  изъятие — `CookingPotResultSlot`. Отдельный конфиг `*.farmersdelight.mixins.json` +
-  `FDMixinPlugin`.
-- **Обобщён гард незрелости** (`XPSystem.isImmatureCrop`): ванильный `CropBlock` →
-  `isMaxAge`, модовые → по свойству `age`.
-- ⚠️ НЕ покрыто: Cutting Board (нарезка ножом — отдельная механика).
+Cross-mod compat pattern WITHOUT hard dep:
+- **Maps by ID** — `addById(String id, …)` (`BuiltInRegistries.*.getOptional`, no-op if absent).
+- **`compat/FarmersDelightCompat`** (`FMLCommonSetupEvent`, `enqueueWork`, gate by `ModList.isLoaded`):
+  crops (Farmer), food (Cook, tiers 1–10 by value), knives (Blacksmith).
+- **Cooking Pot gate + XP** (`compat/mixin/CookingPotResultSlotMixin`, string target, `remap=false`):
+  gate in `remove(int)` → `ItemStack.EMPTY` if under-level; XP in `onTake` via `CookSystem.onCooked`.
+  ⚠️ `CookingPotMealSlot` = preview slot; real take = `CookingPotResultSlot`. Separate config
+  `*.farmersdelight.mixins.json` + `FDMixinPlugin`.
+- **Generalized immature guard** (`XPSystem.isImmatureCrop`): vanilla `CropBlock` → `isMaxAge`,
+  modded → by `age` property.
+- ⚠️ NOT covered: Cutting Board (knife cut — separate mechanic).
 
-## Фермер: убран XP за посадку — эксплойт (2026-06-21)
+## Farmer: removed plant XP — exploit (2026-06-21)
 
-XP капал от **посадки** (`WorldEvents.onBlockPlace`): семена возвращаются при ломке
-ростка → посадка→ломка→пересадка = бесконечный фарм. Фикс: XP за посадку убран
-(гейт посадки и трекинг клеток сохранены). Компенсация: HARVEST-XP культур в
-`BlockXPMap` +1. `PlantEntry.plantXP` оставлен в данных, но не начисляется.
+XP leaked from **planting** (`WorldEvents.onBlockPlace`): seeds returned on sapling break →
+plant→break→replant = infinite farm. Fix: plant XP removed (plant gate + cell tracking kept).
+Compensation: crop HARVEST-XP in `BlockXPMap` +1. `PlantEntry.plantXP` kept in data, not awarded.
 
-## Баланс голода (важность Повара / Добычи, 2026-06-20)
+## Hunger balance (Cook/Mining relevance, 2026-06-20)
 
-- **Возрождение с 50% голода** (`XPSystem.onPlayerRespawn`, конфиг
-  `balance.respawnFoodLevel`=10), пропускается при `isEndConquered`.
-- **Расход голода ×2** (`FoodDataMixin` → `@ModifyVariable` на `FoodData.addExhaustion`,
-  `balance.exhaustionMultiplier`=2.0). ⚠️ Конфиг SERVER — до синка на клиенте
-  `SPEC.isLoaded()` может быть false (защита от краша).
-- **TODO**: уменьшить восстановление голода от еды (через мизин `FoodData.eat`/per-item).
+- **Respawn at 50% hunger** (`XPSystem.onPlayerRespawn`, config `balance.respawnFoodLevel`=10),
+  skipped on `isEndConquered`.
+- **Hunger drain ×2** (`FoodDataMixin` → `@ModifyVariable` on `FoodData.addExhaustion`,
+  `balance.exhaustionMultiplier`=2.0). ⚠️ SERVER config — before sync client `SPEC.isLoaded()` may be
+  false (crash guard).
+- **TODO**: reduce hunger restore from food (mixin `FoodData.eat`/per-item).
 
-## Анти-грифинг к релизу (2026-06-20)
+## Anti-grief for release (2026-06-20)
 
-- **Жёсткий бан крафта** (`BannedCraftMap` + `RestrictionSystem.isCraftBanned`,
-  `antiGrief.craftBanEnabled`): TNT, вагонетка с TNT, кристалл Энда, воронка(+вагонетка),
-  observer, поршни, раздатчик, выбрасыватель. Проверяется ПЕРЕД спец-гейтом; блокировка —
-  `SlotMixin.mayPickup`.
-- **Закрыт Энд** (`onTravelToDimension`, `EntityTravelToDimensionEvent`,
-  `antiGrief.closeEnd`): отмена телепорта при `getDimension() == Level.END`.
+- **Hard craft ban** (`BannedCraftMap` + `RestrictionSystem.isCraftBanned`,
+  `antiGrief.craftBanEnabled`): TNT, TNT minecart, End crystal, hopper(+minecart), observer, pistons,
+  dispenser, dropper. Checked BEFORE spec-gate; block via `SlotMixin.mayPickup`.
+- **End closed** (`onTravelToDimension`, `EntityTravelToDimensionEvent`, `antiGrief.closeEnd`): cancel
+  teleport when `getDimension() == Level.END`.
 
-## Команды /krp: путь по названию + цель-игрок (2026-06-20)
+## /krp commands: path by name + target player (2026-06-20)
 
-- Аргумент пути — **название** (`craft`/`harvest`/…) с автодополнением; индекс 0–4 тоже
-  принимается (`KRPCommand.parsePath`).
-- `addxp`/`setlevel`/`reset`/`stats`/`debug` — опц. `target` (`EntityArgument.player`),
-  модиф. команды и цель-не-себя требуют `permission(2)`. Вывод через `sendSuccess`.
+- Path arg — **name** (`craft`/`harvest`/…) w/ autocomplete; index 0–4 also accepted
+  (`KRPCommand.parsePath`).
+- `addxp`/`setlevel`/`reset`/`stats`/`debug` — opt `target` (`EntityArgument.player`); mutating cmds
+  + non-self target need `permission(2)`. Output via `sendSuccess`.
 
-## Кастомизация главного меню (2026-06-20) — ⚠️ УБРАНО 2026-06-29 (см. раздел ниже про FancyMenu)
+## Main-menu customization (2026-06-20) — ⚠️ REMOVED 2026-06-29 (see FancyMenu section below)
 
 `client.TitleScreenMixin` (`@Mixin(TitleScreen)`, remap=false):
-- `@Redirect BrandingControl.forEachLine` → пусто (скрыть строки версий).
-- `@Redirect SplashRenderer.render` → пусто (временно скрыт splash).
-- `@Redirect LogoRenderer.renderLogo` → blit `title_logo.png` (512×160), по центру,
-  ширина 380. Подход как в легаси — картинка, не шрифт.
+- `@Redirect BrandingControl.forEachLine` → empty (hide version lines).
+- `@Redirect SplashRenderer.render` → empty (splash hidden).
+- `@Redirect LogoRenderer.renderLogo` → blit `title_logo.png` (512×160), centered, width 380. Image,
+  not font.
 
-`ClientEvents.onTitleScreenInit` (`ScreenEvent.Init.Post`): удаляет Realms/копирайт
-(скан `getListenersList()`), сдвигает виджеты вверх на 24 px (см. грабли в TECH_GOTCHAS).
+`ClientEvents.onTitleScreenInit` (`ScreenEvent.Init.Post`): removes Realms/copyright (scan
+`getListenersList()`), shifts widgets up 24 px (see TECH_GOTCHAS).
 
-## Серверная проверка модов клиента (2026-06-20)
+## Server-side client mod check (2026-06-20)
 
-Анти-чит белый список на хендшейке NeoForge 1.21 (config-фаза):
-- `ModWhitelistConfigurationTask` (`ICustomConfigurationTask`) на каждое подключение
-  (`RegisterConfigurationTasksEvent`) → шлёт `ModCheckRequestPayload`.
-- Клиент отвечает `ModListReplyPayload` (свои `ModList.get().getMods()`).
-- Сервер сверяет с **моды сервера ∪ `extraAllowedMods`**; лишние → `disconnect`.
-- Пэйлоады **обязательные** (не optional) → ванильные/не-Neo клиенты отсекаются
-  хендшейком. Конфиг (SERVER): `modCheck.enabled`, `modCheck.extraAllowedMods`.
-- ⚠️ Список сообщает сам клиент — защита от честных/казуальных, не от глубокой модификации.
-  `finishCurrentTask` бросает вне config-фазы; config-пэйлоады — `FriendlyByteBuf`-кодеки.
+Anti-cheat whitelist on NeoForge 1.21 handshake (config phase):
+- `ModWhitelistConfigurationTask` (`ICustomConfigurationTask`) per connection
+  (`RegisterConfigurationTasksEvent`) → sends `ModCheckRequestPayload`.
+- Client replies `ModListReplyPayload` (its `ModList.get().getMods()`).
+- Server compares with **server mods ∪ `extraAllowedMods`**; extras → `disconnect`.
+- Payloads **required** (not optional) → vanilla/non-Neo clients cut by handshake. Config (SERVER):
+  `modCheck.enabled`, `modCheck.extraAllowedMods`.
+- ⚠️ Client reports its own list — guards honest/casual, not deep-modified. `finishCurrentTask` throws
+  outside config phase; config payloads = `FriendlyByteBuf` codecs.
 
-## Пострелизный ретест миграции 1.21 (2026-06-19) — фиксы
+## Post-release 1.21 migration retest — fixes (2026-06-19)
 
-- **Замыленные экраны** — переопределить `renderBlurredBackground`/`renderMenuBackground`
-  пустыми (см. TECH_GOTCHAS).
-- **Молоко снимало штраф XP** — `EffectCure` через `XPSystem.onEffectRemove`
-  (`getCurativeItems` в 1.21 нет).
-- **Фермер качался на недозрелом** — `onBlockBreak` пропускает `CropBlock && !isMaxAge`.
-- **Наковальня врала про уровень книги** — выводит реальное `krp$requiredFor`; убрано
-  двойное сообщение (`createResult` на клиентском И серверном меню — слать при `!isClientSide`).
-- **Лук**: `BowItemMixin` удалён (был сломан, дублировал `ArrowLooseEvent`). Новый перк
-  Лучника — **дальность полёта стрелы** (`onArrowSpawn`, скорость ×(0.5 + 0.1·ур)).
-  Визуал натяжения не меняется.
-- **Закалка распространена**: дерево → Мастеровой (`CraftsmanTemperMap` 1/3), камень →
-  Кузнец (`BlacksmithTemperMap` 1/4).
+- **Blurred screens** — override `renderBlurredBackground`/`renderMenuBackground` empty (see TECH_GOTCHAS).
+- **Milk removed XP penalty** — `EffectCure` via `XPSystem.onEffectRemove` (`getCurativeItems` gone in 1.21).
+- **Farmer leveled on immature** — `onBlockBreak` skips `CropBlock && !isMaxAge`.
+- **Anvil lied about book req level** — outputs real `krp$requiredFor`; removed double message
+  (`createResult` on client AND server menu — send only `!isClientSide`).
+- **Bow**: `BowItemMixin` removed (broken, dup `ArrowLooseEvent`). New Archer perk — **arrow range**
+  (`onArrowSpawn`, speed ×(0.5 + 0.1·lvl)). Pull animation unchanged.
+- **Tempering extended**: wood → Craftsman (`CraftsmanTemperMap` 1/3), stone → Blacksmith
+  (`BlacksmithTemperMap` 1/4).
 
-## Иконки / меню / заголовок окна (2026-06-29: убрано в пользу FancyMenu)
+## Icons / menu / window title (2026-06-29: removed for FancyMenu)
 
-- **Логотип мода**: `logoFile="logo.png"` в `neoforge.mods.toml` (128×128 PNG) — оставлен
-  (это иконка в списке модов, не окна).
-- **Кастомизация главного меню удалена**: `TitleScreenMixin` (скрытие брендинга/splash,
-  замена лого), удаление кнопки Realms и сдвиг виджетов — всё перенесено на мод
-  **FancyMenu**. Оставлено только **скрытие плашки copyright** (`ClientEvents.onTitleScreenInit`,
-  виджет `title.credits`).
-- **Кастомная иконка и заголовок окна удалены** (`WindowIcon`, `ClientModEvents`,
-  `MinecraftTitleMixin`) — ставятся через мод. Ассеты `icons/`, `gui/title_logo.png` удалены.
+- **Mod logo**: `logoFile="logo.png"` in `neoforge.mods.toml` (128×128 PNG) — kept (mod-list icon,
+  not window).
+- **Main-menu customization removed**: `TitleScreenMixin` (branding/splash hide, logo swap), Realms
+  removal + widget shift — all moved to **FancyMenu**. Kept only **copyright hide**
+  (`ClientEvents.onTitleScreenInit`, widget `title.credits`).
+- **Custom window icon + title removed** (`WindowIcon`, `ClientModEvents`, `MinecraftTitleMixin`) —
+  set via mod. Assets `icons/`, `gui/title_logo.png` deleted.
