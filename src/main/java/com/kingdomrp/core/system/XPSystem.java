@@ -70,6 +70,9 @@ public class XPSystem {
             return;
         }
 
+        // Dynamic Trees: рубка DT-деревьев обрабатывается отдельно по фактическому
+        // объёму сваленного дерева — compat/mixin/DTBranchBlockMixin (не здесь, т.к.
+        // BreakEvent для ветки не знает объём и повторяется при доломе остатка).
         BlockEntry entry = BlockXPMap.get(event.getState().getBlock());
         if (entry == null) return;
 
