@@ -3,6 +3,29 @@
 Датированные записи о доработках и фиксах. Текущее состояние систем — в
 `KINGDOM_RP_ARCHITECTURE.md`; технические грабли — в `TECH_GOTCHAS.md`.
 
+## Dynamic Trees: XP Лесоруба (2026-06-30)
+
+DT заменяет деревья своими `BranchBlock` — их нет в `BlockXPMap` (по ванильным
+`Blocks.*_LOG`), рубка DT не давала XP. DT worldgen по умолчанию **заменяет** ванильные
+деревья (`worldGen=true` + FeatureCanceller), т.е. природных ванильных деревьев нет;
+ванильный лог-XP оставлен (поставленные логи / не-DT-породы / worldGen off).
+
+**Итоговое решение — soft-mixin `compat/mixin/DTBranchBlockMixin`** (гейт `DTMixinPlugin`,
+`kingdomrpcore.dynamictrees.mixins.json`). Хук — `BranchBlock.destroyBranchFromNode`
+(@Inject RETURN): вызывается ОДИН раз на фактическую валку, возвращает
+`BranchDestructionData` с реальным `woodVolume` (в брёвнах). XP = `min(40, logs·2)`
+(паритет с `oak_log`=2). Типы DT читаем рефлексией (не на compile-classpath), объём —
+до умножения на Fortune. `entity` = игрок (vanilla-тип).
+
+Почему не BlockEvent+тег/радиус (были ранние попытки, отброшены):
+- **trunk_shell** (толстый ствол) не в теге `branches` → ломка роняла дерево без XP;
+  через `destroyBranchFromNode` (shell валит core-ветку) — попадает.
+- **двойной счёт**: радиус-за-BreakEvent давал 25 и за верхнюю ветку, и за долом
+  нижнего остатка. `woodVolume` считается от разруба вверх → долом даёт объём ТОЛЬКО
+  остатка, повторной награды нет.
+⚠️ Прочие перки Лесоруба (скорость/топор/дабл-дроп/срубка) на DT не действуют — свой
+механизм валки.
+
 ## Tide + Backpacks + локализация (2026-06-28)
 
 - **Рыбалка переведена на мод Tide** (опц. интеграция `compat/TideCompat` +

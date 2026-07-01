@@ -24,6 +24,11 @@ config="${mod_id}.farmersdelight.mixins.json"
 [[mixins]]
 config="${mod_id}.tide.mixins.json"
 
+# Опциональная совместимость с Dynamic Trees — только если мод загружен
+# (см. DTMixinPlugin). XP Лесоруба по объёму сваленного DT-дерева.
+[[mixins]]
+config="${mod_id}.dynamictrees.mixins.json"
+
 [[dependencies.${mod_id}]]
     modId="neoforge"
     type="required"
