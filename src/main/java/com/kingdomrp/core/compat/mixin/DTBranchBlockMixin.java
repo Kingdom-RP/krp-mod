@@ -49,6 +49,9 @@ public abstract class DTBranchBlockMixin {
                             CallbackInfoReturnable<?> cir) {
         if (level.isClientSide()) return;
         if (!(entity instanceof ServerPlayer player)) return;
+        // Абуз-чек не нужен: посадка DT-саженца не трекается PlacedBlockTracker
+        // (WorldEvents.onBlockPlace, namespace "dynamictrees") — та же логика,
+        // что у растущих культур Фермера. Посадил → выросло само → срубил = легит.
         Object data = cir.getReturnValue();
         if (data == null) return;
 

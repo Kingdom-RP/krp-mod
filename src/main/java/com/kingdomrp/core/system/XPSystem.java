@@ -212,11 +212,11 @@ public class XPSystem {
 
         var state = event.getLevel().getBlockState(event.getPos());
 
-        // Лесоруб: обтёсывание бревна топором = 1 XP (путь Добыча)
+        // Обтёсывание бревна топором (снятие коры) = 1 XP пути Ремесло (работа с деревом — Плотник)
         ItemStack held = player.getMainHandItem();
         if (held.getItem() instanceof net.minecraft.world.item.AxeItem
                 && isStrippableLog(state.getBlock())) {
-            giveXP(player, Path.MINING, 1f);
+            giveXP(player, Path.CRAFT, 1f);
             return;
         }
 

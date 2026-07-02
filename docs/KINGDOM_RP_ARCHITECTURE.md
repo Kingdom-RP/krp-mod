@@ -165,16 +165,16 @@ Same for `PlayerEvent.BreakSpeed`, `LivingHurtEvent`, `PlayerEvent.ItemCraftedEv
 **Lumberjack**
 - Log-chop XP: L0 (oak/birch/spruce)=2, L2 (jungle/acacia/dark_oak)=4, L4 (mangrove/cherry)=8,
   L6 (crimson/warped/mushroom)=16
-- Strip-log XP (RMB axe) = 1 (`PlayerInteractEvent.RightClickBlock` + `AxeItem` check)
+- Strip-log XP (RMB axe) — path CRAFT (Carpenter), see Carpenter section
 - Access (`BlockTierMap`, spec=LUMBERJACK) — matches XP tiers
 - Chop speed: `+5%/lvl` — logs AND worked wood (`isWorkedWood`: block whose item Carpenter
   crafts — planks/furniture/doors/fences; set tied to `ItemCraftMap` spec=CARPENTER, no dup list)
+  AND Dynamic Trees branch blocks (`isDtBranch`, matched by class package)
 - Axe durability save: `level*0.05` (5%/lvl, max 50%). Damage rollback via `server.execute`
   (next tick) clamped `Math.min(before, ...)` — `BreakEvent` fires before tool dmg; naive
   `setDamageValue(-1)` fought Unbreaking. Clamp to before-snapshot stacks w/ Unbreaking
-- Log double-drop: `level*0.025`
-- Fell whole tree @L5: `0.25 + (level-5)*0.11` (L5=25%, L10≈80%). BFS over adjacent logs
-  (10 dirs w/ up-diagonals), `MAX_TREE_BLOCKS = 64`, skips placed, via `server.execute()` next tick
+- Log double-drop: `level*0.025`. No whole-tree-fell perk — Dynamic Trees already fells the whole
+  tree natively from a single broken block
 
 ### War path — DONE ✅
 
@@ -317,7 +317,8 @@ Same for `PlayerEvent.BreakSpeed`, `LivingHurtEvent`, `PlayerEvent.ItemCraftedEv
 
 **Carpenter** — DONE ✅
 1. **XP actions** (path CRAFT): craft wooden (+"not quite") items (`ItemCraftMap`, spec=CARPENTER).
-   Chop/strip — Lumberjack (MINING), not Carpenter.
+   Strip-log (RMB axe) = 1 XP path CRAFT too (bark-stripping is woodworking prep, not mining).
+   Chop (log break) stays Lumberjack (MINING).
 2. **XP by value**: trinkets (planks/sticks/slabs/stairs/buttons/signs/bamboo-blocks/scaffolding)=1,
    basics (doors/trapdoors/fences/tools/decor)=2, util/beds (barrel/stone tools/beds)=3, transport/
    furniture (boats/shelves/beehive)=4, profession stations/campfires=5.
@@ -584,9 +585,11 @@ purpur/end-stone — bricks/slabs/stairs/walls/polish).
 Harvest (Farmer+Fisher+Cook), Magic (Alchemist+Enchanter), Craft (Carpenter+Blacksmith+Craftsman).
 
 **Integrations** (soft): Farmer's Delight, Tide (fishing — Fisher runs on it), Backpacks, Dynamic
-Trees (Lumberjack XP by felled-tree volume — `DTBranchBlockMixin` on `destroyBranchFromNode`). 1.21
-content added to mappings (coverage audit).
+Trees (Lumberjack XP by felled-tree volume — `DTBranchBlockMixin` on `destroyBranchFromNode`; DT
+saplings excluded from `PlacedBlockTracker` so plant→grow→chop stays legit XP, same rule as
+Farmer's growable crops; Lumberjack drop/durability/speed perks also trigger on DT branch blocks
+via `isDtBranch()`). 1.21 content added to mappings (coverage audit).
 
 ⚠️ **Open**: runClient retest of Tide + Dynamic Trees integrations (mixin apply, tackle/rod gates,
-fish cooking, journal off; DT volume XP, trunk_shell, no double count). Backlog: stats/logging,
-guilds/territories — after balance.
+fish cooking, journal off; DT volume XP, trunk_shell, no double count, sapling-plant-exemption,
+isDtBranch effects). Backlog: stats/logging, guilds/territories — after balance.

@@ -3,6 +3,35 @@
 Dated notes on reworks + fixes. Current system state — `KINGDOM_RP_ARCHITECTURE.md`; technical
 gotchas — `TECH_GOTCHAS.md`.
 
+## Dynamic Trees × Lumberjack effects fix (2026-07-02)
+
+Bug: DT XP mixin (destroyBranchFromNode) worked, but Lumberjack spec effects (double-drop, axe
+durability save, chop speed, whole-tree fell) still checked vanilla-log-only `isLog()` — never
+triggered on DT branch blocks.
+
+Fixes:
+- `isDtBranch()` added to `SpecializationEffects` (matches by class package
+  `com.dtteam.dynamictrees.block.branch.`, since DT isn't on compile-classpath) — wired into
+  double-drop/durability-save (`checkLumberjack`) and chop speed (`applyLumberjackSpeed`).
+- XP-farm concern (plant sapling → break → replant) resolved same way as Farmer's growable crops:
+  DT saplings excluded from `PlacedBlockTracker` tracking (`WorldEvents.onBlockPlace`, namespace
+  `dynamictrees`) — natural growth cycle stays legit XP, only a *direct* placement of an
+  already-grown block would be blocked (not currently possible via DT's own item set).
+- Whole-tree-fell perk (@L5, custom BFS `destroyBlock` over adjacent logs) removed entirely — DT
+  already fells the whole tree natively from a single broken block; the custom BFS was redundant
+  for DT and risked corrupting DT's internal branch connectivity graph if ever extended to DT blocks.
+- Strip-log XP (RMB axe) moved from path MINING to path CRAFT — bark-stripping is woodworking
+  prep, not mining; belongs to Carpenter's XP pool.
+- `PlayerEvent.BreakSpeed` handler was gated to `instanceof ServerPlayer`, silently no-op on the
+  client. Actual block-break timing is client-authoritative (client tracks its own destroy
+  progress and tells the server when done) — so Miner/Lumberjack speed perks never had any
+  perceptible effect. Fixed: handler now runs for `Player` on both sides (pure multiplier, no
+  side effects, safe to duplicate).
+- Added `/krp setspec <spec> <level> [target]` debug command (+ `PlayerData.setSpecializationLevel`)
+  to set a specialization level directly for testing, bypassing the normal spend-a-point flow.
+  Also bumps the underlying path level to match, so path-gated effects (BlockTierMap etc.) open
+  correctly too.
+
 ## Dynamic Trees: Lumberjack XP (2026-06-30)
 
 DT replaces trees with its own `BranchBlock` — not in `BlockXPMap` (vanilla `Blocks.*_LOG`), so

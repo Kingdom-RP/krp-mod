@@ -49,6 +49,11 @@ public class WorldEvents {
             if (PlantTierMap.isGrowable(placed)) return;
         }
 
+        // Саженцы Dynamic Trees — та же логика: посадка → естественный рост →
+        // рубка легитимна, не фарм. Не трекаем ничего с этим неймспейсом.
+        if (net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(placed)
+                .getNamespace().equals("dynamictrees")) return;
+
         PlacedBlockTracker.onPlaced(event.getPos());
     }
 }

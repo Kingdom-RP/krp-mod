@@ -22,10 +22,6 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 
-import java.util.HashSet;
-import java.util.Queue;
-import java.util.Set;
-
 @EventBusSubscriber(modid = KingdomRPCore.MODID)
 public class SpecializationEffects {
 
@@ -33,8 +29,6 @@ public class SpecializationEffects {
     private static void withData(Player player, java.util.function.Consumer<PlayerData> action) {
         action.accept(player.getData(KRPAttachments.PLAYER_DATA));
     }
-
-    private static final int MAX_TREE_BLOCKS = 64;
 
     // ================================================================
     // СОБЫТИЯ
@@ -58,10 +52,14 @@ public class SpecializationEffects {
         checkFarmer(player, block, pos, event);
     }
 
+    // Реальная скорость слома блока решается на КЛИЕНТЕ (он локально считает
+    // прогресс и шлёт "готово" серверу) — сервер только валидирует. Поэтому
+    // бонус обязан применяться и на клиенте тоже, иначе игрок его физически
+    // не почувствует (ServerPlayer-only гейт здесь был багом). Побочных
+    // эффектов нет (чистый множитель, без XP/рандома) — безопасно на обеих сторонах.
     @SubscribeEvent
     public static void onBreakSpeed(PlayerEvent.BreakSpeed event) {
-        if (!(event.getEntity() instanceof ServerPlayer player)) return;
-
+        Player player = event.getEntity();
         Block block = event.getState().getBlock();
 
         applyMinerSpeed(player, block, event);
@@ -328,7 +326,7 @@ public class SpecializationEffects {
 
     private static void checkLumberjack(ServerPlayer player, Block block,
                                         BlockPos pos, BlockEvent.BreakEvent event) {
-        if (!isLog(block)) return;
+        if (!isLog(block) && !isDtBranch(block)) return;
 
         withData(player, data -> {
             int specLevel = data.getSpecializationLevel(Spec.LUMBERJACK.id);
@@ -359,15 +357,8 @@ public class SpecializationEffects {
                         player.level().getBlockEntity(pos),
                         player.getMainHandItem());
             }
-
-            // Срубка дерева с 5 уровня
-            if (specLevel >= 5) {
-                float fellChance = 0.25f + (specLevel - 5) * 0.11f;
-                if (player.level().random.nextFloat() < fellChance) {
-                    ((ServerLevel) player.level()).getServer()
-                            .execute(() -> fellTree(player, pos));
-                }
-            }
+            // Срубка дерева целиком с 5 ур. убрана — Dynamic Trees уже роняет
+            // всё дерево от одного сломанного блока нативно.
         });
     }
 
@@ -396,7 +387,7 @@ public class SpecializationEffects {
     // СКОРОСТЬ ДОБЫЧИ
     // ================================================================
 
-    private static void applyMinerSpeed(ServerPlayer player, Block block,
+    private static void applyMinerSpeed(Player player, Block block,
                                         PlayerEvent.BreakSpeed event) {
         BlockEntry entry = BlockXPMap.get(block);
         if (entry == null || entry.path() != Path.MINING) return;
@@ -409,11 +400,12 @@ public class SpecializationEffects {
         });
     }
 
-    private static void applyLumberjackSpeed(ServerPlayer player, Block block,
+    private static void applyLumberjackSpeed(Player player, Block block,
                                              PlayerEvent.BreakSpeed event) {
         // Брёвна + обработанное дерево (доски/мебель/двери и т.п. — то, что
-        // крафтит Плотник): Лесоруб хорошо добывает дерево в любом виде.
-        if (!isLog(block) && !isWorkedWood(block)) return;
+        // крафтит Плотник) + стволы/ветви Dynamic Trees: Лесоруб хорошо
+        // добывает дерево в любом виде.
+        if (!isLog(block) && !isWorkedWood(block) && !isDtBranch(block)) return;
 
         withData(player, data -> {
             int specLevel = data.getSpecializationLevel(Spec.LUMBERJACK.id);
@@ -897,31 +889,10 @@ public class SpecializationEffects {
     // УТИЛИТЫ
     // ================================================================
 
-    private static void fellTree(ServerPlayer player, BlockPos startPos) {
-        var level = (ServerLevel) player.level();
-        Set<BlockPos> visited = new HashSet<>();
-        Queue<BlockPos> queue = new java.util.LinkedList<>();
-        queue.add(startPos);
-
-        while (!queue.isEmpty() && visited.size() < MAX_TREE_BLOCKS) {
-            BlockPos pos = queue.poll();
-            if (visited.contains(pos)) continue;
-            if (!isLog(level.getBlockState(pos).getBlock())) continue;
-            if (PlacedBlockTracker.isPlacedByPlayer(pos)) continue;
-
-            visited.add(pos);
-            level.destroyBlock(pos, true, player);
-
-            for (var offset : new BlockPos[]{
-                    pos.above(), pos.below(),
-                    pos.north(), pos.south(),
-                    pos.east(), pos.west(),
-                    pos.above().north(), pos.above().south(),
-                    pos.above().east(), pos.above().west()
-            }) {
-                if (!visited.contains(offset)) queue.add(offset);
-            }
-        }
+    // Ствол/ветвь Dynamic Trees — по пакету класса (мод не на compile-classpath,
+    // это soft-зависимость; тот же приём таргетирования, что в DTBranchBlockMixin).
+    private static boolean isDtBranch(Block block) {
+        return block.getClass().getName().startsWith("com.dtteam.dynamictrees.block.branch.");
     }
 
     private static boolean isLog(Block block) {
