@@ -3,6 +3,8 @@ package com.kingdomrp.core.command;
 import com.kingdomrp.core.capability.PlayerData;
 import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.data.Path;
+import com.kingdomrp.core.data.Spec;
+import com.kingdomrp.core.specialization.SpecializationRegistry;
 import com.kingdomrp.core.network.PacketHelper;
 import com.kingdomrp.core.system.XPSystem;
 import com.kingdomrp.core.KingdomRPCore;
@@ -32,6 +34,11 @@ public class KRPCommand {
     private static final SuggestionProvider<CommandSourceStack> PATH_SUGGEST =
             (ctx, builder) -> SharedSuggestionProvider.suggest(
                     Arrays.stream(Path.values()).map(p -> p.name().toLowerCase()), builder);
+
+    /** Автодополнение id специализаций (miner, lumberjack, farmer, ...). */
+    private static final SuggestionProvider<CommandSourceStack> SPEC_SUGGEST =
+            (ctx, builder) -> SharedSuggestionProvider.suggest(
+                    Arrays.stream(Spec.values()).map(s -> s.id), builder);
 
     private static void withData(ServerPlayer player, java.util.function.Consumer<PlayerData> action) {
         action.accept(player.getData(KRPAttachments.PLAYER_DATA));
@@ -105,6 +112,18 @@ public class KRPCommand {
                                                 .executes(ctx -> cmdSetLevel(ctx, false))
                                                 .then(Commands.argument("target", EntityArgument.player())
                                                         .executes(ctx -> cmdSetLevel(ctx, true)))
+                                        )
+                                )
+                        )
+                        // ===== setspec <spec> <level> [target] =====
+                        .then(Commands.literal("setspec")
+                                .requires(src -> src.hasPermission(2))
+                                .then(Commands.argument("spec", StringArgumentType.word()).suggests(SPEC_SUGGEST)
+                                        .then(Commands.argument("level",
+                                                IntegerArgumentType.integer(0, PlayerData.MAX_SPEC_LEVEL))
+                                                .executes(ctx -> cmdSetSpec(ctx, false))
+                                                .then(Commands.argument("target", EntityArgument.player())
+                                                        .executes(ctx -> cmdSetSpec(ctx, true)))
                                         )
                                 )
                         )
@@ -206,6 +225,52 @@ public class KRPCommand {
                 "§aПуть §f" + XPSystem.getPathName(path) + " §aигрока §f"
                         + target.getName().getString() + " §aустановлен на уровень §f" + level), true);
         return 1;
+    }
+
+    /** Спека по id (miner/lumberjack/...). null — не распознана. */
+    private static Spec parseSpec(String s) {
+        for (Spec spec : Spec.values()) {
+            if (spec.id.equals(s.toLowerCase())) return spec;
+        }
+        return null;
+    }
+
+    // Прямая установка уровня специализации — тестовый шорткат в обход обычной
+    // прокачки (K → уровень → кнопка спеки N раз). Очки пути НЕ тратятся честно,
+    // но путь до нужного уровня подтягивается — эффекты, завязанные на pathLevel
+    // (гейты BlockTierMap/PlantTierMap и т.п.), тоже открываются корректно.
+    private static int cmdSetSpec(CommandContext<CommandSourceStack> ctx, boolean hasTarget)
+            throws CommandSyntaxException {
+        ServerPlayer target = resolveTarget(ctx, hasTarget);
+        if (target == null) return 0;
+        Spec spec = parseSpec(StringArgumentType.getString(ctx, "spec"));
+        if (spec == null) {
+            ctx.getSource().sendFailure(Component.literal("§cНеизвестная специализация. Доступно: "
+                    + specNamesHint()));
+            return 0;
+        }
+        int level = IntegerArgumentType.getInteger(ctx, "level");
+        Path path = SpecializationRegistry.get(spec.id)
+                .map(s -> Path.values()[s.getPathIndex()])
+                .orElse(null);
+
+        withData(target, data -> {
+            data.setSpecializationLevel(spec.id, level);
+            if (path != null) {
+                while (data.getLevel(path) < level) {
+                    data.addXP(path, data.getXPRequired(path));
+                }
+            }
+            PacketHelper.syncPlayer(target);
+        });
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "§aСпециализация §f" + spec.id + " §aигрока §f" + target.getName().getString()
+                        + " §aустановлена на уровень §f" + level), true);
+        return 1;
+    }
+
+    private static String specNamesHint() {
+        return String.join(", ", Arrays.stream(Spec.values()).map(s -> s.id).toList());
     }
 
     private static int cmdReset(CommandContext<CommandSourceStack> ctx, boolean hasTarget)

@@ -71,6 +71,12 @@ public class PlayerData implements INBTSerializable<CompoundTag> {
         specializationLevels.put(specId, current + 1);
     }
 
+    /** Прямая установка уровня специализации в обход "очков пути" — для тестовых команд. */
+    public void setSpecializationLevel(String specId, int level) {
+        int clamped = Math.max(0, Math.min(MAX_SPEC_LEVEL, level));
+        specializationLevels.put(specId, clamped);
+    }
+
     public int getSpecializationLevel(String specId) {
         return specializationLevels.getOrDefault(specId, 0);
     }
