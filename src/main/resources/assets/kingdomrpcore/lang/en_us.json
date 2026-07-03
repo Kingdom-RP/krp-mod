@@ -2,5 +2,6 @@
   "effect.kingdomrpcore.death_xp_penalty": "XP Penalty",
   "effect.kingdomrpcore.death_xp_penalty.desc": "After death. Reduced XP gain. Not removed by milk.",
   "key.categories.kingdomrpcore": "Kingdom RP",
-  "key.kingdomrpcore.open_paths": "Open Paths Menu"
+  "key.kingdomrpcore.open_paths": "Open Paths Menu",
+  "emi.category.kingdomrpcore.keg_brewing": "Keg Brewing"
 }

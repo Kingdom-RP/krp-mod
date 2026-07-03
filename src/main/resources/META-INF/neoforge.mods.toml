@@ -29,6 +29,11 @@ config="${mod_id}.tide.mixins.json"
 [[mixins]]
 config="${mod_id}.dynamictrees.mixins.json"
 
+# Опциональная совместимость с AlcoCraft+ — только если мод загружен
+# (см. AlcoCraftMixinPlugin). Гейт/XP Повара за варку пива в Кеге.
+[[mixins]]
+config="${mod_id}.alcocraft.mixins.json"
+
 [[dependencies.${mod_id}]]
     modId="neoforge"
     type="required"

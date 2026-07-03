@@ -581,4 +581,12 @@ public class ItemCraftMap {
         if (!initialized) init();
         return MAP.get(item);
     }
+
+    /** Регистрация XP за крафт по ID (мод-совместимость). No-op если предмета нет. */
+    public static void addById(String id, CraftEntry entry) {
+        if (!initialized) init();
+        net.minecraft.core.registries.BuiltInRegistries.ITEM
+                .getOptional(net.minecraft.resources.ResourceLocation.parse(id))
+                .ifPresent(it -> MAP.put(it, entry));
+    }
 }

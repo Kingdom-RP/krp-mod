@@ -56,6 +56,16 @@ neoForge {
     }
 }
 
+// EMI API — только для компиляции (наш опциональный EMI-плагин рецептов Кега
+// AlcoCraft+). В рантайме класс грузит сам EMI; без EMI не грузится.
+repositories {
+    maven { url = uri('https://maven.terraformersmc.com/releases/') }
+}
+
+dependencies {
+    compileOnly 'dev.emi:emi-neoforge:1.1.24+1.21.1:api'
+}
+
 // Ресурсы, сгенерированные датагеном.
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
