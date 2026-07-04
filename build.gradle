@@ -63,7 +63,9 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'dev.emi:emi-neoforge:1.1.24+1.21.1:api'
+    // Полный jar (не :api) — нужен доступ к внутренним классам EMI для
+    // клиентского микстина «distraction-free» (скрытие индекс-панели).
+    compileOnly 'dev.emi:emi-neoforge:1.1.24+1.21.1'
 }
 
 // Ресурсы, сгенерированные датагеном.

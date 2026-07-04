@@ -34,6 +34,11 @@ config="${mod_id}.dynamictrees.mixins.json"
 [[mixins]]
 config="${mod_id}.alcocraft.mixins.json"
 
+# Опциональный EMI-твик (клиент) — только если EMI загружен (см. EmiMixinPlugin).
+# «Distraction-free»: скрывать индекс-панель EMI при пустом поиске.
+[[mixins]]
+config="${mod_id}.emi.mixins.json"
+
 [[dependencies.${mod_id}]]
     modId="neoforge"
     type="required"
