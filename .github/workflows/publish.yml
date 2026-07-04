@@ -142,6 +142,13 @@ jobs:
             SKIP_INSTALL="--skip-install"
             echo "build-work из кэша → --skip-install"
           fi
+          # Шейдерпаки: все .zip из krp-mod/shaderpacks/ → повторяемый --shaderpack.
+          SHADER_ARGS=()
+          for zip in "${{ github.workspace }}/krp-mod/shaderpacks/"*.zip; do
+            [ -e "$zip" ] || continue
+            SHADER_ARGS+=(--shaderpack "$zip")
+            echo "шейдерпак → $(basename "$zip")"
+          done
           cargo run --manifest-path builder/Cargo.toml --release -- \
             --base-url "$BASE_URL" \
             --mod-jar "${{ steps.jar.outputs.path }}" \
@@ -151,6 +158,7 @@ jobs:
             --sides "${{ github.workspace }}/krp-modpack/sides.toml" \
             --version "1.0.${{ github.run_number }}" \
             --out "${{ github.workspace }}/dist" \
+            "${SHADER_ARGS[@]}" \
             $SKIP_INSTALL
 
       - name: Upload Pages artifact
