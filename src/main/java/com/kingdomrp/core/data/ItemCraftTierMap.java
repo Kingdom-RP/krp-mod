@@ -1,5 +1,6 @@
 package com.kingdomrp.core.data;
 
+import com.kingdomrp.core.registry.KRPItems;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
@@ -166,14 +167,18 @@ public class ItemCraftTierMap {
                 Items.SHIELD, Items.STONECUTTER, Items.BOW,
                 Items.SMOKER, Items.BLAST_FURNACE);
 
-        // Тир 3 — железо (инструменты + броня + кольчуга)
+        // Тир 2 — железное кольцо + кольчужная броня (из колец)
+        gate(new SpecRequirement(Spec.BLACKSMITH, 2),
+                KRPItems.IRON_RING.get(),
+                Items.CHAINMAIL_HELMET, Items.CHAINMAIL_CHESTPLATE,
+                Items.CHAINMAIL_LEGGINGS, Items.CHAINMAIL_BOOTS);
+
+        // Тир 3 — железо (инструменты + броня)
         gate(new SpecRequirement(Spec.BLACKSMITH, 3),
                 Items.IRON_SWORD, Items.IRON_AXE, Items.IRON_PICKAXE,
                 Items.IRON_SHOVEL, Items.IRON_HOE,
                 Items.IRON_HELMET, Items.IRON_CHESTPLATE,
-                Items.IRON_LEGGINGS, Items.IRON_BOOTS,
-                Items.CHAINMAIL_HELMET, Items.CHAINMAIL_CHESTPLATE,
-                Items.CHAINMAIL_LEGGINGS, Items.CHAINMAIL_BOOTS);
+                Items.IRON_LEGGINGS, Items.IRON_BOOTS);
 
         // Тир 3 — железная утилитарка, приборы, транспорт, станции, механизмы
         gate(new SpecRequirement(Spec.BLACKSMITH, 3),
@@ -225,8 +230,9 @@ public class ItemCraftTierMap {
                 Items.CYAN_TERRACOTTA, Items.PURPLE_TERRACOTTA, Items.BLUE_TERRACOTTA,
                 Items.BROWN_TERRACOTTA, Items.GREEN_TERRACOTTA, Items.RED_TERRACOTTA, Items.BLACK_TERRACOTTA);
 
-        // Тир 3 — тонкая керамика + цветное стекло (витражи)
+        // Тир 3 — тонкая керамика + цветное стекло (витражи) + седло
         gate(new SpecRequirement(Spec.CRAFTSMAN, 3),
+                Items.SADDLE,
                 Items.DECORATED_POT,
                 Items.WHITE_STAINED_GLASS, Items.ORANGE_STAINED_GLASS, Items.MAGENTA_STAINED_GLASS,
                 Items.LIGHT_BLUE_STAINED_GLASS, Items.YELLOW_STAINED_GLASS, Items.LIME_STAINED_GLASS,

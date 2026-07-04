@@ -28,16 +28,16 @@ public class PlantTierMap {
         // Ур.0 — стартовые культуры
         plant(0, Blocks.WHEAT, Blocks.SWEET_BERRY_BUSH);
 
-        // Ур.1 — корнеплоды, бамбук
+        // Ур.1 — корнеплоды, бамбук, грибы
         plant(1, Blocks.CARROTS, Blocks.POTATOES,
-                Blocks.BAMBOO_SAPLING, Blocks.BAMBOO);
+                Blocks.BAMBOO_SAPLING, Blocks.BAMBOO,
+                Blocks.BROWN_MUSHROOM, Blocks.RED_MUSHROOM);
 
         // Ур.2 — свёкла, тростник, кактус
         plant(2, Blocks.BEETROOTS, Blocks.SUGAR_CANE, Blocks.CACTUS);
 
-        // Ур.3 — крупные плоды (стебли), грибы
-        plant(3, Blocks.PUMPKIN_STEM, Blocks.MELON_STEM,
-                Blocks.BROWN_MUSHROOM, Blocks.RED_MUSHROOM);
+        // Ур.3 — крупные плоды (стебли)
+        plant(3, Blocks.PUMPKIN_STEM, Blocks.MELON_STEM);
 
         // Ур.4 — какао
         plant(4, Blocks.COCOA);

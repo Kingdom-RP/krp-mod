@@ -4,5 +4,6 @@
   "key.categories.kingdomrpcore": "Kingdom RP",
   "key.kingdomrpcore.open_paths": "Открыть меню путей",
   "emi.category.kingdomrpcore.keg_brewing": "Варка в Кеге",
-  "gui.kingdomrpcore.emi_search_hint": "Начните искать, чтобы увидеть предметы"
+  "gui.kingdomrpcore.emi_search_hint": "Начните искать, чтобы увидеть предметы",
+  "item.kingdomrpcore.iron_ring": "Железное кольцо"
 }

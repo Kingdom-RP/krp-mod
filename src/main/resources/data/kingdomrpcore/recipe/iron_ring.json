@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "NNN",
+    "N N",
+    "NNN"
+  ],
+  "key": {
+    "N": { "item": "minecraft:iron_nugget" }
+  },
+  "result": {
+    "id": "kingdomrpcore:iron_ring",
+    "count": 2
+  }
+}

@@ -1,5 +1,6 @@
 package com.kingdomrp.core.data;
 
+import com.kingdomrp.core.registry.KRPItems;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
@@ -271,7 +272,11 @@ public class ItemCraftMap {
                 Items.IRON_HELMET, Items.IRON_CHESTPLATE,
                 Items.IRON_LEGGINGS, Items.IRON_BOOTS);
 
-        // Кольчужная броня — железный тир
+        // Железное кольцо — компонент кольчуги (из самородков), XP 2
+        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 2f),
+                KRPItems.IRON_RING.get());
+
+        // Кольчужная броня — из железных колец (тир 2)
         register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 18f),
                 Items.CHAINMAIL_HELMET, Items.CHAINMAIL_CHESTPLATE,
                 Items.CHAINMAIL_LEGGINGS, Items.CHAINMAIL_BOOTS);
@@ -443,6 +448,10 @@ public class ItemCraftMap {
         // ================== Тир 2 (CRAFTSMAN 2): тяжёлая кожа + терракота ==================
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 3f),
                 Items.LEATHER_CHESTPLATE, Items.LEATHER_LEGGINGS);
+
+        // Седло — кожа + железо (натуральная кожа → Мастеровой), XP 5
+        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 5f),
+                Items.SADDLE);
 
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 2f),
                 Items.WHITE_TERRACOTTA, Items.ORANGE_TERRACOTTA, Items.MAGENTA_TERRACOTTA,

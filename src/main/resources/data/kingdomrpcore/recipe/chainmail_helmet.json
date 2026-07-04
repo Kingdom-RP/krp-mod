@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "RRR",
+    "R R"
+  ],
+  "key": {
+    "R": { "item": "kingdomrpcore:iron_ring" }
+  },
+  "result": {
+    "id": "minecraft:chainmail_helmet",
+    "count": 1
+  }
+}

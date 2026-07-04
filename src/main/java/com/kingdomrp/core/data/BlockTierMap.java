@@ -57,18 +57,18 @@ public class BlockTierMap {
         // (ур.0 — пшеница и сладкие ягоды — без ограничений)
         // ================================================================
 
-        // Ур.1: морковь, картофель, бамбук
+        // Ур.1: морковь, картофель, бамбук, грибы
         register(new BlockTierEntry(Spec.FARMER, 1),
-                Blocks.CARROTS, Blocks.POTATOES, Blocks.BAMBOO);
+                Blocks.CARROTS, Blocks.POTATOES, Blocks.BAMBOO,
+                Blocks.BROWN_MUSHROOM, Blocks.RED_MUSHROOM);
 
         // Ур.2: свёкла, тростник, кактус
         register(new BlockTierEntry(Spec.FARMER, 2),
                 Blocks.BEETROOTS, Blocks.SUGAR_CANE, Blocks.CACTUS);
 
-        // Ур.3: тыква, арбуз, грибы
+        // Ур.3: тыква, арбуз
         register(new BlockTierEntry(Spec.FARMER, 3),
-                Blocks.PUMPKIN, Blocks.MELON,
-                Blocks.BROWN_MUSHROOM, Blocks.RED_MUSHROOM);
+                Blocks.PUMPKIN, Blocks.MELON);
 
         // Ур.4: какао
         register(new BlockTierEntry(Spec.FARMER, 4),

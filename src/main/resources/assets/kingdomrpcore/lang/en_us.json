@@ -4,5 +4,6 @@
   "key.categories.kingdomrpcore": "Kingdom RP",
   "key.kingdomrpcore.open_paths": "Open Paths Menu",
   "emi.category.kingdomrpcore.keg_brewing": "Keg Brewing",
-  "gui.kingdomrpcore.emi_search_hint": "Start typing to show items"
+  "gui.kingdomrpcore.emi_search_hint": "Start typing to show items",
+  "item.kingdomrpcore.iron_ring": "Iron Ring"
 }
