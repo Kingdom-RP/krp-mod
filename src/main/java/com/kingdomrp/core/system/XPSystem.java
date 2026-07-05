@@ -302,6 +302,9 @@ public class XPSystem {
         if (result.isEmpty()) return;
         float per = NaturalSmeltMap.get(result.getItem());
         if (per <= 0f) return;
+        // Гейт-XP: за переплавку выше уровня (напр. стекло без Мастерового 1) XP не даём,
+        // даже если сырьё положил хоппер/другой игрок (вход печи такое не ловит).
+        if (RestrictionSystem.isSmeltBlocked(player, result.getItem())) return;
         giveXP(player, Path.CRAFT, per * result.getCount());
     }
 

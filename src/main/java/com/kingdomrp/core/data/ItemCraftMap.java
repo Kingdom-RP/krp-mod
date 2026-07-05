@@ -1,16 +1,29 @@
 package com.kingdomrp.core.data;
 
 import com.kingdomrp.core.registry.KRPItems;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ItemCraftMap {
 
     private static final Map<Item, CraftEntry> MAP = new HashMap<>();
+    /** Тег-правила (fallback после точных Item; мод-совместимость: modded-варианты). */
+    private static final List<Map.Entry<TagKey<Item>, CraftEntry>> TAGS = new ArrayList<>();
     private static boolean initialized = false;
+
+    /** Тег предметов по ID (для common-тегов вроде c:bookshelves). */
+    private static TagKey<Item> itemTag(String id) {
+        return TagKey.create(Registries.ITEM, ResourceLocation.parse(id));
+    }
 
     public static void init() {
         if (initialized) return;
@@ -26,110 +39,35 @@ public class ItemCraftMap {
 
         // ---------------- Тир 0 (без гейта): минимум для старта ----------------
 
-        // Доски, палка, миска, знаки — XP 1
-        register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f),
-                Items.OAK_PLANKS, Items.BIRCH_PLANKS, Items.SPRUCE_PLANKS,
-                Items.JUNGLE_PLANKS, Items.ACACIA_PLANKS, Items.DARK_OAK_PLANKS,
-                Items.MANGROVE_PLANKS, Items.CHERRY_PLANKS,
-                Items.BAMBOO_PLANKS, Items.CRIMSON_PLANKS, Items.WARPED_PLANKS);
-
+        // Палка, миска — XP 1
+        // ⚠️ Доски/знаки/висячие таблички/кнопки/двери/люки/плиты/ступени/заборы/
+        // кровати/лодки/верстак/книжные полки — по ТЕГАМ (см. тег-fallback в конце
+        // init()): ваниль + modded-варианты. Здесь поимённо только НЕ покрытые тегом.
         register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f),
                 Items.STICK, Items.BOWL);
 
-        register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f),
-                Items.OAK_SIGN, Items.BIRCH_SIGN, Items.SPRUCE_SIGN,
-                Items.JUNGLE_SIGN, Items.ACACIA_SIGN, Items.DARK_OAK_SIGN,
-                Items.MANGROVE_SIGN, Items.CHERRY_SIGN, Items.BAMBOO_SIGN,
-                Items.CRIMSON_SIGN, Items.WARPED_SIGN);
-
-        // Верстак, сундук, деревянные инструменты — XP 2
+        // Сундук, деревянные инструменты — XP 2 (верстак — тег c:...:crafting_tables)
         register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f),
-                Items.CRAFTING_TABLE, Items.CHEST);
+                Items.CHEST);
 
         register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f),
                 Items.WOODEN_SWORD, Items.WOODEN_AXE, Items.WOODEN_PICKAXE,
                 Items.WOODEN_SHOVEL, Items.WOODEN_HOE);
 
-        // (Коптильня переехала к Кузнецу — см. секцию КУЗНЕЦ.)
-
-        // ---------------- Тир 1 (CARPENTER 1): базовая столярка ----------------
-
-        // Кнопки — XP 1
-        register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f),
-                Items.OAK_BUTTON, Items.BIRCH_BUTTON, Items.SPRUCE_BUTTON,
-                Items.JUNGLE_BUTTON, Items.ACACIA_BUTTON, Items.DARK_OAK_BUTTON,
-                Items.MANGROVE_BUTTON, Items.CHERRY_BUTTON, Items.BAMBOO_BUTTON,
-                Items.CRIMSON_BUTTON, Items.WARPED_BUTTON);
-
-        // Нажимные плиты, лестница — XP 2
-        register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f),
-                Items.OAK_PRESSURE_PLATE, Items.BIRCH_PRESSURE_PLATE, Items.SPRUCE_PRESSURE_PLATE,
-                Items.JUNGLE_PRESSURE_PLATE, Items.ACACIA_PRESSURE_PLATE, Items.DARK_OAK_PRESSURE_PLATE,
-                Items.MANGROVE_PRESSURE_PLATE, Items.CHERRY_PRESSURE_PLATE, Items.BAMBOO_PRESSURE_PLATE,
-                Items.CRIMSON_PRESSURE_PLATE, Items.WARPED_PRESSURE_PLATE);
-
+        // Лестница, удочка — XP 2
         register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f),
                 Items.LADDER, Items.FISHING_ROD);
 
-        // Двери, люки — XP 2
-        register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f),
-                Items.OAK_DOOR, Items.BIRCH_DOOR, Items.SPRUCE_DOOR,
-                Items.JUNGLE_DOOR, Items.ACACIA_DOOR, Items.DARK_OAK_DOOR,
-                Items.MANGROVE_DOOR, Items.CHERRY_DOOR, Items.BAMBOO_DOOR,
-                Items.CRIMSON_DOOR, Items.WARPED_DOOR);
-
-        register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f),
-                Items.OAK_TRAPDOOR, Items.BIRCH_TRAPDOOR, Items.SPRUCE_TRAPDOOR,
-                Items.JUNGLE_TRAPDOOR, Items.ACACIA_TRAPDOOR, Items.DARK_OAK_TRAPDOOR,
-                Items.MANGROVE_TRAPDOOR, Items.CHERRY_TRAPDOOR, Items.BAMBOO_TRAPDOOR,
-                Items.CRIMSON_TRAPDOOR, Items.WARPED_TRAPDOOR);
-
-        // Бочка — XP 3 (каменные инструменты переехали к Кузнецу)
+        // Бочка — XP 3
         register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 3f),
                 Items.BARREL);
 
-        // Кровати — XP 3
-        register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 3f),
-                Items.WHITE_BED, Items.ORANGE_BED, Items.MAGENTA_BED,
-                Items.LIGHT_BLUE_BED, Items.YELLOW_BED, Items.LIME_BED,
-                Items.PINK_BED, Items.GRAY_BED, Items.LIGHT_GRAY_BED,
-                Items.CYAN_BED, Items.PURPLE_BED, Items.BLUE_BED,
-                Items.BROWN_BED, Items.GREEN_BED, Items.RED_BED, Items.BLACK_BED);
-
-        // ------------- Тир 2 (CARPENTER 2): формовка и декор -------------
-
-        // Плиты, ступени (+ бамбук, незер, мозаика) — XP 1
-        register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f),
-                Items.OAK_SLAB, Items.BIRCH_SLAB, Items.SPRUCE_SLAB,
-                Items.JUNGLE_SLAB, Items.ACACIA_SLAB, Items.DARK_OAK_SLAB,
-                Items.MANGROVE_SLAB, Items.CHERRY_SLAB, Items.BAMBOO_SLAB,
-                Items.CRIMSON_SLAB, Items.WARPED_SLAB, Items.BAMBOO_MOSAIC_SLAB);
-
-        register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f),
-                Items.OAK_STAIRS, Items.BIRCH_STAIRS, Items.SPRUCE_STAIRS,
-                Items.JUNGLE_STAIRS, Items.ACACIA_STAIRS, Items.DARK_OAK_STAIRS,
-                Items.MANGROVE_STAIRS, Items.CHERRY_STAIRS, Items.BAMBOO_STAIRS,
-                Items.CRIMSON_STAIRS, Items.WARPED_STAIRS, Items.BAMBOO_MOSAIC_STAIRS);
-
-        // Заборы, калитки — XP 2
-        register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f),
-                Items.OAK_FENCE, Items.BIRCH_FENCE, Items.SPRUCE_FENCE,
-                Items.JUNGLE_FENCE, Items.ACACIA_FENCE, Items.DARK_OAK_FENCE,
-                Items.MANGROVE_FENCE, Items.CHERRY_FENCE, Items.BAMBOO_FENCE,
-                Items.CRIMSON_FENCE, Items.WARPED_FENCE);
-
+        // Калитки — XP 2 (нет надёжного item-тега → поимённо)
         register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f),
                 Items.OAK_FENCE_GATE, Items.BIRCH_FENCE_GATE, Items.SPRUCE_FENCE_GATE,
                 Items.JUNGLE_FENCE_GATE, Items.ACACIA_FENCE_GATE, Items.DARK_OAK_FENCE_GATE,
                 Items.MANGROVE_FENCE_GATE, Items.CHERRY_FENCE_GATE, Items.BAMBOO_FENCE_GATE,
                 Items.CRIMSON_FENCE_GATE, Items.WARPED_FENCE_GATE);
-
-        // Висячие таблички — XP 1
-        register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f),
-                Items.OAK_HANGING_SIGN, Items.BIRCH_HANGING_SIGN, Items.SPRUCE_HANGING_SIGN,
-                Items.JUNGLE_HANGING_SIGN, Items.ACACIA_HANGING_SIGN, Items.DARK_OAK_HANGING_SIGN,
-                Items.MANGROVE_HANGING_SIGN, Items.CHERRY_HANGING_SIGN, Items.BAMBOO_HANGING_SIGN,
-                Items.CRIMSON_HANGING_SIGN, Items.WARPED_HANGING_SIGN);
 
         // Бамбук-блоки, строительная подмога — XP 1
         register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f),
@@ -162,21 +100,11 @@ public class ItemCraftMap {
                 Items.BROWN_BANNER, Items.GREEN_BANNER, Items.RED_BANNER, Items.BLACK_BANNER);
 
         // ------- Тир 3 (CARPENTER 3): транспорт, мебель, станции -------
+        // (лодки/лодки с сундуком — теги BOATS/CHEST_BOATS; книжные полки — c:bookshelves)
 
-        // Лодки, лодки с сундуком — XP 4
+        // Улей — XP 4
         register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 4f),
-                Items.OAK_BOAT, Items.BIRCH_BOAT, Items.SPRUCE_BOAT,
-                Items.JUNGLE_BOAT, Items.ACACIA_BOAT, Items.DARK_OAK_BOAT,
-                Items.MANGROVE_BOAT, Items.CHERRY_BOAT, Items.BAMBOO_RAFT);
-
-        register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 4f),
-                Items.OAK_CHEST_BOAT, Items.BIRCH_CHEST_BOAT, Items.SPRUCE_CHEST_BOAT,
-                Items.JUNGLE_CHEST_BOAT, Items.ACACIA_CHEST_BOAT, Items.DARK_OAK_CHEST_BOAT,
-                Items.MANGROVE_CHEST_BOAT, Items.CHERRY_CHEST_BOAT, Items.BAMBOO_CHEST_RAFT);
-
-        // Книжные полки, улей — XP 4
-        register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 4f),
-                Items.BOOKSHELF, Items.CHISELED_BOOKSHELF, Items.BEEHIVE);
+                Items.BEEHIVE);
 
         // Рабочие станции профессий, костры — XP 5
         // (Кузнечный стол переехал к Кузнецу — см. секцию КУЗНЕЦ.)
@@ -578,6 +506,29 @@ public class ItemCraftMap {
                 Items.PINK_DYE, Items.GRAY_DYE, Items.LIGHT_GRAY_DYE,
                 Items.CYAN_DYE, Items.PURPLE_DYE, Items.BLUE_DYE,
                 Items.BROWN_DYE, Items.GREEN_DYE, Items.RED_DYE, Items.BLACK_DYE);
+
+        // ================================================================
+        // ТЕГ-FALLBACK (мод-совместимость) — Плотник
+        // ================================================================
+        // Ловят modded-варианты (напр. baobab-доски/верстак BWG), которым точный
+        // Items-ключ не соответствует. Проверяются ПОСЛЕ точных Item, XP совпадает
+        // с ванильными семействами. Ваниль по-прежнему матчится напрямую.
+        registerTag(ItemTags.PLANKS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
+        registerTag(ItemTags.WOODEN_SLABS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
+        registerTag(ItemTags.WOODEN_STAIRS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
+        registerTag(ItemTags.WOODEN_BUTTONS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
+        registerTag(ItemTags.SIGNS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
+        registerTag(ItemTags.HANGING_SIGNS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
+        registerTag(ItemTags.WOODEN_DOORS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
+        registerTag(ItemTags.WOODEN_TRAPDOORS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
+        registerTag(ItemTags.WOODEN_FENCES, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
+        registerTag(ItemTags.WOODEN_PRESSURE_PLATES, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
+        registerTag(ItemTags.BEDS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 3f));
+        registerTag(ItemTags.BOATS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 4f));
+        registerTag(ItemTags.CHEST_BOATS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 4f));
+        registerTag(itemTag("c:bookshelves"), new CraftEntry(Path.CRAFT, Spec.CARPENTER, 4f));
+        registerTag(itemTag("c:player_workstations/crafting_tables"),
+                new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
     }
 
     private static void register(CraftEntry entry, Item... items) {
@@ -586,9 +537,18 @@ public class ItemCraftMap {
         }
     }
 
+    private static void registerTag(TagKey<Item> tag, CraftEntry entry) {
+        TAGS.add(Map.entry(tag, entry));
+    }
+
     public static CraftEntry get(Item item) {
         if (!initialized) init();
-        return MAP.get(item);
+        CraftEntry direct = MAP.get(item);
+        if (direct != null) return direct;
+        for (var e : TAGS) {
+            if (item.builtInRegistryHolder().is(e.getKey())) return e.getValue();
+        }
+        return null;
     }
 
     /** Регистрация XP за крафт по ID (мод-совместимость). No-op если предмета нет. */

@@ -1,14 +1,20 @@
 package com.kingdomrp.core.data;
 
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class BlockXPMap {
 
     private static final Map<Block, BlockEntry> MAP = new HashMap<>();
+    /** Тег-правила (проверяются после точных Block, для мод-совместимости). */
+    private static final List<Map.Entry<TagKey<Block>, BlockEntry>> TAGS = new ArrayList<>();
 
     static {
 
@@ -257,20 +263,12 @@ public class BlockXPMap {
         // ПУТЬ: МАГИЯ — Алхимик (сбор цветов/реагентного сырья)
         // ================================================================
 
-        // Мелкие цветы (сырьё для красителей/зелий)
-        register(new BlockEntry(Path.MAGIC, 0.5f),
-                Blocks.DANDELION, Blocks.POPPY,
-                Blocks.BLUE_ORCHID, Blocks.ALLIUM,
-                Blocks.AZURE_BLUET, Blocks.RED_TULIP,
-                Blocks.ORANGE_TULIP, Blocks.WHITE_TULIP,
-                Blocks.PINK_TULIP, Blocks.OXEYE_DAISY,
-                Blocks.CORNFLOWER, Blocks.LILY_OF_THE_VALLEY,
-                Blocks.WITHER_ROSE);
+        // Мелкие цветы (сырьё для красителей/зелий) — по тегу: ваниль + моды
+        // (BWG/BOP дописывают свои цветы в minecraft:small_flowers/tall_flowers)
+        registerTag(BlockTags.SMALL_FLOWERS, new BlockEntry(Path.MAGIC, 0.5f));
 
         // Высокие цветы (двойной блок — больше сырья)
-        register(new BlockEntry(Path.MAGIC, 1f),
-                Blocks.SUNFLOWER, Blocks.LILAC,
-                Blocks.ROSE_BUSH, Blocks.PEONY);
+        registerTag(BlockTags.TALL_FLOWERS, new BlockEntry(Path.MAGIC, 1f));
 
         // Глоустоун (натуральный)
         register(new BlockEntry(Path.MAGIC, 2f),
@@ -283,8 +281,17 @@ public class BlockXPMap {
         }
     }
 
+    private static void registerTag(TagKey<Block> tag, BlockEntry entry) {
+        TAGS.add(Map.entry(tag, entry));
+    }
+
     public static BlockEntry get(Block block) {
-        return MAP.get(block);
+        BlockEntry direct = MAP.get(block);
+        if (direct != null) return direct;
+        for (var e : TAGS) {
+            if (block.builtInRegistryHolder().is(e.getKey())) return e.getValue();
+        }
+        return null;
     }
 
     /** Регистрация блока по ID (мод-совместимость). No-op если блок отсутствует. */

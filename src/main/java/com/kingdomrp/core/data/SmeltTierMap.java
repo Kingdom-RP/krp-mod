@@ -7,15 +7,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Гейтинг ПЕРЕПЛАВКИ металла по уровню Кузнеца. Ключ — РЕЗУЛЬТАТ выплавки
- * (как в {@link MetalSmeltMap}); гейт вешается на вход печи
- * ({@code CookGatedInputSlot.mayPlace} через {@link RestrictionSystem}).
- * <p>
- * Только металл. Песок/булыжник/глина и прочие натуральные материалы НЕ гейтятся
- * вовсе — их обжиг закреплён за Мастеровым ({@link NaturalSmeltMap}, только XP,
- * без гейта: стекло/камень нужны всем и рано). Еда гейтится отдельно Поваром
- * ({@code FoodTierMap}). Дедлока нет: уровень Кузнеца добывается любой активностью
- * пути Ремесло (например, Плотником) → очки в Кузнеца.
+ * Гейтинг ПЕРЕПЛАВКИ по уровню специализации. Ключ — РЕЗУЛЬТАТ выплавки; гейт вешается
+ * на вход печи ({@code CookGatedInputSlot.mayPlace} через {@link RestrictionSystem},
+ * spec берётся из {@link SpecRequirement} — не хардкод). Металл — Кузнец; стекло —
+ * Мастеровой ур.1 (песок ваниль+моды → стекло). Прочие натуральные материалы
+ * (булыжник/камень/глина) НЕ гейтятся — только XP ({@link NaturalSmeltMap}). Еда —
+ * отдельно Повар ({@code FoodTierMap}). Дедлока нет: уровень добывается любой
+ * активностью соответствующего пути.
  */
 public class SmeltTierMap {
 
@@ -31,6 +29,9 @@ public class SmeltTierMap {
 
         // Незеритовый лом (древние обломки) — ур.5
         reg(5, Items.NETHERITE_SCRAP);
+
+        // Стекло — Мастеровой ур.1 (любой песок: ваниль + моды → minecraft:glass)
+        MAP.put(Items.GLASS, new SpecRequirement(Spec.CRAFTSMAN, 1));
     }
 
     private static void reg(int level, Item... results) {

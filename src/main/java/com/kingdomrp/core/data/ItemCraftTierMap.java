@@ -1,9 +1,14 @@
 package com.kingdomrp.core.data;
 
 import com.kingdomrp.core.registry.KRPItems;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +24,12 @@ import java.util.Map;
 public class ItemCraftTierMap {
 
     private static final Map<Item, List<SpecRequirement>> MAP = new HashMap<>();
+    /** Тег-правила гейта (fallback после точных Item; мод-совместимость). */
+    private static final List<Map.Entry<TagKey<Item>, List<SpecRequirement>>> TAGS = new ArrayList<>();
+
+    private static TagKey<Item> itemTag(String id) {
+        return TagKey.create(Registries.ITEM, ResourceLocation.parse(id));
+    }
 
     static {
         // ============================================================
@@ -28,56 +39,21 @@ public class ItemCraftTierMap {
         // XP см. ItemCraftMap.
         // ============================================================
 
-        // Тир 1: кнопки, нажимные плиты, лестница, двери, люки, каменные
-        // инструменты, бочка, кровати
-        gate(new SpecRequirement(Spec.CARPENTER, 1),
-                Items.OAK_BUTTON, Items.BIRCH_BUTTON, Items.SPRUCE_BUTTON,
-                Items.JUNGLE_BUTTON, Items.ACACIA_BUTTON, Items.DARK_OAK_BUTTON,
-                Items.MANGROVE_BUTTON, Items.CHERRY_BUTTON, Items.BAMBOO_BUTTON,
-                Items.CRIMSON_BUTTON, Items.WARPED_BUTTON,
-                Items.OAK_PRESSURE_PLATE, Items.BIRCH_PRESSURE_PLATE, Items.SPRUCE_PRESSURE_PLATE,
-                Items.JUNGLE_PRESSURE_PLATE, Items.ACACIA_PRESSURE_PLATE, Items.DARK_OAK_PRESSURE_PLATE,
-                Items.MANGROVE_PRESSURE_PLATE, Items.CHERRY_PRESSURE_PLATE, Items.BAMBOO_PRESSURE_PLATE,
-                Items.CRIMSON_PRESSURE_PLATE, Items.WARPED_PRESSURE_PLATE,
-                Items.LADDER, Items.FISHING_ROD,
-                Items.OAK_DOOR, Items.BIRCH_DOOR, Items.SPRUCE_DOOR,
-                Items.JUNGLE_DOOR, Items.ACACIA_DOOR, Items.DARK_OAK_DOOR,
-                Items.MANGROVE_DOOR, Items.CHERRY_DOOR, Items.BAMBOO_DOOR,
-                Items.CRIMSON_DOOR, Items.WARPED_DOOR,
-                Items.OAK_TRAPDOOR, Items.BIRCH_TRAPDOOR, Items.SPRUCE_TRAPDOOR,
-                Items.JUNGLE_TRAPDOOR, Items.ACACIA_TRAPDOOR, Items.DARK_OAK_TRAPDOOR,
-                Items.MANGROVE_TRAPDOOR, Items.CHERRY_TRAPDOOR, Items.BAMBOO_TRAPDOOR,
-                Items.CRIMSON_TRAPDOOR, Items.WARPED_TRAPDOOR,
-                Items.BARREL,
-                Items.WHITE_BED, Items.ORANGE_BED, Items.MAGENTA_BED,
-                Items.LIGHT_BLUE_BED, Items.YELLOW_BED, Items.LIME_BED,
-                Items.PINK_BED, Items.GRAY_BED, Items.LIGHT_GRAY_BED,
-                Items.CYAN_BED, Items.PURPLE_BED, Items.BLUE_BED,
-                Items.BROWN_BED, Items.GREEN_BED, Items.RED_BED, Items.BLACK_BED);
+        // ⚠️ Кнопки/плиты/двери/люки/кровати (Т1), плиты/ступени/заборы/висячие
+        // таблички (Т2), лодки/лодки с сундуком/книжные полки (Т3) — по ГЕЙТ-ТЕГАМ
+        // (см. gateTag в конце static-блока): ваниль + modded-варианты. Здесь
+        // поимённо только НЕ покрытые тегом.
 
-        // Тир 2: плиты, ступени, заборы, калитки, висячие таблички, бамбук-блоки,
-        // строительная подмога, декор (рамки/картина/стойка/композтер/баннеры)
+        // Тир 1: лестница, удочка, бочка
+        gate(new SpecRequirement(Spec.CARPENTER, 1),
+                Items.LADDER, Items.FISHING_ROD, Items.BARREL);
+
+        // Тир 2: калитки, бамбук-блоки, кора (Wood/Hyphae), декор
         gate(new SpecRequirement(Spec.CARPENTER, 2),
-                Items.OAK_SLAB, Items.BIRCH_SLAB, Items.SPRUCE_SLAB,
-                Items.JUNGLE_SLAB, Items.ACACIA_SLAB, Items.DARK_OAK_SLAB,
-                Items.MANGROVE_SLAB, Items.CHERRY_SLAB, Items.BAMBOO_SLAB,
-                Items.CRIMSON_SLAB, Items.WARPED_SLAB, Items.BAMBOO_MOSAIC_SLAB,
-                Items.OAK_STAIRS, Items.BIRCH_STAIRS, Items.SPRUCE_STAIRS,
-                Items.JUNGLE_STAIRS, Items.ACACIA_STAIRS, Items.DARK_OAK_STAIRS,
-                Items.MANGROVE_STAIRS, Items.CHERRY_STAIRS, Items.BAMBOO_STAIRS,
-                Items.CRIMSON_STAIRS, Items.WARPED_STAIRS, Items.BAMBOO_MOSAIC_STAIRS,
-                Items.OAK_FENCE, Items.BIRCH_FENCE, Items.SPRUCE_FENCE,
-                Items.JUNGLE_FENCE, Items.ACACIA_FENCE, Items.DARK_OAK_FENCE,
-                Items.MANGROVE_FENCE, Items.CHERRY_FENCE, Items.BAMBOO_FENCE,
-                Items.CRIMSON_FENCE, Items.WARPED_FENCE,
                 Items.OAK_FENCE_GATE, Items.BIRCH_FENCE_GATE, Items.SPRUCE_FENCE_GATE,
                 Items.JUNGLE_FENCE_GATE, Items.ACACIA_FENCE_GATE, Items.DARK_OAK_FENCE_GATE,
                 Items.MANGROVE_FENCE_GATE, Items.CHERRY_FENCE_GATE, Items.BAMBOO_FENCE_GATE,
                 Items.CRIMSON_FENCE_GATE, Items.WARPED_FENCE_GATE,
-                Items.OAK_HANGING_SIGN, Items.BIRCH_HANGING_SIGN, Items.SPRUCE_HANGING_SIGN,
-                Items.JUNGLE_HANGING_SIGN, Items.ACACIA_HANGING_SIGN, Items.DARK_OAK_HANGING_SIGN,
-                Items.MANGROVE_HANGING_SIGN, Items.CHERRY_HANGING_SIGN, Items.BAMBOO_HANGING_SIGN,
-                Items.CRIMSON_HANGING_SIGN, Items.WARPED_HANGING_SIGN,
                 Items.BAMBOO_BLOCK, Items.STRIPPED_BAMBOO_BLOCK,
                 Items.BAMBOO_MOSAIC, Items.SCAFFOLDING,
                 Items.OAK_WOOD, Items.BIRCH_WOOD, Items.SPRUCE_WOOD,
@@ -96,16 +72,9 @@ public class ItemCraftTierMap {
                 Items.CYAN_BANNER, Items.PURPLE_BANNER, Items.BLUE_BANNER,
                 Items.BROWN_BANNER, Items.GREEN_BANNER, Items.RED_BANNER, Items.BLACK_BANNER);
 
-        // Тир 3: транспорт (лодки/лодки с сундуком), мебель (книжные полки/улей),
-        // рабочие станции профессий, костры
+        // Тир 3: улей, рабочие станции профессий, костры
         gate(new SpecRequirement(Spec.CARPENTER, 3),
-                Items.OAK_BOAT, Items.BIRCH_BOAT, Items.SPRUCE_BOAT,
-                Items.JUNGLE_BOAT, Items.ACACIA_BOAT, Items.DARK_OAK_BOAT,
-                Items.MANGROVE_BOAT, Items.CHERRY_BOAT, Items.BAMBOO_RAFT,
-                Items.OAK_CHEST_BOAT, Items.BIRCH_CHEST_BOAT, Items.SPRUCE_CHEST_BOAT,
-                Items.JUNGLE_CHEST_BOAT, Items.ACACIA_CHEST_BOAT, Items.DARK_OAK_CHEST_BOAT,
-                Items.MANGROVE_CHEST_BOAT, Items.CHERRY_CHEST_BOAT, Items.BAMBOO_CHEST_RAFT,
-                Items.BOOKSHELF, Items.CHISELED_BOOKSHELF, Items.BEEHIVE,
+                Items.BEEHIVE,
                 Items.LECTERN, Items.LOOM, Items.FLETCHING_TABLE,
                 Items.CARTOGRAPHY_TABLE, Items.SMITHING_TABLE,
                 Items.CAMPFIRE, Items.SOUL_CAMPFIRE);
@@ -319,6 +288,26 @@ public class ItemCraftTierMap {
                 new SpecRequirement(Spec.ALCHEMIST, 3), new SpecRequirement(Spec.ENCHANTER, 3));
         gateAll(Items.GOLDEN_APPLE,
                 new SpecRequirement(Spec.ALCHEMIST, 3), new SpecRequirement(Spec.ENCHANTER, 3));
+
+        // ============================================================
+        // ТЕГ-FALLBACK (мод-совместимость) — Плотник
+        // ============================================================
+        // Гейтят modded-варианты деревянных семейств тем же уровнем, что ваниль.
+        // Проверяются ПОСЛЕ точных Item; уровни совпадают с id-группами выше.
+        // (доски/знаки/верстак — ур.0, не гейтятся.)
+        gateTag(new SpecRequirement(Spec.CARPENTER, 1),
+                ItemTags.WOODEN_BUTTONS, ItemTags.WOODEN_PRESSURE_PLATES,
+                ItemTags.WOODEN_DOORS, ItemTags.WOODEN_TRAPDOORS, ItemTags.BEDS);
+        gateTag(new SpecRequirement(Spec.CARPENTER, 2),
+                ItemTags.WOODEN_SLABS, ItemTags.WOODEN_STAIRS,
+                ItemTags.WOODEN_FENCES, ItemTags.HANGING_SIGNS);
+        gateTag(new SpecRequirement(Spec.CARPENTER, 3),
+                ItemTags.BOATS, ItemTags.CHEST_BOATS, itemTag("c:bookshelves"));
+    }
+
+    /** Одно требование на несколько тегов (fallback для мод-вариантов). */
+    private static void gateTag(SpecRequirement req, TagKey<Item>... tags) {
+        for (TagKey<Item> tag : tags) TAGS.add(Map.entry(tag, List.of(req)));
     }
 
     /** Одно требование на несколько предметов. */
@@ -333,7 +322,12 @@ public class ItemCraftTierMap {
 
     /** Список требований для крафта предмета, либо null (без ограничений). */
     public static List<SpecRequirement> get(Item item) {
-        return MAP.get(item);
+        List<SpecRequirement> direct = MAP.get(item);
+        if (direct != null) return direct;
+        for (var e : TAGS) {
+            if (item.builtInRegistryHolder().is(e.getKey())) return e.getValue();
+        }
+        return null;
     }
 
     /** Регистрация крафт-гейта по ID (мод-совместимость). No-op если предмета нет. */
