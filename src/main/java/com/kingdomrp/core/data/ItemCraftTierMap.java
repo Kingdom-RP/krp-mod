@@ -32,28 +32,30 @@ public class ItemCraftTierMap {
     }
 
     static {
-        // ============================================================
-        // ПЛОТНИК — гейтинг стройки по образцу старого KRP.
-        // Ур.0 (БЕЗ гейта, здесь не перечислено): доски, палка, миска, знаки,
-        // верстак, сундук, деревянные инструменты, коптильня (временно).
-        // XP см. ItemCraftMap.
-        // ============================================================
+        initCraftPath();
+        initMagicPath();
+    }
 
-        // ⚠️ Кнопки/плиты/двери/люки/кровати (Т1), плиты/ступени/заборы/висячие
-        // таблички (Т2), лодки/лодки с сундуком/книжные полки (Т3) — по ГЕЙТ-ТЕГАМ
-        // (см. gateTag в конце static-блока): ваниль + modded-варианты. Здесь
-        // поимённо только НЕ покрытые тегом.
+    // Путь "Ремесло"
+    private static void initCraftPath() {
+        initCarpenter();
+        initBlacksmith();
+        initCraftsman();
+    }
+
+    // Специализация "Плотник" (гейтинг стройки)
+    private static void initCarpenter() {
+        // Ур.0 (без гейта): доски, палка, миска, знаки, верстак, сундук,
+        // деревянные инструменты, коптильня. Семейства кнопок/плит/дверей/люков/
+        // кроватей/лодок/полок гейтятся по тегам (gateTag ниже) — ваниль + моды;
+        // поимённо здесь только НЕ покрытые тегом.
 
         // Тир 1: лестница, удочка, бочка
         gate(new SpecRequirement(Spec.CARPENTER, 1),
                 Items.LADDER, Items.FISHING_ROD, Items.BARREL);
 
-        // Тир 2: калитки, бамбук-блоки, кора (Wood/Hyphae), декор
+        // Тир 2: бамбук-блоки, кора (Wood/Hyphae), декор
         gate(new SpecRequirement(Spec.CARPENTER, 2),
-                Items.OAK_FENCE_GATE, Items.BIRCH_FENCE_GATE, Items.SPRUCE_FENCE_GATE,
-                Items.JUNGLE_FENCE_GATE, Items.ACACIA_FENCE_GATE, Items.DARK_OAK_FENCE_GATE,
-                Items.MANGROVE_FENCE_GATE, Items.CHERRY_FENCE_GATE, Items.BAMBOO_FENCE_GATE,
-                Items.CRIMSON_FENCE_GATE, Items.WARPED_FENCE_GATE,
                 Items.BAMBOO_BLOCK, Items.STRIPPED_BAMBOO_BLOCK,
                 Items.BAMBOO_MOSAIC, Items.SCAFFOLDING,
                 Items.OAK_WOOD, Items.BIRCH_WOOD, Items.SPRUCE_WOOD,
@@ -65,12 +67,7 @@ public class ItemCraftTierMap {
                 Items.STRIPPED_MANGROVE_WOOD, Items.STRIPPED_CHERRY_WOOD,
                 Items.STRIPPED_CRIMSON_HYPHAE, Items.STRIPPED_WARPED_HYPHAE,
                 Items.COMPOSTER, Items.ITEM_FRAME, Items.GLOW_ITEM_FRAME,
-                Items.PAINTING, Items.ARMOR_STAND,
-                Items.WHITE_BANNER, Items.ORANGE_BANNER, Items.MAGENTA_BANNER,
-                Items.LIGHT_BLUE_BANNER, Items.YELLOW_BANNER, Items.LIME_BANNER,
-                Items.PINK_BANNER, Items.GRAY_BANNER, Items.LIGHT_GRAY_BANNER,
-                Items.CYAN_BANNER, Items.PURPLE_BANNER, Items.BLUE_BANNER,
-                Items.BROWN_BANNER, Items.GREEN_BANNER, Items.RED_BANNER, Items.BLACK_BANNER);
+                Items.PAINTING, Items.ARMOR_STAND);
 
         // Тир 3: улей, рабочие станции профессий, костры
         gate(new SpecRequirement(Spec.CARPENTER, 3),
@@ -79,12 +76,23 @@ public class ItemCraftTierMap {
                 Items.CARTOGRAPHY_TABLE, Items.SMITHING_TABLE,
                 Items.CAMPFIRE, Items.SOUL_CAMPFIRE);
 
-        // ============================================================
-        // КУЗНЕЦ — металл, инструменты, броня, утилитарка.
-        // Тиры: медь ур.1, золото ур.2, железо ур.3, алмаз ур.5, незерит ур.7.
-        // Незеритовый ГИР гейтится отдельно на кузнечном столе (SmithingMenuMixin),
-        // здесь его нет. Незеритовый слиток/магнетит крафтятся на верстаке — ур.7.
-        // ============================================================
+        // ТЕГ-FALLBACK (мод-совместимость) — гейтят modded-варианты деревянных
+        // семейств тем же уровнем, что ваниль. Проверяются ПОСЛЕ точных Item.
+        gateTag(new SpecRequirement(Spec.CARPENTER, 1),
+                ItemTags.WOODEN_BUTTONS, ItemTags.WOODEN_PRESSURE_PLATES,
+                ItemTags.WOODEN_DOORS, ItemTags.WOODEN_TRAPDOORS, ItemTags.BEDS);
+        gateTag(new SpecRequirement(Spec.CARPENTER, 2),
+                ItemTags.WOODEN_SLABS, ItemTags.WOODEN_STAIRS,
+                ItemTags.WOODEN_FENCES, ItemTags.HANGING_SIGNS,
+                ItemTags.FENCE_GATES, ItemTags.BANNERS);
+        gateTag(new SpecRequirement(Spec.CARPENTER, 3),
+                ItemTags.BOATS, ItemTags.CHEST_BOATS, itemTag("c:bookshelves"));
+    }
+
+    // Специализация "Кузнец" (металл, инструменты, броня, утилитарка)
+    private static void initBlacksmith() {
+        // Тиры: медь 1, золото 2, железо 3, алмаз 5, незерит 7. Незеритовый ГИР
+        // гейтится на кузнечном столе (SmithingMenuMixin), здесь только слиток/магнетит.
 
         // Тир 1 — медь (+ декоративные медные блоки 1.21 во всех состояниях)
         gate(new SpecRequirement(Spec.BLACKSMITH, 1),
@@ -174,30 +182,22 @@ public class ItemCraftTierMap {
         // Тир 7 — незеритовый слиток + магнетит (крафтятся на верстаке)
         gate(new SpecRequirement(Spec.BLACKSMITH, 7),
                 Items.NETHERITE_INGOT, Items.LODESTONE);
+    }
 
-        // ============================================================
-        // МАСТЕРОВОЙ — натуральные материалы (текстиль/кожа/стекло/керамика/камень).
-        // Ур.0 (БЕЗ гейта, здесь не перечислено): базовая стройка — текстиль/свечи,
-        // стекло (панели/тонир.), бетон. пудра, обычная каменная кладка (камень/
-        // булыжник/песчаник/кирпич/незер-кирпич/грязевой кирпич + полировка гранита/
-        // диорита/андезита), глина, прочие натуральные блоки. XP см. ItemCraftMap.
-        // Лестница размазана 1→7: чем «дальше/декоративнее» материал, тем выше гейт.
-        // ============================================================
+    // Специализация "Мастеровой" (натуральные материалы: текстиль/кожа/стекло/керамика/камень)
+    private static void initCraftsman() {
+        // Ур.0 (без гейта): базовая стройка — текстиль/свечи/стекло-панели/бетон-пудра/
+        // обычная каменная кладка/глина. Лестница 1→7: декоративнее материал → выше гейт.
 
         // Тир 1 — выделка кожи, книги, лёгкая кожаная броня
         gate(new SpecRequirement(Spec.CRAFTSMAN, 1),
                 Items.LEATHER, Items.BOOK,
                 Items.LEATHER_BOOTS, Items.LEATHER_HELMET);
 
-        // Тир 2 — тяжёлая кожаная броня + крашеная терракота + черепаший шлем (скют)
+        // Тир 2 — тяжёлая кожаная броня + черепаший шлем (скют)
         gate(new SpecRequirement(Spec.CRAFTSMAN, 2),
                 Items.TURTLE_HELMET,
-                Items.LEATHER_CHESTPLATE, Items.LEATHER_LEGGINGS,
-                Items.WHITE_TERRACOTTA, Items.ORANGE_TERRACOTTA, Items.MAGENTA_TERRACOTTA,
-                Items.LIGHT_BLUE_TERRACOTTA, Items.YELLOW_TERRACOTTA, Items.LIME_TERRACOTTA,
-                Items.PINK_TERRACOTTA, Items.GRAY_TERRACOTTA, Items.LIGHT_GRAY_TERRACOTTA,
-                Items.CYAN_TERRACOTTA, Items.PURPLE_TERRACOTTA, Items.BLUE_TERRACOTTA,
-                Items.BROWN_TERRACOTTA, Items.GREEN_TERRACOTTA, Items.RED_TERRACOTTA, Items.BLACK_TERRACOTTA);
+                Items.LEATHER_CHESTPLATE, Items.LEATHER_LEGGINGS);
 
         // Тир 3 — тонкая керамика + цветное стекло (витражи) + седло
         gate(new SpecRequirement(Spec.CRAFTSMAN, 3),
@@ -256,13 +256,23 @@ public class ItemCraftTierMap {
                 Items.PURPUR_BLOCK, Items.PURPUR_PILLAR, Items.PURPUR_SLAB, Items.PURPUR_STAIRS,
                 Items.END_STONE_BRICKS, Items.END_STONE_BRICK_SLAB,
                 Items.END_STONE_BRICK_STAIRS, Items.END_STONE_BRICK_WALL);
+
+        // ТЕГ-FALLBACK — крашеная терракота (ваниль + моды)
+        gateTag(new SpecRequirement(Spec.CRAFTSMAN, 2), ItemTags.TERRACOTTA);
+
         // Стол зачарования НЕ гейтится — крафтабелен с ур.0 (профильный
         // инструмент Зачарователя, нужен для старта прокачки). XP/двойной крафт
         // привязаны к Зачарователю через ItemCraftMap.
+    }
 
-        // ============================================================
-        // АЛХИМИК — реагенты и магический инвентарь
-        // ============================================================
+    // Путь "Магия"
+    private static void initMagicPath() {
+        initAlchemist();
+        initEnchanter();
+    }
+
+    // Специализация "Алхимик" (реагенты и магический инвентарь)
+    private static void initAlchemist() {
         gate(new SpecRequirement(Spec.ALCHEMIST, 2),
                 Items.FERMENTED_SPIDER_EYE, Items.GLISTERING_MELON_SLICE);
 
@@ -274,35 +284,18 @@ public class ItemCraftTierMap {
 
         gate(new SpecRequirement(Spec.ALCHEMIST, 5),
                 Items.END_CRYSTAL);
+    }
 
-        // ============================================================
-        // ЗАЧАРОВАТЕЛЬ
-        // ============================================================
+    // Специализация "Зачарователь"
+    private static void initEnchanter() {
         gate(new SpecRequirement(Spec.ENCHANTER, 3),
                 Items.ENCHANTED_BOOK);
 
-        // ============================================================
         // DUAL-SPEC: Алхимик 3 + Зачарователь 3
-        // ============================================================
         gateAll(Items.GOLDEN_CARROT,
                 new SpecRequirement(Spec.ALCHEMIST, 3), new SpecRequirement(Spec.ENCHANTER, 3));
         gateAll(Items.GOLDEN_APPLE,
                 new SpecRequirement(Spec.ALCHEMIST, 3), new SpecRequirement(Spec.ENCHANTER, 3));
-
-        // ============================================================
-        // ТЕГ-FALLBACK (мод-совместимость) — Плотник
-        // ============================================================
-        // Гейтят modded-варианты деревянных семейств тем же уровнем, что ваниль.
-        // Проверяются ПОСЛЕ точных Item; уровни совпадают с id-группами выше.
-        // (доски/знаки/верстак — ур.0, не гейтятся.)
-        gateTag(new SpecRequirement(Spec.CARPENTER, 1),
-                ItemTags.WOODEN_BUTTONS, ItemTags.WOODEN_PRESSURE_PLATES,
-                ItemTags.WOODEN_DOORS, ItemTags.WOODEN_TRAPDOORS, ItemTags.BEDS);
-        gateTag(new SpecRequirement(Spec.CARPENTER, 2),
-                ItemTags.WOODEN_SLABS, ItemTags.WOODEN_STAIRS,
-                ItemTags.WOODEN_FENCES, ItemTags.HANGING_SIGNS);
-        gateTag(new SpecRequirement(Spec.CARPENTER, 3),
-                ItemTags.BOATS, ItemTags.CHEST_BOATS, itemTag("c:bookshelves"));
     }
 
     /** Одно требование на несколько тегов (fallback для мод-вариантов). */

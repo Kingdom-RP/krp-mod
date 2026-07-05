@@ -18,7 +18,17 @@ public class ItemUseTierMap {
     private static final Map<Item, SpecRequirement> MAP = new HashMap<>();
 
     static {
-        // Воин — броня и ближнее оружие
+        initWarPath();
+    }
+
+    // Путь "Война"
+    private static void initWarPath() {
+        initWarrior();
+        initArcher();
+    }
+
+    // Специализация "Воин" (броня и ближнее оружие)
+    private static void initWarrior() {
         register(new SpecRequirement(Spec.WARRIOR, 1),
                 Items.LEATHER_HELMET, Items.LEATHER_CHESTPLATE,
                 Items.LEATHER_LEGGINGS, Items.LEATHER_BOOTS);
@@ -47,8 +57,10 @@ public class ItemUseTierMap {
                 Items.NETHERITE_LEGGINGS, Items.NETHERITE_BOOTS,
                 Items.NETHERITE_SWORD, Items.NETHERITE_AXE,
                 Items.MACE); // булава 1.21 — мощное ближнее оружие из Trial Chambers
+    }
 
-        // Лучник — арбалет
+    // Специализация "Лучник" (арбалет)
+    private static void initArcher() {
         register(new SpecRequirement(Spec.ARCHER, 3),
                 Items.CROSSBOW);
     }

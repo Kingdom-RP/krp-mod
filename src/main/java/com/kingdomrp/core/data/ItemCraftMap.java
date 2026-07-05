@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+// Маппинг получения опыта за крафт предметов соответствующих путей/специализаций
 public class ItemCraftMap {
 
     private static final Map<Item, CraftEntry> MAP = new HashMap<>();
@@ -29,20 +30,22 @@ public class ItemCraftMap {
         if (initialized) return;
         initialized = true;
 
-        // ================================================================
-        // ПЛОТНИК
-        // ================================================================
-        // Крафт деревянных (и «не очень») изделий — всегда успех.
-        // Доступ по уровням — ItemCraftTierMap (CARPENTER). Гейтинг стройки —
-        // по образцу старого KRP. XP по ценности изделия (см. ниже), группировка
-        // здесь по тирам доступа для сверки с ItemCraftTierMap.
+        initCraftPath();
+        initHarvestPath();
+        initMagicPath();
+    }
 
+    // Путь "Ремесло"
+    private static void initCraftPath() {
+        initCarpenter();
+        initBlacksmith();
+        initCraftsman();
+    }
+
+    // Специализация "Плотник"
+    private static void initCarpenter() {
         // ---------------- Тир 0 (без гейта): минимум для старта ----------------
-
         // Палка, миска — XP 1
-        // ⚠️ Доски/знаки/висячие таблички/кнопки/двери/люки/плиты/ступени/заборы/
-        // кровати/лодки/верстак/книжные полки — по ТЕГАМ (см. тег-fallback в конце
-        // init()): ваниль + modded-варианты. Здесь поимённо только НЕ покрытые тегом.
         register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f),
                 Items.STICK, Items.BOWL);
 
@@ -61,13 +64,6 @@ public class ItemCraftMap {
         // Бочка — XP 3
         register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 3f),
                 Items.BARREL);
-
-        // Калитки — XP 2 (нет надёжного item-тега → поимённо)
-        register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f),
-                Items.OAK_FENCE_GATE, Items.BIRCH_FENCE_GATE, Items.SPRUCE_FENCE_GATE,
-                Items.JUNGLE_FENCE_GATE, Items.ACACIA_FENCE_GATE, Items.DARK_OAK_FENCE_GATE,
-                Items.MANGROVE_FENCE_GATE, Items.CHERRY_FENCE_GATE, Items.BAMBOO_FENCE_GATE,
-                Items.CRIMSON_FENCE_GATE, Items.WARPED_FENCE_GATE);
 
         // Бамбук-блоки, строительная подмога — XP 1
         register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f),
@@ -92,13 +88,6 @@ public class ItemCraftMap {
                 Items.COMPOSTER, Items.ITEM_FRAME, Items.GLOW_ITEM_FRAME,
                 Items.PAINTING, Items.ARMOR_STAND);
 
-        register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f),
-                Items.WHITE_BANNER, Items.ORANGE_BANNER, Items.MAGENTA_BANNER,
-                Items.LIGHT_BLUE_BANNER, Items.YELLOW_BANNER, Items.LIME_BANNER,
-                Items.PINK_BANNER, Items.GRAY_BANNER, Items.LIGHT_GRAY_BANNER,
-                Items.CYAN_BANNER, Items.PURPLE_BANNER, Items.BLUE_BANNER,
-                Items.BROWN_BANNER, Items.GREEN_BANNER, Items.RED_BANNER, Items.BLACK_BANNER);
-
         // ------- Тир 3 (CARPENTER 3): транспорт, мебель, станции -------
         // (лодки/лодки с сундуком — теги BOATS/CHEST_BOATS; книжные полки — c:bookshelves)
 
@@ -115,19 +104,31 @@ public class ItemCraftMap {
         register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 5f),
                 Items.CAMPFIRE, Items.SOUL_CAMPFIRE);
 
-        // ================================================================
-        // КУЗНЕЦ
-        // ================================================================
-        // Шанса провала у Кузнеца НЕТ — всё крафтится всегда успешно (в пределах
-        // открытого тира, baseChance=1.0). Прогрессия держится на лестнице доступа
-        // (ItemCraftTierMap) и на ЗАКАЛКЕ: прочность изделия растёт с уровнем
-        // (BlacksmithTemperMap, см. SpecializationEffects.applyBlacksmithTempering).
-        // Незеритовый ГИР делается на кузнечном столе (SmithingMenuMixin), здесь его нет.
-        // Тиры доступа: медь ур.1, золото ур.2, железо ур.3, алмаз ур.5, незерит ур.7.
+        // ТЕГ-FALLBACK (мод-совместимость) — Плотник
+        // Ловят modded-варианты, которым точный Items-ключ не соответствует.
+        // Проверяются ПОСЛЕ точных Item, XP совпадает с ванильными семействами.
+        registerTag(ItemTags.PLANKS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
+        registerTag(ItemTags.WOODEN_SLABS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
+        registerTag(ItemTags.WOODEN_STAIRS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
+        registerTag(ItemTags.WOODEN_BUTTONS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
+        registerTag(ItemTags.SIGNS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
+        registerTag(ItemTags.HANGING_SIGNS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
+        registerTag(ItemTags.WOODEN_DOORS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
+        registerTag(ItemTags.WOODEN_TRAPDOORS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
+        registerTag(ItemTags.WOODEN_FENCES, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
+        registerTag(ItemTags.FENCE_GATES, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
+        registerTag(ItemTags.BANNERS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
+        registerTag(ItemTags.WOODEN_PRESSURE_PLATES, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
+        registerTag(ItemTags.BEDS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 3f));
+        registerTag(ItemTags.BOATS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 4f));
+        registerTag(ItemTags.CHEST_BOATS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 4f));
+        registerTag(itemTag("c:bookshelves"), new CraftEntry(Path.CRAFT, Spec.CARPENTER, 4f));
+        registerTag(itemTag("c:player_workstations/crafting_tables"), new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
+    }
 
+    // Специализация "Кузнец"
+    private static void initBlacksmith() {
         // ---- Каменные инструменты (без гейта, ур.0) ----
-        // Нужны для раннего прогресса (каменной киркой добывают железо), поэтому
-        // не гейтятся — но XP уже идёт Кузнецу. Закалке не подлежат (дёшево).
         register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 3f),
                 Items.STONE_SWORD, Items.STONE_AXE, Items.STONE_PICKAXE,
                 Items.STONE_SHOVEL, Items.STONE_HOE);
@@ -177,10 +178,6 @@ public class ItemCraftMap {
                 Items.WEATHERED_CUT_COPPER_STAIRS, Items.OXIDIZED_CUT_COPPER_STAIRS,
                 Items.WAXED_CUT_COPPER_STAIRS, Items.WAXED_EXPOSED_CUT_COPPER_STAIRS,
                 Items.WAXED_WEATHERED_CUT_COPPER_STAIRS, Items.WAXED_OXIDIZED_CUT_COPPER_STAIRS);
-
-        // Черепаший шлем — крафт из скюта (натуральный материал), XP 3; носит Воин
-        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 3f),
-                Items.TURTLE_HELMET);
 
         // ---- Золото (тир 2): инструменты + броня ----
         register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 15f),
@@ -256,64 +253,23 @@ public class ItemCraftMap {
 
         register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 10f),
                 Items.CROSSBOW);
+    }
 
-        // ================================================================
-        // МАСТЕРОВОЙ — натуральные материалы (кожа, шерсть, глина, керамика)
-        // ================================================================
-        // Всё крафтится всегда успешно (baseChance=1.0); прогрессия — на лестнице
-        // доступа (ItemCraftTierMap, spec=CRAFTSMAN) и активных эффектах (экономия
-        // материала + двойной выход — см. SpecializationEffects). XP по ценности
-        // изделия. Будущие модовые предметы из натуральных материалов (рюкзаки и
-        // т.п.) добавляются сюда же. Обжиг натуральных материалов в печи даёт XP
-        // отдельно (NaturalSmeltMap → XPSystem.onNaturalSmelted).
-
-        // XP масштабируется по тиру доступа (= уровню гейта в ItemCraftTierMap):
-        // базовая стройка (ур.0) = 1; чем выше требуемый уровень, тем больше XP за
-        // крафт-действие. XP даётся за крафт-событие (пачка плит = 1 событие).
+    // Специализация "Мастеровой" (натуральные материалы - кожа, шерсть, глина, керамика и т.д.)
+    private static void initCraftsman() {
+        // Черепаший шлем — крафт из скюта (натуральный материал), XP 3; носит Воин
+        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 3f),
+                Items.TURTLE_HELMET);
 
         // ================== Ур.0 (без гейта), XP 1 — базовая стройка ==================
 
-        // Шерсть из нити + ковры
+        // Мох-ковёр (не входит в wool_carpets), тонированное стекло (не панель)
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f),
-                Items.WHITE_WOOL, Items.ORANGE_WOOL, Items.MAGENTA_WOOL,
-                Items.LIGHT_BLUE_WOOL, Items.YELLOW_WOOL, Items.LIME_WOOL,
-                Items.PINK_WOOL, Items.GRAY_WOOL, Items.LIGHT_GRAY_WOOL,
-                Items.CYAN_WOOL, Items.PURPLE_WOOL, Items.BLUE_WOOL,
-                Items.BROWN_WOOL, Items.GREEN_WOOL, Items.RED_WOOL, Items.BLACK_WOOL);
-
-        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f),
-                Items.WHITE_CARPET, Items.ORANGE_CARPET, Items.MAGENTA_CARPET,
-                Items.LIGHT_BLUE_CARPET, Items.YELLOW_CARPET, Items.LIME_CARPET,
-                Items.PINK_CARPET, Items.GRAY_CARPET, Items.LIGHT_GRAY_CARPET,
-                Items.CYAN_CARPET, Items.PURPLE_CARPET, Items.BLUE_CARPET,
-                Items.BROWN_CARPET, Items.GREEN_CARPET, Items.RED_CARPET, Items.BLACK_CARPET,
-                Items.MOSS_CARPET);
-
-        // Свечи (воск + нить)
-        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f),
-                Items.CANDLE,
-                Items.WHITE_CANDLE, Items.ORANGE_CANDLE, Items.MAGENTA_CANDLE,
-                Items.LIGHT_BLUE_CANDLE, Items.YELLOW_CANDLE, Items.LIME_CANDLE,
-                Items.PINK_CANDLE, Items.GRAY_CANDLE, Items.LIGHT_GRAY_CANDLE,
-                Items.CYAN_CANDLE, Items.PURPLE_CANDLE, Items.BLUE_CANDLE,
-                Items.BROWN_CANDLE, Items.GREEN_CANDLE, Items.RED_CANDLE, Items.BLACK_CANDLE);
+                Items.MOSS_CARPET, Items.TINTED_GLASS);
 
         // Бумага, поводок, цветочный горшок, книга с пером
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f),
                 Items.PAPER, Items.LEAD, Items.FLOWER_POT, Items.WRITABLE_BOOK);
-
-        // Стекло: панели + тонированное (цветное стекло — тир 3, ниже)
-        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f),
-                Items.GLASS_PANE, Items.TINTED_GLASS);
-
-        // Бетонная пудра (песок + гравий + краситель)
-        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f),
-                Items.WHITE_CONCRETE_POWDER, Items.ORANGE_CONCRETE_POWDER, Items.MAGENTA_CONCRETE_POWDER,
-                Items.LIGHT_BLUE_CONCRETE_POWDER, Items.YELLOW_CONCRETE_POWDER, Items.LIME_CONCRETE_POWDER,
-                Items.PINK_CONCRETE_POWDER, Items.GRAY_CONCRETE_POWDER, Items.LIGHT_GRAY_CONCRETE_POWDER,
-                Items.CYAN_CONCRETE_POWDER, Items.PURPLE_CONCRETE_POWDER, Items.BLUE_CONCRETE_POWDER,
-                Items.BROWN_CONCRETE_POWDER, Items.GREEN_CONCRETE_POWDER, Items.RED_CONCRETE_POWDER,
-                Items.BLACK_CONCRETE_POWDER);
 
         // Глина (XP 2 — базовое сырьё, чуть дороже) + прочие натуральные блоки
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 2f),
@@ -381,13 +337,6 @@ public class ItemCraftMap {
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 5f),
                 Items.SADDLE);
 
-        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 2f),
-                Items.WHITE_TERRACOTTA, Items.ORANGE_TERRACOTTA, Items.MAGENTA_TERRACOTTA,
-                Items.LIGHT_BLUE_TERRACOTTA, Items.YELLOW_TERRACOTTA, Items.LIME_TERRACOTTA,
-                Items.PINK_TERRACOTTA, Items.GRAY_TERRACOTTA, Items.LIGHT_GRAY_TERRACOTTA,
-                Items.CYAN_TERRACOTTA, Items.PURPLE_TERRACOTTA, Items.BLUE_TERRACOTTA,
-                Items.BROWN_TERRACOTTA, Items.GREEN_TERRACOTTA, Items.RED_TERRACOTTA, Items.BLACK_TERRACOTTA);
-
         // ================== Тир 3 (CRAFTSMAN 3): decorated pot + витражи ==================
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 4f),
                 Items.DECORATED_POT);
@@ -447,13 +396,24 @@ public class ItemCraftMap {
                 Items.END_STONE_BRICKS, Items.END_STONE_BRICK_SLAB,
                 Items.END_STONE_BRICK_STAIRS, Items.END_STONE_BRICK_WALL);
 
-        // ================================================================
-        // ПРОМЫСЕЛ — ПОВАР
-        // ================================================================
-        // Крафт еды всегда успешен (baseChance=1.0). Гейтинг доступа — по
-        // уровню Повара через FoodTierMap (см. XPSystem.onCraft). XP по тирам
-        // ценности; составные блюда дороже готовки в печи (см. FoodCookMap).
+        // ТЕГ-FALLBACK (мод-совместимость) — Мастеровой.
+        // Крашеное стекло/панели (XP 2) регистрируются поимённо выше → перекрывают
+        // общий c:glass_panes (XP 1) для крашеных.
+        registerTag(ItemTags.WOOL, new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f));
+        registerTag(ItemTags.WOOL_CARPETS, new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f));
+        registerTag(ItemTags.CANDLES, new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f));
+        registerTag(itemTag("c:concrete_powders"), new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f));
+        registerTag(itemTag("c:glass_panes"), new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f));
+        registerTag(ItemTags.TERRACOTTA, new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 2f));
+    }
 
+    // Путь "Промысел"
+    private static void initHarvestPath() {
+        initCook();
+    }
+
+    // Специализация "Повар"
+    private static void initCook() {
         // Базовое
         register(new CraftEntry(Path.HARVEST, Spec.COOK, 2f),
                 Items.COOKIE, Items.BREAD);
@@ -473,13 +433,16 @@ public class ItemCraftMap {
         // Торт
         register(new CraftEntry(Path.HARVEST, Spec.COOK, 12f),
                 Items.CAKE);
+    }
 
-        // ================================================================
-        // МАГИЯ — АЛХИМИК
-        // ================================================================
-        // Крафт магических расходников/реагентов — всегда успех (baseChance=1.0),
-        // XP идёт в путь Магия. Гейтинг доступа (где есть) — ItemCraftTierMap.
+    // Путь "Магия"
+    private static void initMagicPath() {
+        initAlchemist();
+        initEnchanter();
+    }
 
+    // Специализация "Алхимик"
+    private static void initAlchemist() {
         register(new CraftEntry(Path.MAGIC, Spec.ALCHEMIST, 4f),
                 Items.BLAZE_POWDER);
 
@@ -491,44 +454,16 @@ public class ItemCraftMap {
                 Items.FERMENTED_SPIDER_EYE, Items.GLISTERING_MELON_SLICE,
                 Items.MAGMA_CREAM);
 
-        // ================================================================
-        // МАГИЯ — ЗАЧАРОВАТЕЛЬ
-        // ================================================================
+        // Красители (XP мал, абуз незначителен)
+        registerTag(itemTag("c:dyes"), new CraftEntry(Path.MAGIC, Spec.ALCHEMIST, 0.5f));
+    }
+
+    // Специализация "Зачарователь"
+    private static void initEnchanter() {
         // Стол зачарования — профильный инструмент Зачарователя, крафтабелен
         // с ур.0 (без гейта), чтобы было на чём прокачиваться. XP идёт в Магию.
         register(new CraftEntry(Path.MAGIC, Spec.ENCHANTER, 8f),
                 Items.ENCHANTING_TABLE);
-
-        // Красители (любой источник — XP мал, абуз незначителен)
-        register(new CraftEntry(Path.MAGIC, Spec.ALCHEMIST, 0.5f),
-                Items.WHITE_DYE, Items.ORANGE_DYE, Items.MAGENTA_DYE,
-                Items.LIGHT_BLUE_DYE, Items.YELLOW_DYE, Items.LIME_DYE,
-                Items.PINK_DYE, Items.GRAY_DYE, Items.LIGHT_GRAY_DYE,
-                Items.CYAN_DYE, Items.PURPLE_DYE, Items.BLUE_DYE,
-                Items.BROWN_DYE, Items.GREEN_DYE, Items.RED_DYE, Items.BLACK_DYE);
-
-        // ================================================================
-        // ТЕГ-FALLBACK (мод-совместимость) — Плотник
-        // ================================================================
-        // Ловят modded-варианты (напр. baobab-доски/верстак BWG), которым точный
-        // Items-ключ не соответствует. Проверяются ПОСЛЕ точных Item, XP совпадает
-        // с ванильными семействами. Ваниль по-прежнему матчится напрямую.
-        registerTag(ItemTags.PLANKS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
-        registerTag(ItemTags.WOODEN_SLABS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
-        registerTag(ItemTags.WOODEN_STAIRS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
-        registerTag(ItemTags.WOODEN_BUTTONS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
-        registerTag(ItemTags.SIGNS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
-        registerTag(ItemTags.HANGING_SIGNS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
-        registerTag(ItemTags.WOODEN_DOORS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
-        registerTag(ItemTags.WOODEN_TRAPDOORS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
-        registerTag(ItemTags.WOODEN_FENCES, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
-        registerTag(ItemTags.WOODEN_PRESSURE_PLATES, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
-        registerTag(ItemTags.BEDS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 3f));
-        registerTag(ItemTags.BOATS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 4f));
-        registerTag(ItemTags.CHEST_BOATS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 4f));
-        registerTag(itemTag("c:bookshelves"), new CraftEntry(Path.CRAFT, Spec.CARPENTER, 4f));
-        registerTag(itemTag("c:player_workstations/crafting_tables"),
-                new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
     }
 
     private static void register(CraftEntry entry, Item... items) {

@@ -20,6 +20,17 @@ public class SmeltTierMap {
     private static final Map<Item, SpecRequirement> MAP = new HashMap<>();
 
     static {
+        initCraftPath();
+    }
+
+    // Путь "Ремесло"
+    private static void initCraftPath() {
+        initBlacksmith();
+        initCraftsman();
+    }
+
+    // Специализация "Кузнец" (металл)
+    private static void initBlacksmith() {
         // Медь — ур.1
         reg(1, Items.COPPER_INGOT);
 
@@ -29,8 +40,11 @@ public class SmeltTierMap {
 
         // Незеритовый лом (древние обломки) — ур.5
         reg(5, Items.NETHERITE_SCRAP);
+    }
 
-        // Стекло — Мастеровой ур.1 (любой песок: ваниль + моды → minecraft:glass)
+    // Специализация "Мастеровой" (стекло)
+    private static void initCraftsman() {
+        // Стекло — ур.1 (любой песок: ваниль + моды → minecraft:glass)
         MAP.put(Items.GLASS, new SpecRequirement(Spec.CRAFTSMAN, 1));
     }
 

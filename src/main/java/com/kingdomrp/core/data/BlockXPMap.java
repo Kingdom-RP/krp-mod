@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+// Маппинг получения опыта за разрушение блоков соответствующих путей/специализаций
 public class BlockXPMap {
 
     private static final Map<Block, BlockEntry> MAP = new HashMap<>();
@@ -17,11 +18,19 @@ public class BlockXPMap {
     private static final List<Map.Entry<TagKey<Block>, BlockEntry>> TAGS = new ArrayList<>();
 
     static {
+        initMiningPath();
+        initHarvestPath();
+        initMagicPath();
+    }
 
-        // ================================================================
-        // ПУТЬ: ДОБЫЧА — Шахтёр
-        // ================================================================
+    // Путь "Добыча"
+    private static void initMiningPath() {
+        initMiner();
+        initLumberjack();
+    }
 
+    // Специализация "Шахтёр"
+    private static void initMiner() {
         // Камень обычный (якорь = 1)
         register(new BlockEntry(Path.MINING, 1f),
                 Blocks.STONE, Blocks.COBBLESTONE, Blocks.SMOOTH_STONE);
@@ -147,11 +156,10 @@ public class BlockXPMap {
                 Blocks.COARSE_DIRT, Blocks.PODZOL, Blocks.MYCELIUM);
         register(new BlockEntry(Path.MINING, 1f),
                 Blocks.BONE_BLOCK);
+    }
 
-        // ================================================================
-        // ПУТЬ: ДОБЫЧА — Лесоруб
-        // ================================================================
-
+    // Специализация "Лесоруб"
+    private static void initLumberjack() {
         // Уровень 0 — мягкие породы (дуб, берёза, ель)
         register(new BlockEntry(Path.MINING, 2f),
                 Blocks.OAK_LOG, Blocks.BIRCH_LOG, Blocks.SPRUCE_LOG);
@@ -173,12 +181,16 @@ public class BlockXPMap {
         // Корни (бамбук — у Фермера, путь Промысел)
         register(new BlockEntry(Path.MINING, 0.5f),
                 Blocks.MANGROVE_ROOTS);
+    }
 
-        // ================================================================
-        // ПУТЬ: ПРОМЫСЕЛ — Фермер
-        // ================================================================
-        // XP коррелирует с уровнем доступа (BlockTierMap, Spec.FARMER)
+    // Путь "Промысел"
+    private static void initHarvestPath() {
+        initFarmer();
+        initFisher();
+    }
 
+    // Специализация "Фермер" (XP коррелирует с уровнем доступа — BlockTierMap)
+    private static void initFarmer() {
         // Ур.0 — стартовые культуры
         // (XP повышен после отмены XP за посадку — награда только за сбор созревшего)
         register(new BlockEntry(Path.HARVEST, 3f),
@@ -242,11 +254,10 @@ public class BlockXPMap {
                 Blocks.VINE, Blocks.WEEPING_VINES,
                 Blocks.TWISTING_VINES,
                 Blocks.BIG_DRIPLEAF, Blocks.SMALL_DRIPLEAF);
+    }
 
-        // ================================================================
-        // ПУТЬ: ПРОМЫСЕЛ — Рыбак (натуральная морская флора)
-        // ================================================================
-
+    // Специализация "Рыбак" (натуральная морская флора)
+    private static void initFisher() {
         // Водоросли и морские растения
         register(new BlockEntry(Path.HARVEST, 1f),
                 Blocks.KELP, Blocks.SEAGRASS, Blocks.TALL_SEAGRASS);
@@ -258,11 +269,15 @@ public class BlockXPMap {
         // Морские огурцы
         register(new BlockEntry(Path.HARVEST, 1f),
                 Blocks.SEA_PICKLE);
+    }
 
-        // ================================================================
-        // ПУТЬ: МАГИЯ — Алхимик (сбор цветов/реагентного сырья)
-        // ================================================================
+    // Путь "Магия"
+    private static void initMagicPath() {
+        initAlchemist();
+    }
 
+    // Специализация "Алхимик" (сбор цветов/реагентного сырья)
+    private static void initAlchemist() {
         // Мелкие цветы (сырьё для красителей/зелий) — по тегу: ваниль + моды
         // (BWG/BOP дописывают свои цветы в minecraft:small_flowers/tall_flowers)
         registerTag(BlockTags.SMALL_FLOWERS, new BlockEntry(Path.MAGIC, 0.5f));

@@ -8,11 +8,24 @@ import net.minecraft.world.level.block.Blocks;
 import java.util.HashMap;
 import java.util.Map;
 
+// Гейтинг ДОБЫЧИ блока (руда/дерево/урожай) по уровню специализации
 public class BlockTierMap {
 
     private static final Map<Block, BlockTierEntry> MAP = new HashMap<>();
 
     static {
+        initMiningPath();
+        initHarvestPath();
+    }
+
+    // Путь "Добыча"
+    private static void initMiningPath() {
+        initMiner();
+        initLumberjack();
+    }
+
+    // Специализация "Шахтёр"
+    private static void initMiner() {
         // Шахтёр — уровень 1: уголь, медь
         register(new BlockTierEntry(Spec.MINER, 1),
                 Blocks.COAL_ORE, Blocks.DEEPSLATE_COAL_ORE,
@@ -38,25 +51,26 @@ public class BlockTierMap {
         register(new BlockTierEntry(Spec.MINER, 5),
                 Blocks.NETHER_QUARTZ_ORE, Blocks.NETHER_GOLD_ORE,
                 Blocks.ANCIENT_DEBRIS);
+    }
 
-        // Лесоруб — ВСЕ оверворлд-деревья доступны с ур.0 (тир-гейта нет):
-        // дуб, берёза, ель, джунгли, акация, тёмный дуб, мангровое, вишня. Иначе
-        // игрок, заспавнившийся в биоме с «специфичным» деревом (саванна — только
-        // акация, болото — мангровое и т.п.), не мог бы добыть древесину вообще.
-        // XP за них всё равно начисляется (BlockXPMap, путь Добыча).
-
-        // Лесоруб — уровень 6: незер-стебли и гигантские грибы (НЕ деревья
-        // спавн-биома; требуют похода в Нижний/особых условий) — гейт сохранён.
+    // Специализация "Лесоруб"
+    private static void initLumberjack() {
+        // ВСЕ оверворлд-деревья доступны с ур.0 (гейта нет) — иначе игрок в биоме
+        // с одним видом дерева не добыл бы древесину. XP всё равно идёт (BlockXPMap).
+        // Ур.6: незер-стебли и гигантские грибы — гейт сохранён (нужен поход в Нижний).
         register(new BlockTierEntry(Spec.LUMBERJACK, 6),
                 Blocks.CRIMSON_STEM, Blocks.WARPED_STEM,
                 Blocks.BROWN_MUSHROOM_BLOCK, Blocks.RED_MUSHROOM_BLOCK,
                 Blocks.MUSHROOM_STEM);
+    }
 
-        // ================================================================
-        // Фермер (путь Промысел) — гейтинг ДОБЫЧИ урожая
-        // (ур.0 — пшеница и сладкие ягоды — без ограничений)
-        // ================================================================
+    // Путь "Промысел"
+    private static void initHarvestPath() {
+        initFarmer();
+    }
 
+    // Специализация "Фермер" (ур.0 — пшеница и сладкие ягоды — без гейта)
+    private static void initFarmer() {
         // Ур.1: морковь, картофель, бамбук, грибы
         register(new BlockTierEntry(Spec.FARMER, 1),
                 Blocks.CARROTS, Blocks.POTATOES, Blocks.BAMBOO,
