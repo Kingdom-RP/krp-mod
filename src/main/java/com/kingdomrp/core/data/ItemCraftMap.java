@@ -83,55 +83,46 @@ public class ItemCraftMap {
                 Items.STRIPPED_MANGROVE_WOOD, Items.STRIPPED_CHERRY_WOOD,
                 Items.STRIPPED_CRIMSON_HYPHAE, Items.STRIPPED_WARPED_HYPHAE);
 
-        // Декор «не очень деревянное» — XP 2
-        register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f),
+        register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 3f),
                 Items.COMPOSTER, Items.ITEM_FRAME, Items.GLOW_ITEM_FRAME,
                 Items.PAINTING, Items.ARMOR_STAND);
 
-        // ------- Тир 3 (CARPENTER 3): транспорт, мебель, станции -------
-        // (лодки/лодки с сундуком — теги BOATS/CHEST_BOATS; книжные полки — c:bookshelves)
 
-        // Улей — XP 4
         register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 4f),
-                Items.BEEHIVE);
-
-        // Рабочие станции профессий, костры — XP 5
-        // (Кузнечный стол переехал к Кузнецу — см. секцию КУЗНЕЦ.)
-        register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 5f),
-                Items.LECTERN, Items.LOOM, Items.FLETCHING_TABLE,
-                Items.CARTOGRAPHY_TABLE);
-
-        register(new CraftEntry(Path.CRAFT, Spec.CARPENTER, 5f),
-                Items.CAMPFIRE, Items.SOUL_CAMPFIRE);
+                Items.LECTERN, Items.LOOM, Items.FLETCHING_TABLE, Items.CARTOGRAPHY_TABLE,
+                Items.CAMPFIRE, Items.SOUL_CAMPFIRE, Items.BEEHIVE);
 
         // ТЕГ-FALLBACK (мод-совместимость) — Плотник
         // Ловят modded-варианты, которым точный Items-ключ не соответствует.
         // Проверяются ПОСЛЕ точных Item, XP совпадает с ванильными семействами.
         registerTag(ItemTags.PLANKS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
-        registerTag(ItemTags.WOODEN_SLABS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
-        registerTag(ItemTags.WOODEN_STAIRS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
-        registerTag(ItemTags.WOODEN_BUTTONS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
-        registerTag(ItemTags.SIGNS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
-        registerTag(ItemTags.HANGING_SIGNS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
+        registerTag(ItemTags.WOODEN_SLABS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1.5f));
+        registerTag(ItemTags.WOODEN_STAIRS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
+        registerTag(ItemTags.WOODEN_BUTTONS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 0.5f));
+        registerTag(ItemTags.SIGNS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 3f));
+        registerTag(ItemTags.HANGING_SIGNS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 4f));
         registerTag(ItemTags.WOODEN_DOORS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
         registerTag(ItemTags.WOODEN_TRAPDOORS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
         registerTag(ItemTags.WOODEN_FENCES, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
         registerTag(ItemTags.FENCE_GATES, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
         registerTag(ItemTags.BANNERS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
-        registerTag(ItemTags.WOODEN_PRESSURE_PLATES, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
+        registerTag(ItemTags.WOODEN_PRESSURE_PLATES, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
         registerTag(ItemTags.BEDS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 3f));
-        registerTag(ItemTags.BOATS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 4f));
-        registerTag(ItemTags.CHEST_BOATS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 4f));
+        registerTag(ItemTags.BOATS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
+        registerTag(ItemTags.CHEST_BOATS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
         registerTag(itemTag("c:bookshelves"), new CraftEntry(Path.CRAFT, Spec.CARPENTER, 4f));
-        registerTag(itemTag("c:player_workstations/crafting_tables"), new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
+        registerTag(itemTag("c:player_workstations/crafting_tables"), new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1.5f));
     }
 
     // Специализация "Кузнец"
     private static void initBlacksmith() {
-        // ---- Каменные инструменты (без гейта, ур.0) ----
+        // ---- Каменные инструменты (без гейта, ур.0) — XP по затратам ----
+        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 2f),
+                Items.STONE_SHOVEL);
         register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 3f),
-                Items.STONE_SWORD, Items.STONE_AXE, Items.STONE_PICKAXE,
-                Items.STONE_SHOVEL, Items.STONE_HOE);
+                Items.STONE_HOE, Items.STONE_SWORD);
+        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 4f),
+                Items.STONE_PICKAXE, Items.STONE_AXE);
 
         // ---- Медь (нижний металл, тир 1) ----
         register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 3f),
@@ -180,43 +171,53 @@ public class ItemCraftMap {
                 Items.WAXED_WEATHERED_CUT_COPPER_STAIRS, Items.WAXED_OXIDIZED_CUT_COPPER_STAIRS);
 
         // ---- Золото (тир 2): инструменты + броня ----
-        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 15f),
-                Items.GOLDEN_SWORD, Items.GOLDEN_AXE, Items.GOLDEN_PICKAXE,
-                Items.GOLDEN_SHOVEL, Items.GOLDEN_HOE,
-                Items.GOLDEN_HELMET, Items.GOLDEN_CHESTPLATE,
-                Items.GOLDEN_LEGGINGS, Items.GOLDEN_BOOTS);
+        registerGear(3f, 8f, 12f,
+                Items.GOLDEN_SHOVEL, Items.GOLDEN_HOE, Items.GOLDEN_SWORD,
+                Items.GOLDEN_PICKAXE, Items.GOLDEN_AXE,
+                Items.GOLDEN_BOOTS, Items.GOLDEN_HELMET,
+                Items.GOLDEN_LEGGINGS, Items.GOLDEN_CHESTPLATE);
 
         // Золотые приборы/утилитарка — тир 2
         register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 5f),
                 Items.CLOCK, Items.LIGHT_WEIGHTED_PRESSURE_PLATE);
 
         // ---- Железо (тир 3): инструменты + броня ----
-        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 20f),
-                Items.IRON_SWORD, Items.IRON_AXE, Items.IRON_PICKAXE,
-                Items.IRON_SHOVEL, Items.IRON_HOE,
-                Items.IRON_HELMET, Items.IRON_CHESTPLATE,
-                Items.IRON_LEGGINGS, Items.IRON_BOOTS);
+        registerGear(4f, 10f, 14f,
+                Items.IRON_SHOVEL, Items.IRON_HOE, Items.IRON_SWORD,
+                Items.IRON_PICKAXE, Items.IRON_AXE,
+                Items.IRON_BOOTS, Items.IRON_HELMET,
+                Items.IRON_LEGGINGS, Items.IRON_CHESTPLATE);
 
         // Железное кольцо — компонент кольчуги (из самородков), XP 2
         register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 2f),
                 KRPItems.IRON_RING.get());
 
-        // Кольчужная броня — из железных колец (тир 2)
-        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 18f),
-                Items.CHAINMAIL_HELMET, Items.CHAINMAIL_CHESTPLATE,
-                Items.CHAINMAIL_LEGGINGS, Items.CHAINMAIL_BOOTS);
+        // Кольчужная броня — из железных колец (тир 2) — XP по затратам
+        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 9f),
+                Items.CHAINMAIL_BOOTS, Items.CHAINMAIL_HELMET);
+        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 13f),
+                Items.CHAINMAIL_LEGGINGS, Items.CHAINMAIL_CHESTPLATE);
 
-        // Железная утилитарка
-        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 15f),
-                Items.IRON_DOOR, Items.IRON_TRAPDOOR,
-                Items.IRON_BARS, Items.CAULDRON,
-                Items.ANVIL, Items.STONECUTTER,
-                Items.SHEARS, Items.BUCKET,
-                Items.SHIELD, Items.FLINT_AND_STEEL,
-                Items.COMPASS, Items.CHAIN,
-                Items.LANTERN, Items.SOUL_LANTERN,
-                Items.HOPPER, Items.BLAST_FURNACE, Items.GRINDSTONE,
+        // Железная утилитарка — XP по затратам железа
+        // Дёшево (~1 слиток / самородки)
+        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 3f),
+                Items.FLINT_AND_STEEL, Items.CHAIN,
+                Items.LANTERN, Items.SOUL_LANTERN);
+
+        // 2–4 слитка
+        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 5f),
+                Items.SHEARS, Items.BUCKET, Items.STONECUTTER,
+                Items.SHIELD, Items.GRINDSTONE, Items.IRON_TRAPDOOR,
                 Items.HEAVY_WEIGHTED_PRESSURE_PLATE);
+
+        // 5–7 слитков
+        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 8f),
+                Items.IRON_DOOR, Items.IRON_BARS, Items.COMPASS,
+                Items.CAULDRON, Items.HOPPER, Items.BLAST_FURNACE);
+
+        // Наковальня — ~31 слиток (3 блока + 4), отдельно
+        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 25f),
+                Items.ANVIL);
 
         // Recovery compass — дорогой прибор (эхо-осколки)
         register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 10f),
@@ -228,14 +229,14 @@ public class ItemCraftMap {
                 Items.HOPPER_MINECART, Items.TNT_MINECART);
 
         // ---- Алмаз (тир 5): инструменты + броня ----
-        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 40f),
-                Items.DIAMOND_SWORD, Items.DIAMOND_AXE, Items.DIAMOND_PICKAXE,
-                Items.DIAMOND_SHOVEL, Items.DIAMOND_HOE,
-                Items.DIAMOND_HELMET, Items.DIAMOND_CHESTPLATE,
-                Items.DIAMOND_LEGGINGS, Items.DIAMOND_BOOTS);
+        registerGear(6f, 16f, 20f,
+                Items.DIAMOND_SHOVEL, Items.DIAMOND_HOE, Items.DIAMOND_SWORD,
+                Items.DIAMOND_PICKAXE, Items.DIAMOND_AXE,
+                Items.DIAMOND_BOOTS, Items.DIAMOND_HELMET,
+                Items.DIAMOND_LEGGINGS, Items.DIAMOND_CHESTPLATE);
 
         // ---- Незерит-прочее (тир 7); сам гир — на кузнечном столе ----
-        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 20f),
+        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 25f),
                 Items.NETHERITE_INGOT);
 
         register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 15f),
@@ -251,7 +252,7 @@ public class ItemCraftMap {
         register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 3f),
                 Items.BOW, Items.ARROW);
 
-        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 10f),
+        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 4f),
                 Items.CROSSBOW);
     }
 
@@ -271,17 +272,13 @@ public class ItemCraftMap {
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f),
                 Items.PAPER, Items.LEAD, Items.FLOWER_POT, Items.WRITABLE_BOOK);
 
-        // Глина (XP 2 — базовое сырьё, чуть дороже) + прочие натуральные блоки
-        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 2f),
-                Items.CLAY);
-
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f),
                 Items.PACKED_MUD, Items.COARSE_DIRT,
                 Items.BONE_BLOCK, Items.HONEYCOMB_BLOCK, Items.SLIME_BLOCK,
                 Items.POLISHED_BASALT);
 
         // Кирпич / незер-кирпич / грязевой кирпич (резной незер-кирпич — тир 4)
-        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f),
+        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 3f),
                 Items.BRICKS, Items.BRICK_SLAB, Items.BRICK_STAIRS, Items.BRICK_WALL,
                 Items.NETHER_BRICKS, Items.NETHER_BRICK_SLAB, Items.NETHER_BRICK_STAIRS,
                 Items.NETHER_BRICK_WALL, Items.NETHER_BRICK_FENCE,
@@ -290,14 +287,14 @@ public class ItemCraftMap {
                 Items.MUD_BRICKS, Items.MUD_BRICK_SLAB, Items.MUD_BRICK_STAIRS, Items.MUD_BRICK_WALL);
 
         // Камень / каменный кирпич / булыжник (резьба и мшистость — тир 4)
-        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f),
+        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 3f),
                 Items.STONE_SLAB, Items.STONE_STAIRS, Items.SMOOTH_STONE_SLAB,
                 Items.STONE_BRICKS, Items.STONE_BRICK_SLAB, Items.STONE_BRICK_STAIRS,
                 Items.STONE_BRICK_WALL,
                 Items.COBBLESTONE_SLAB, Items.COBBLESTONE_STAIRS, Items.COBBLESTONE_WALL);
 
         // Андезит / диорит / гранит (полировка + плиты/ступени/стены)
-        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f),
+        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 3f),
                 Items.POLISHED_ANDESITE, Items.POLISHED_ANDESITE_SLAB, Items.POLISHED_ANDESITE_STAIRS,
                 Items.ANDESITE_SLAB, Items.ANDESITE_STAIRS, Items.ANDESITE_WALL,
                 Items.POLISHED_DIORITE, Items.POLISHED_DIORITE_SLAB, Items.POLISHED_DIORITE_STAIRS,
@@ -306,7 +303,7 @@ public class ItemCraftMap {
                 Items.GRANITE_SLAB, Items.GRANITE_STAIRS, Items.GRANITE_WALL);
 
         // Песчаник / красный песчаник (резьба — тир 4)
-        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f),
+        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 3f),
                 Items.SANDSTONE, Items.SANDSTONE_SLAB, Items.SANDSTONE_STAIRS, Items.SANDSTONE_WALL,
                 Items.CUT_SANDSTONE, Items.CUT_STANDSTONE_SLAB, Items.SMOOTH_SANDSTONE_SLAB,
                 Items.SMOOTH_SANDSTONE_STAIRS,
@@ -315,7 +312,7 @@ public class ItemCraftMap {
                 Items.SMOOTH_RED_SANDSTONE_SLAB, Items.SMOOTH_RED_SANDSTONE_STAIRS);
 
         // Туф 1.21 (полировка/кирпич/плиты/ступени/стены) — резьба chiseled на тире 4
-        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f),
+        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 4f),
                 Items.TUFF_SLAB, Items.TUFF_STAIRS, Items.TUFF_WALL,
                 Items.POLISHED_TUFF, Items.POLISHED_TUFF_SLAB,
                 Items.POLISHED_TUFF_STAIRS, Items.POLISHED_TUFF_WALL,
@@ -326,11 +323,11 @@ public class ItemCraftMap {
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 2f),
                 Items.LEATHER, Items.BOOK);
 
-        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 3f),
+        // Кожаная броня — XP по затратам (ботинки/шлем < поножи/нагрудник)
+        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 4f),
                 Items.LEATHER_BOOTS, Items.LEATHER_HELMET);
 
-        // ================== Тир 2 (CRAFTSMAN 2): тяжёлая кожа + терракота ==================
-        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 3f),
+        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 6f),
                 Items.LEATHER_CHESTPLATE, Items.LEATHER_LEGGINGS);
 
         // Седло — кожа + железо (натуральная кожа → Мастеровой), XP 5
@@ -341,7 +338,7 @@ public class ItemCraftMap {
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 4f),
                 Items.DECORATED_POT);
 
-        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 2f),
+        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 4f),
                 Items.WHITE_STAINED_GLASS, Items.ORANGE_STAINED_GLASS, Items.MAGENTA_STAINED_GLASS,
                 Items.LIGHT_BLUE_STAINED_GLASS, Items.YELLOW_STAINED_GLASS, Items.LIME_STAINED_GLASS,
                 Items.PINK_STAINED_GLASS, Items.GRAY_STAINED_GLASS, Items.LIGHT_GRAY_STAINED_GLASS,
@@ -356,7 +353,7 @@ public class ItemCraftMap {
                 Items.BLACK_STAINED_GLASS_PANE);
 
         // ================== Тир 4 (CRAFTSMAN 4): узорная отделка камня, XP 3 ==================
-        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 3f),
+        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 4f),
                 Items.CHISELED_STONE_BRICKS, Items.CHISELED_SANDSTONE, Items.CHISELED_RED_SANDSTONE,
                 Items.CHISELED_NETHER_BRICKS, Items.CHISELED_TUFF, Items.CHISELED_TUFF_BRICKS,
                 Items.MOSSY_STONE_BRICKS, Items.MOSSY_STONE_BRICK_SLAB,
@@ -402,8 +399,8 @@ public class ItemCraftMap {
         registerTag(ItemTags.WOOL, new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f));
         registerTag(ItemTags.WOOL_CARPETS, new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f));
         registerTag(ItemTags.CANDLES, new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f));
-        registerTag(itemTag("c:concrete_powders"), new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f));
-        registerTag(itemTag("c:glass_panes"), new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 1f));
+        registerTag(itemTag("c:concrete_powders"), new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 4f));
+        registerTag(itemTag("c:glass_panes"), new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 2f));
         registerTag(ItemTags.TERRACOTTA, new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 2f));
     }
 
@@ -462,7 +459,7 @@ public class ItemCraftMap {
     private static void initEnchanter() {
         // Стол зачарования — профильный инструмент Зачарователя, крафтабелен
         // с ур.0 (без гейта), чтобы было на чём прокачиваться. XP идёт в Магию.
-        register(new CraftEntry(Path.MAGIC, Spec.ENCHANTER, 8f),
+        register(new CraftEntry(Path.MAGIC, Spec.ENCHANTER, 15f),
                 Items.ENCHANTING_TABLE);
     }
 
@@ -470,6 +467,21 @@ public class ItemCraftMap {
         for (Item item : items) {
             MAP.put(item, entry);
         }
+    }
+
+    /**
+     * Кузнечный комплект (инструменты + броня) — XP пропорционально затратам металла.
+     * Инструменты: лопата=t (1 слиток), мотыга/меч=t+1 (2), кирка/топор=t+2 (3).
+     * Броня: ботинки/шлем=l (4–5), поножи/нагрудник=h (7–8).
+     */
+    private static void registerGear(float t, float l, float h,
+            Item shovel, Item hoe, Item sword, Item pickaxe, Item axe,
+            Item boots, Item helmet, Item leggings, Item chestplate) {
+        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, t), shovel);
+        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, t + 1), hoe, sword);
+        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, t + 2), pickaxe, axe);
+        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, l), boots, helmet);
+        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, h), leggings, chestplate);
     }
 
     private static void registerTag(TagKey<Item> tag, CraftEntry entry) {

@@ -189,15 +189,15 @@ public class ItemCraftTierMap {
         // Ур.0 (без гейта): базовая стройка — текстиль/свечи/стекло-панели/бетон-пудра/
         // обычная каменная кладка/глина. Лестница 1→7: декоративнее материал → выше гейт.
 
-        // Тир 1 — выделка кожи, книги, лёгкая кожаная броня
+        // Тир 1 — выделка кожи, книги, вся кожаная броня
         gate(new SpecRequirement(Spec.CRAFTSMAN, 1),
                 Items.LEATHER, Items.BOOK,
-                Items.LEATHER_BOOTS, Items.LEATHER_HELMET);
-
-        // Тир 2 — тяжёлая кожаная броня + черепаший шлем (скют)
-        gate(new SpecRequirement(Spec.CRAFTSMAN, 2),
-                Items.TURTLE_HELMET,
+                Items.LEATHER_BOOTS, Items.LEATHER_HELMET,
                 Items.LEATHER_CHESTPLATE, Items.LEATHER_LEGGINGS);
+
+        // Тир 2 — черепаший шлем (скют)
+        gate(new SpecRequirement(Spec.CRAFTSMAN, 2),
+                Items.TURTLE_HELMET);
 
         // Тир 3 — тонкая керамика + цветное стекло (витражи) + седло
         gate(new SpecRequirement(Spec.CRAFTSMAN, 3),

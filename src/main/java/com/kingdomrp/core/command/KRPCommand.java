@@ -4,10 +4,27 @@ import com.kingdomrp.core.capability.PlayerData;
 import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.data.Path;
 import com.kingdomrp.core.data.Spec;
+import com.kingdomrp.core.data.CraftEntry;
+import com.kingdomrp.core.data.BlockEntry;
+import com.kingdomrp.core.data.KillEntry;
+import com.kingdomrp.core.data.SpecRequirement;
+import com.kingdomrp.core.data.ItemCraftMap;
+import com.kingdomrp.core.data.ItemCraftTierMap;
+import com.kingdomrp.core.data.BlockXPMap;
+import com.kingdomrp.core.data.MobKillMap;
+import com.kingdomrp.core.data.FishingXPMap;
+import com.kingdomrp.core.data.MetalSmeltMap;
+import com.kingdomrp.core.data.NaturalSmeltMap;
+import com.kingdomrp.core.data.RepairXPMap;
+import com.kingdomrp.core.data.FoodCookMap;
 import com.kingdomrp.core.specialization.SpecializationRegistry;
 import com.kingdomrp.core.network.PacketHelper;
 import com.kingdomrp.core.system.XPSystem;
 import com.kingdomrp.core.KingdomRPCore;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -25,7 +42,14 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 @EventBusSubscriber(modid = KingdomRPCore.MODID)
 public class KRPCommand {
@@ -126,6 +150,11 @@ public class KRPCommand {
                                                         .executes(ctx -> cmdSetSpec(ctx, true)))
                                         )
                                 )
+                        )
+                        // ===== xpaudit =====
+                        .then(Commands.literal("xpaudit")
+                                .requires(src -> src.hasPermission(2))
+                                .executes(KRPCommand::cmdXpAudit)
                         )
                         // ===== reset [target] =====
                         .then(Commands.literal("reset")
@@ -284,6 +313,144 @@ public class KRPCommand {
         ctx.getSource().sendSuccess(() -> Component.literal(
                 "§aПрогресс игрока §f" + target.getName().getString() + " §aсброшен"), true);
         return 1;
+    }
+
+    // ===================== xpaudit =====================
+    // Дамп всех XP-маппингов в файл (баланс-сверка). Итерируем реестры и зовём
+    // get() каждого маппинга — теги/fallback резолвятся штатно.
+
+    private static int cmdXpAudit(CommandContext<CommandSourceStack> ctx) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Kingdom RP — XP audit\n=====================\n\n");
+
+        auditCraft(sb);
+        auditBlocks(sb);
+        auditKills(sb);
+        auditFloatMap(sb, "Fishing (FishingXPMap)", FishingXPMap::get);
+        auditFloatMap(sb, "Metal smelt (MetalSmeltMap)", MetalSmeltMap::get);
+        auditFloatMap(sb, "Natural smelt (NaturalSmeltMap)", NaturalSmeltMap::get);
+        auditFloatMap(sb, "Repair (RepairXPMap)", it -> RepairXPMap.get(new ItemStack(it)));
+        auditFloatMap(sb, "Cook (FoodCookMap)", FoodCookMap::get);
+
+        java.nio.file.Path out = ctx.getSource().getServer()
+                .getServerDirectory().resolve("krp_xpaudit.txt");
+        try {
+            Files.writeString(out, sb.toString());
+        } catch (IOException e) {
+            ctx.getSource().sendFailure(Component.literal("§cОшибка записи: " + e.getMessage()));
+            return 0;
+        }
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "§aXP-аудит записан: §f" + out.toString()), false);
+        return 1;
+    }
+
+    private static String itemName(Item item) {
+        return BuiltInRegistries.ITEM.getKey(item).toString();
+    }
+
+    /** Тир доступа предмета для указанной спеки (ItemCraftTierMap), либо 0. */
+    private static int craftTier(Item item, Spec spec) {
+        List<SpecRequirement> reqs = ItemCraftTierMap.get(item);
+        if (reqs == null) return 0;
+        for (SpecRequirement r : reqs) {
+            if (r.spec() == spec) return r.level();
+        }
+        return 0;
+    }
+
+    private static void auditCraft(StringBuilder sb) {
+        EnumMap<Spec, List<Object[]>> bySpec = new EnumMap<>(Spec.class);
+        for (Item it : BuiltInRegistries.ITEM) {
+            CraftEntry e = ItemCraftMap.get(it);
+            if (e == null) continue;
+            bySpec.computeIfAbsent(e.spec(), k -> new ArrayList<>())
+                    .add(new Object[]{itemName(it), e.xpReward(), craftTier(it, e.spec())});
+        }
+        sb.append("## Craft XP (ItemCraftMap) — по спеке, тир доступа × XP\n\n");
+        for (var entry : bySpec.entrySet()) {
+            List<Object[]> rows = entry.getValue();
+            rows.sort((a, b) -> {
+                int t = Integer.compare((int) a[2], (int) b[2]);
+                return t != 0 ? t : Float.compare((float) b[1], (float) a[1]);
+            });
+            sb.append("### ").append(entry.getKey()).append("  (")
+                    .append(rows.size()).append(")\n");
+            // Свод по тирам: min/max XP — быстрая ловля инверсий
+            Map<Integer, float[]> perTier = new java.util.TreeMap<>();
+            for (Object[] r : rows) {
+                int tier = (int) r[2];
+                float xp = (float) r[1];
+                float[] mm = perTier.computeIfAbsent(tier, k -> new float[]{Float.MAX_VALUE, 0f});
+                mm[0] = Math.min(mm[0], xp);
+                mm[1] = Math.max(mm[1], xp);
+            }
+            perTier.forEach((tier, mm) -> sb.append(String.format(
+                    "  тир %d:  XP %.1f..%.1f\n", tier, mm[0], mm[1])));
+            for (Object[] r : rows) {
+                sb.append(String.format("    T%d  %6.1f  %s\n", (int) r[2], (float) r[1], r[0]));
+            }
+            sb.append("\n");
+        }
+    }
+
+    private static void auditBlocks(StringBuilder sb) {
+        EnumMap<Path, List<Map.Entry<String, Float>>> byPath = new EnumMap<>(Path.class);
+        for (var block : BuiltInRegistries.BLOCK) {
+            BlockEntry e = BlockXPMap.get(block);
+            if (e == null) continue;
+            byPath.computeIfAbsent(e.path(), k -> new ArrayList<>())
+                    .add(Map.entry(BuiltInRegistries.BLOCK.getKey(block).toString(), e.xpReward()));
+        }
+        sb.append("## Block break XP (BlockXPMap) — по пути\n\n");
+        for (var entry : byPath.entrySet()) {
+            List<Map.Entry<String, Float>> rows = entry.getValue();
+            rows.sort((a, b) -> Float.compare(b.getValue(), a.getValue()));
+            appendRows(sb, entry.getKey().name(), rows);
+        }
+    }
+
+    private static void auditKills(StringBuilder sb) {
+        List<Map.Entry<String, Float>> rows = new ArrayList<>();
+        for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
+            KillEntry e = MobKillMap.get(type);
+            if (e == null) continue;
+            rows.add(Map.entry(BuiltInRegistries.ENTITY_TYPE.getKey(type).toString(), e.xpReward()));
+        }
+        rows.sort((a, b) -> Float.compare(b.getValue(), a.getValue()));
+        sb.append("## Mob kill XP (MobKillMap)\n\n");
+        appendRows(sb, "kills", rows);
+    }
+
+    private static void auditFloatMap(StringBuilder sb, String title, Function<Item, Float> fn) {
+        List<Map.Entry<String, Float>> rows = new ArrayList<>();
+        for (Item it : BuiltInRegistries.ITEM) {
+            float v = fn.apply(it);
+            if (v > 0) rows.add(Map.entry(itemName(it), v));
+        }
+        rows.sort((a, b) -> Float.compare(b.getValue(), a.getValue()));
+        sb.append("## ").append(title).append("\n\n");
+        appendRows(sb, title, rows);
+    }
+
+    /** Печать группы: заголовок + count/min/max/avg + строки. */
+    private static void appendRows(StringBuilder sb, String group, List<Map.Entry<String, Float>> rows) {
+        if (rows.isEmpty()) {
+            sb.append("### ").append(group).append("  (пусто)\n\n");
+            return;
+        }
+        float min = Float.MAX_VALUE, max = 0f, sum = 0f;
+        for (var r : rows) {
+            min = Math.min(min, r.getValue());
+            max = Math.max(max, r.getValue());
+            sum += r.getValue();
+        }
+        sb.append(String.format("### %s  (n=%d, min=%.1f, max=%.1f, avg=%.2f)\n",
+                group, rows.size(), min, max, sum / rows.size()));
+        for (var r : rows) {
+            sb.append(String.format("    %6.1f  %s\n", r.getValue(), r.getKey()));
+        }
+        sb.append("\n");
     }
 
     private static String pathNamesHint() {
