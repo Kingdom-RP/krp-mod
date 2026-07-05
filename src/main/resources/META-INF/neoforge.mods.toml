@@ -62,3 +62,12 @@ config="${mod_id}.emi.mixins.json"
     versionRange="*"
     ordering="AFTER"
     side="BOTH"
+
+# Optional + ordering=AFTER: оверрайды рецептов Small Ships (data/smallships/recipe/*)
+# перекрывают оригиналы — отключение крафта cannon / cannon_ball.
+[[dependencies.${mod_id}]]
+    modId="smallships"
+    type="optional"
+    versionRange="*"
+    ordering="AFTER"
+    side="BOTH"
