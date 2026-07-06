@@ -2,7 +2,6 @@ package com.kingdomrp.core.mixin;
 
 import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.config.KRPConfig;
-import com.kingdomrp.core.data.map.BlacksmithTemperMap;
 import com.kingdomrp.core.data.type.Path;
 import com.kingdomrp.core.data.type.Spec;
 import com.kingdomrp.core.system.XPSystem;
@@ -47,12 +46,14 @@ public class SmithingMenuMixin {
         return player.getData(KRPAttachments.PLAYER_DATA).getSpecializationLevel(Spec.BLACKSMITH.id);
     }
 
-    /** Это незерит-апгрейд (а не трим): предмет меняется на незеритовый. */
+    /** Это незерит-апгрейд (а не трим): инструмент/броня, и предмет сменился. */
     @Unique
     private boolean krp$isUpgrade(Container inputs, ItemStack result) {
         if (result.isEmpty()) return false;
-        if (BlacksmithTemperMap.get(result.getItem()) == null) return false;
-        return inputs.getItem(1).getItem() != result.getItem();
+        var item = result.getItem();
+        if (!(item instanceof net.minecraft.world.item.TieredItem
+                || item instanceof net.minecraft.world.item.ArmorItem)) return false;
+        return inputs.getItem(1).getItem() != item;
     }
 
     /** Гейт на ВХОДЕ: не отдаём результат апгрейда, если уровень недостаточен. */

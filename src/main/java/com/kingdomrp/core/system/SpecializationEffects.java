@@ -15,7 +15,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.common.Tags;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.TieredItem;
+import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
@@ -312,7 +316,7 @@ public class SpecializationEffects {
 
     private static void checkMiner(ServerPlayer player, Block block,
                                    BlockPos pos, BlockEvent.BreakEvent event) {
-        if (!OreDropMap.isOre(block)) return;
+        if (!block.builtInRegistryHolder().is(Tags.Blocks.ORES)) return;
 
         withData(player, data -> {
             int specLevel = data.getSpecializationLevel(Spec.MINER.id);
@@ -506,31 +510,49 @@ public class SpecializationEffects {
     }
 
     // Вызывается при сборке результата крафта (CraftingResultMixin), до изъятия.
-    // Закаляет металл (Кузнец) и натуральную броню (Мастеровой).
+    // Закалка инструментов/брони: прочность свежего изделия растёт с уровнем спеца,
+    // сделавшего предмет. Низкоуровневый мастер делает рабочий, но менее долговечный
+    // предмет — замена шанса провала крафта. Незерит-гир (кузнечный стол) прочность
+    // не понижает (SmithingMenuMixin).
+    //
+    // Тир закалки выводится, а не хранится в карте: unlock = уровень открытия крафта
+    // (ItemCraftTierMap для спеца-изготовителя, 0 если гейта нет), full = unlock + 3.
     public static void applyTemperingToCraftResult(Player player, ItemStack result) {
         if (player == null || result == null || result.isEmpty()) return;
-        applyBlacksmithTempering(player, result);
-        applyCraftsmanTempering(player, result);
-    }
-
-    // Закалка Кузнеца: свежескованное металлическое изделие получает прочность,
-    // зависящую от уровня. Свежеоткрытый тир → 50%, к открытию следующего тира →
-    // 100% (см. BlacksmithTemperMap). Заменяет шанс провала крафта — низкоуровневый
-    // Кузнец делает рабочий, но менее долговечный предмет. Незерит — в SmithingMenuMixin.
-    private static void applyBlacksmithTempering(Player player, ItemStack result) {
         if (!result.isDamageableItem()) return;
-        BlacksmithTemperMap.TemperTier tier = BlacksmithTemperMap.get(result.getItem());
-        if (tier == null) return;
+        Item item = result.getItem();
+        if (!(item instanceof TieredItem || item instanceof ArmorItem)) return;
+        var entry = ItemCraftMap.get(item);
+        if (entry == null) return;
+        Spec spec = entry.spec();
+        if (spec != Spec.BLACKSMITH && spec != Spec.CRAFTSMAN && spec != Spec.CARPENTER) return;
 
+        int unlock = craftUnlockLevel(item, spec);
+        int full = unlock + 3;
         withData(player, data -> {
-            int level = data.getSpecializationLevel(Spec.BLACKSMITH.id);
-            float quality = BlacksmithTemperMap.quality(tier, level);
+            float quality = temperQuality(unlock, full, data.getSpecializationLevel(spec.id));
             if (quality >= 1.0f) return;
             int maxDur = result.getMaxDamage();
-            int damage = Math.round((1f - quality) * maxDur);
-            damage = Math.min(damage, maxDur - 1); // не отдаём «сломанный» предмет
+            int damage = Math.min(Math.round((1f - quality) * maxDur), maxDur - 1);
             result.setDamageValue(damage);
         });
+    }
+
+    /** Уровень открытия крафта предмета для спеца (ItemCraftTierMap), либо 0 (без гейта). */
+    private static int craftUnlockLevel(Item item, Spec spec) {
+        var reqs = ItemCraftTierMap.get(item);
+        if (reqs != null) {
+            for (var r : reqs) if (r.spec() == spec) return r.level();
+        }
+        return 0;
+    }
+
+    /** Доля прочности свежего изделия: ~33% на unlock, линейно до 100% на full. */
+    public static float temperQuality(int unlock, int full, int level) {
+        final float base = 1f / 3f;
+        if (level >= full) return 1.0f;
+        if (level <= unlock) return base;
+        return base + (1f - base) * (level - unlock) / (float) (full - unlock);
     }
 
     // Экономия древесины: при крафте предмета Плотника шанс вернуть 1 ед.
@@ -714,26 +736,6 @@ public class SpecializationEffects {
                 || item == net.minecraft.world.item.Items.STRING
                 || item == net.minecraft.world.item.Items.CLAY_BALL
                 || item == net.minecraft.world.item.Items.RABBIT_HIDE;
-    }
-
-    // Закалка Мастерового: свежесделанное изделие из натуральных материалов
-    // (сейчас — кожаная броня) получает прочность по уровню (50% на открытии тира
-    // → 100% к уровню полной прочности). Аналог закалки Кузнеца; применяется
-    // только на крафте. Карта расширяема под модовую броню (CraftsmanTemperMap).
-    private static void applyCraftsmanTempering(Player player, ItemStack result) {
-        if (!result.isDamageableItem()) return;
-        BlacksmithTemperMap.TemperTier tier = CraftsmanTemperMap.get(result.getItem());
-        if (tier == null) return;
-
-        withData(player, data -> {
-            int level = data.getSpecializationLevel(Spec.CRAFTSMAN.id);
-            float quality = BlacksmithTemperMap.quality(tier, level);
-            if (quality >= 1.0f) return;
-            int maxDur = result.getMaxDamage();
-            int damage = Math.round((1f - quality) * maxDur);
-            damage = Math.min(damage, maxDur - 1); // не отдаём «сломанный» предмет
-            result.setDamageValue(damage);
-        });
     }
 
     // Партия сверх нормы Мастерового: при крафте базового строительного блока

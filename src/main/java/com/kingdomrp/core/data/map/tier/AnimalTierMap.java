@@ -3,8 +3,6 @@ package com.kingdomrp.core.data.map.tier;
 import com.kingdomrp.core.data.map.*;
 import com.kingdomrp.core.data.map.tier.*;
 import com.kingdomrp.core.data.map.xp.*;
-import com.kingdomrp.core.data.map.tier.*;
-import com.kingdomrp.core.data.map.xp.*;
 
 import com.kingdomrp.core.data.type.*;
 import com.kingdomrp.core.data.entry.*;
