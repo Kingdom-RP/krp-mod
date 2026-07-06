@@ -65,7 +65,7 @@ public class RestrictionSystem {
         List<String> lines = new java.util.ArrayList<>();
 
         if (com.kingdomrp.core.data.map.BannedCraftMap.isBanned(item)) {
-            lines.add("§cкрафт запрещён (анти-грифинг)");
+            lines.add("§cКрафт запрещён");
         }
         List<SpecRequirement> craft = ItemCraftTierMap.get(item);
         if (craft != null) {
@@ -194,7 +194,7 @@ public class RestrictionSystem {
 
         if (isCraftBanned(result)) {
             player.sendSystemMessage(Component.literal(
-                    "§c[Kingdom RP] Крафт этого предмета отключён на сервере (анти-грифинг)."));
+                    "§c[Kingdom RP] Крафт этого предмета запрещён."));
             return;
         }
 

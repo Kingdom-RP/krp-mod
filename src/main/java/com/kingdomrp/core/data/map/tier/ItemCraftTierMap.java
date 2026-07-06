@@ -50,19 +50,21 @@ public class ItemCraftTierMap {
         initCraftsman();
     }
 
-    // Специализация "Плотник" (гейтинг стройки)
+    // Специализация "Плотник" (гейтинг стройки) — функциональная лестница 0→7.
     private static void initCarpenter() {
-        // Ур.0 (без гейта): доски, палка, миска, знаки, верстак, сундук,
-        // деревянные инструменты, коптильня. Семейства кнопок/плит/дверей/люков/
-        // кроватей/лодок/полок гейтятся по тегам (gateTag ниже) — ваниль + моды;
-        // поимённо здесь только НЕ покрытые тегом.
+        // Ур.0 (без гейта): доски, палка, миска, верстак, сундук, дерев. инструменты.
+        // Семейства (знаки/кнопки/плиты/двери/слэбы/... — по тегам, gateTag ниже; ваниль + моды).
 
-        // Тир 1: лестница, удочка, бочка
+        // Тир 1: лестница, удочка + столярка (двери/люки/кнопки/плиты)
         gate(new SpecRequirement(Spec.CARPENTER, 1),
-                Items.LADDER, Items.FISHING_ROD, Items.BARREL);
+                Items.LADDER, Items.FISHING_ROD);
 
-        // Тир 2: бамбук-блоки, кора (Wood/Hyphae), декор
+        // Тир 2: бочка (мебель-база; плиты/ступени/кровати по тегам)
         gate(new SpecRequirement(Spec.CARPENTER, 2),
+                Items.BARREL);
+
+        // Тир 3: бамбук-блоки, кора (Wood/Hyphae), леса (заборы/калитки/висячие — по тегам)
+        gate(new SpecRequirement(Spec.CARPENTER, 3),
                 Items.BAMBOO_BLOCK, Items.STRIPPED_BAMBOO_BLOCK,
                 Items.BAMBOO_MOSAIC, Items.SCAFFOLDING,
                 Items.OAK_WOOD, Items.BIRCH_WOOD, Items.SPRUCE_WOOD,
@@ -72,28 +74,40 @@ public class ItemCraftTierMap {
                 Items.STRIPPED_OAK_WOOD, Items.STRIPPED_BIRCH_WOOD, Items.STRIPPED_SPRUCE_WOOD,
                 Items.STRIPPED_JUNGLE_WOOD, Items.STRIPPED_ACACIA_WOOD, Items.STRIPPED_DARK_OAK_WOOD,
                 Items.STRIPPED_MANGROVE_WOOD, Items.STRIPPED_CHERRY_WOOD,
-                Items.STRIPPED_CRIMSON_HYPHAE, Items.STRIPPED_WARPED_HYPHAE,
+                Items.STRIPPED_CRIMSON_HYPHAE, Items.STRIPPED_WARPED_HYPHAE);
+
+        // Тир 4: декор (баннеры — по тегу)
+        gate(new SpecRequirement(Spec.CARPENTER, 4),
                 Items.COMPOSTER, Items.ITEM_FRAME, Items.GLOW_ITEM_FRAME,
                 Items.PAINTING, Items.ARMOR_STAND);
 
-        // Тир 3: улей, рабочие станции профессий, костры
-        gate(new SpecRequirement(Spec.CARPENTER, 3),
-                Items.BEEHIVE,
+        // Тир 5: транспорт (лодки/лодки с сундуком — по тегам)
+
+        // Тир 6: книжные полки (по тегу), улей, костры
+        gate(new SpecRequirement(Spec.CARPENTER, 6),
+                Items.BEEHIVE, Items.CAMPFIRE, Items.SOUL_CAMPFIRE);
+
+        // Тир 7: рабочие станции профессий (кузнечный стол — у Кузнеца)
+        gate(new SpecRequirement(Spec.CARPENTER, 7),
                 Items.LECTERN, Items.LOOM, Items.FLETCHING_TABLE,
-                Items.CARTOGRAPHY_TABLE, Items.SMITHING_TABLE,
-                Items.CAMPFIRE, Items.SOUL_CAMPFIRE);
+                Items.CARTOGRAPHY_TABLE);
 
         // ТЕГ-FALLBACK (мод-совместимость) — гейтят modded-варианты деревянных
         // семейств тем же уровнем, что ваниль. Проверяются ПОСЛЕ точных Item.
         gateTag(new SpecRequirement(Spec.CARPENTER, 1),
+                ItemTags.SIGNS,
                 ItemTags.WOODEN_BUTTONS, ItemTags.WOODEN_PRESSURE_PLATES,
-                ItemTags.WOODEN_DOORS, ItemTags.WOODEN_TRAPDOORS, ItemTags.BEDS);
+                ItemTags.WOODEN_DOORS, ItemTags.WOODEN_TRAPDOORS);
         gateTag(new SpecRequirement(Spec.CARPENTER, 2),
-                ItemTags.WOODEN_SLABS, ItemTags.WOODEN_STAIRS,
-                ItemTags.WOODEN_FENCES, ItemTags.HANGING_SIGNS,
-                ItemTags.FENCE_GATES, ItemTags.BANNERS);
+                ItemTags.WOODEN_SLABS, ItemTags.WOODEN_STAIRS, ItemTags.BEDS);
         gateTag(new SpecRequirement(Spec.CARPENTER, 3),
-                ItemTags.BOATS, ItemTags.CHEST_BOATS, itemTag("c:bookshelves"));
+                ItemTags.WOODEN_FENCES, ItemTags.FENCE_GATES, ItemTags.HANGING_SIGNS);
+        gateTag(new SpecRequirement(Spec.CARPENTER, 4),
+                ItemTags.BANNERS);
+        gateTag(new SpecRequirement(Spec.CARPENTER, 5),
+                ItemTags.BOATS, ItemTags.CHEST_BOATS);
+        gateTag(new SpecRequirement(Spec.CARPENTER, 6),
+                itemTag("c:bookshelves"));
     }
 
     // Специализация "Кузнец" (металл, инструменты, броня, утилитарка)
@@ -336,4 +350,5 @@ public class ItemCraftTierMap {
                 .getOptional(net.minecraft.resources.ResourceLocation.parse(id))
                 .ifPresent(it -> MAP.put(it, List.of(reqs)));
     }
+
 }

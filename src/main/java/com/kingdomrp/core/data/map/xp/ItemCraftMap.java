@@ -512,4 +512,5 @@ public class ItemCraftMap {
                 .getOptional(net.minecraft.resources.ResourceLocation.parse(id))
                 .ifPresent(it -> MAP.put(it, entry));
     }
+
 }

@@ -10,6 +10,7 @@ import com.kingdomrp.core.data.entry.*;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -28,7 +29,7 @@ import java.util.Set;
  */
 public final class BannedCraftMap {
 
-    private static final Set<Item> BANNED = Set.of(
+    private static final Set<Item> BANNED = new HashSet<>(Set.of(
             // взрывчатка / грифинг
             Items.TNT, Items.TNT_MINECART, Items.END_CRYSTAL,
             // item-лаг
@@ -37,11 +38,18 @@ public final class BannedCraftMap {
             Items.OBSERVER, Items.PISTON, Items.STICKY_PISTON,
             // item/снаряд-машины
             Items.DISPENSER, Items.DROPPER
-    );
+    ));
 
     private BannedCraftMap() {}
 
     public static boolean isBanned(Item item) {
         return BANNED.contains(item);
+    }
+
+    /** Бан крафта по ID (мод-совместимость, напр. off-theme предметы). No-op если предмета нет. */
+    public static void addById(String id) {
+        net.minecraft.core.registries.BuiltInRegistries.ITEM
+                .getOptional(net.minecraft.resources.ResourceLocation.parse(id))
+                .ifPresent(BANNED::add);
     }
 }
