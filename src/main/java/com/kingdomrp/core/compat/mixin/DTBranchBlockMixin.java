@@ -1,6 +1,6 @@
 package com.kingdomrp.core.compat.mixin;
 
-import com.kingdomrp.core.data.Path;
+import com.kingdomrp.core.data.type.Path;
 import com.kingdomrp.core.system.XPSystem;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;

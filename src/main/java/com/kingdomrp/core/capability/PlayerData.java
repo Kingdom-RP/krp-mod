@@ -1,8 +1,8 @@
 package com.kingdomrp.core.capability;
 
 import com.kingdomrp.core.config.KRPConfig;
-import com.kingdomrp.core.data.Path;
-import com.kingdomrp.core.specialization.SpecializationRegistry;
+import com.kingdomrp.core.data.type.Path;
+import com.kingdomrp.core.data.type.SpecializationRegistry;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.neoforged.neoforge.common.util.INBTSerializable;

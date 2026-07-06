@@ -1,7 +1,7 @@
 package com.kingdomrp.core.client;
 
 import com.kingdomrp.core.KingdomRPCore;
-import com.kingdomrp.core.data.Path;
+import com.kingdomrp.core.data.type.Path;
 import com.kingdomrp.core.system.XPSystem;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;

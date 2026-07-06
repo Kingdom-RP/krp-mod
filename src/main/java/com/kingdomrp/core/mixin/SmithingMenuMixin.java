@@ -2,9 +2,9 @@ package com.kingdomrp.core.mixin;
 
 import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.config.KRPConfig;
-import com.kingdomrp.core.data.BlacksmithTemperMap;
-import com.kingdomrp.core.data.Path;
-import com.kingdomrp.core.data.Spec;
+import com.kingdomrp.core.data.map.BlacksmithTemperMap;
+import com.kingdomrp.core.data.type.Path;
+import com.kingdomrp.core.data.type.Spec;
 import com.kingdomrp.core.system.XPSystem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;

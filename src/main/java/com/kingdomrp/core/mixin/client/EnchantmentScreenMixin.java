@@ -1,8 +1,8 @@
 package com.kingdomrp.core.mixin.client;
 
 import com.kingdomrp.core.registry.KRPAttachments;
-import com.kingdomrp.core.data.EnchantTierMap;
-import com.kingdomrp.core.data.Spec;
+import com.kingdomrp.core.data.map.tier.EnchantTierMap;
+import com.kingdomrp.core.data.type.Spec;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.EnchantmentScreen;

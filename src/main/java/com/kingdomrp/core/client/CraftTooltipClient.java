@@ -1,7 +1,7 @@
 package com.kingdomrp.core.client;
 
 import com.kingdomrp.core.KingdomRPCore;
-import com.kingdomrp.core.data.SpecRequirement;
+import com.kingdomrp.core.data.type.SpecRequirement;
 import com.kingdomrp.core.system.RestrictionSystem;
 import com.kingdomrp.core.system.XPSystem;
 import net.minecraft.client.Minecraft;

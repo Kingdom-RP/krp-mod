@@ -1,11 +1,11 @@
 package com.kingdomrp.core.mixin;
 
 import com.kingdomrp.core.registry.KRPAttachments;
-import com.kingdomrp.core.data.EnchantTierMap;
-import com.kingdomrp.core.data.EnchantXPMap;
-import com.kingdomrp.core.data.Path;
-import com.kingdomrp.core.data.RepairXPMap;
-import com.kingdomrp.core.data.Spec;
+import com.kingdomrp.core.data.map.tier.EnchantTierMap;
+import com.kingdomrp.core.data.map.xp.EnchantXPMap;
+import com.kingdomrp.core.data.type.Path;
+import com.kingdomrp.core.data.map.xp.RepairXPMap;
+import com.kingdomrp.core.data.type.Spec;
 import com.kingdomrp.core.system.EnchantSystem;
 import com.kingdomrp.core.system.XPSystem;
 import net.minecraft.server.level.ServerPlayer;

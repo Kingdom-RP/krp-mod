@@ -1,7 +1,7 @@
 package com.kingdomrp.core.network;
 
 import com.kingdomrp.core.capability.PlayerData;
-import com.kingdomrp.core.data.Path;
+import com.kingdomrp.core.data.type.Path;
 import com.kingdomrp.core.registry.KRPAttachments;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;

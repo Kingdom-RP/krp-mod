@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  *       ({@link RestrictionSystem#isCraftBlocked}), возвращаем пустой стак →
  *       блюдо не извлекается (vanilla {@code safeTake} не зовёт {@code onTake}).</li>
  *   <li><b>XP за готовку</b> — в {@code onTake} через {@link CookSystem#onCooked}:
- *       единый путь с печью/коптильней/костром (XP из {@link com.kingdomrp.core.data.FoodCookMap},
+ *       единый путь с печью/коптильней/костром (XP из {@link com.kingdomrp.core.data.map.xp.FoodCookMap},
  *       × количество, с access-гейтом). FD-еда заведена в FoodCookMap в
  *       {@link com.kingdomrp.core.compat.FarmersDelightCompat}.</li>
  * </ul>

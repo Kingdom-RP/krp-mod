@@ -4,7 +4,11 @@ import com.kingdomrp.core.KingdomRPCore;
 import com.kingdomrp.core.capability.PlayerData;
 import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.config.KRPConfig;
-import com.kingdomrp.core.data.*;
+import com.kingdomrp.core.data.type.*;
+import com.kingdomrp.core.data.entry.*;
+import com.kingdomrp.core.data.map.*;
+import com.kingdomrp.core.data.map.tier.*;
+import com.kingdomrp.core.data.map.xp.*;
 import com.kingdomrp.core.network.PacketHelper;
 import com.kingdomrp.core.registry.KRPEffects;
 import com.kingdomrp.core.world.PlacedBlockTracker;
@@ -170,7 +174,7 @@ public class XPSystem {
             return;
         }
 
-        var entry = com.kingdomrp.core.data.ItemCraftMap.get(result.getItem());
+        var entry = com.kingdomrp.core.data.map.xp.ItemCraftMap.get(result.getItem());
         if (entry == null) return;
         // Крафт всегда успешен — прогрессия держится на лестницах доступа и
         // активных эффектах навыков, а не на шансе провала.
@@ -360,9 +364,9 @@ public class XPSystem {
     }
 
     public static String getSpecName(String specId) {
-        return com.kingdomrp.core.specialization.SpecializationRegistry
+        return com.kingdomrp.core.data.type.SpecializationRegistry
                 .get(specId)
-                .map(com.kingdomrp.core.specialization.Specialization::name)
+                .map(com.kingdomrp.core.data.type.Specialization::name)
                 .orElse(specId);
     }
 

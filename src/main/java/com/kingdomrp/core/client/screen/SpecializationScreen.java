@@ -2,10 +2,10 @@ package com.kingdomrp.core.client.screen;
 
 import com.kingdomrp.core.capability.PlayerData;
 import com.kingdomrp.core.registry.KRPAttachments;
-import com.kingdomrp.core.data.Path;
+import com.kingdomrp.core.data.type.Path;
 import com.kingdomrp.core.network.ChooseSpecializationPacket;
-import com.kingdomrp.core.specialization.Specialization;
-import com.kingdomrp.core.specialization.SpecializationRegistry;
+import com.kingdomrp.core.data.type.Specialization;
+import com.kingdomrp.core.data.type.SpecializationRegistry;
 import com.kingdomrp.core.system.XPSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;

@@ -1,8 +1,8 @@
 package com.kingdomrp.core.compat;
 
 import com.kingdomrp.core.KingdomRPCore;
-import com.kingdomrp.core.data.BlockXPMap;
-import com.kingdomrp.core.data.Path;
+import com.kingdomrp.core.data.map.xp.BlockXPMap;
+import com.kingdomrp.core.data.type.Path;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;

@@ -2,10 +2,10 @@ package com.kingdomrp.core.world;
 
 import com.kingdomrp.core.KingdomRPCore;
 import com.kingdomrp.core.registry.KRPAttachments;
-import com.kingdomrp.core.data.PlantEntry;
-import com.kingdomrp.core.data.PlantTierMap;
-import com.kingdomrp.core.specialization.Specialization;
-import com.kingdomrp.core.specialization.SpecializationRegistry;
+import com.kingdomrp.core.data.entry.PlantEntry;
+import com.kingdomrp.core.data.map.tier.PlantTierMap;
+import com.kingdomrp.core.data.type.Specialization;
+import com.kingdomrp.core.data.type.SpecializationRegistry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;

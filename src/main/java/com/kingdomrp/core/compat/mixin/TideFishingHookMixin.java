@@ -1,6 +1,6 @@
 package com.kingdomrp.core.compat.mixin;
 
-import com.kingdomrp.core.data.Spec;
+import com.kingdomrp.core.data.type.Spec;
 import com.kingdomrp.core.registry.KRPAttachments;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.world.entity.Entity;

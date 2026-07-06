@@ -1,6 +1,6 @@
 package com.kingdomrp.core.mixin;
 
-import com.kingdomrp.core.data.EnchantTierMap;
+import com.kingdomrp.core.data.map.tier.EnchantTierMap;
 import com.kingdomrp.core.system.EnchantSystem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;

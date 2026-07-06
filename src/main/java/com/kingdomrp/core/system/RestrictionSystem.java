@@ -3,10 +3,10 @@ package com.kingdomrp.core.system;
 import com.kingdomrp.core.KingdomRPCore;
 import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.config.KRPConfig;
-import com.kingdomrp.core.data.BannedCraftMap;
-import com.kingdomrp.core.data.ItemCraftTierMap;
-import com.kingdomrp.core.data.ItemUseTierMap;
-import com.kingdomrp.core.data.SpecRequirement;
+import com.kingdomrp.core.data.map.BannedCraftMap;
+import com.kingdomrp.core.data.map.tier.ItemCraftTierMap;
+import com.kingdomrp.core.data.map.tier.ItemUseTierMap;
+import com.kingdomrp.core.data.type.SpecRequirement;
 import net.minecraft.world.level.Level;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -64,7 +64,7 @@ public class RestrictionSystem {
         var item = stack.getItem();
         List<String> lines = new java.util.ArrayList<>();
 
-        if (com.kingdomrp.core.data.BannedCraftMap.isBanned(item)) {
+        if (com.kingdomrp.core.data.map.BannedCraftMap.isBanned(item)) {
             lines.add("§cкрафт запрещён (анти-грифинг)");
         }
         List<SpecRequirement> craft = ItemCraftTierMap.get(item);
@@ -80,17 +80,17 @@ public class RestrictionSystem {
         SpecRequirement use = ItemUseTierMap.get(item);
         if (use != null) lines.add("ношение: " + XPSystem.getSpecName(use.spec().id) + " ур." + use.level());
 
-        var food = com.kingdomrp.core.data.FoodTierMap.get(item);
+        var food = com.kingdomrp.core.data.map.tier.FoodTierMap.get(item);
         if (food != null) lines.add("еда (произв.): " + XPSystem.getSpecName(food.spec().id) + " ур." + food.level());
 
-        SpecRequirement smelt = com.kingdomrp.core.data.SmeltTierMap.get(item);
+        SpecRequirement smelt = com.kingdomrp.core.data.map.tier.SmeltTierMap.get(item);
         if (smelt != null) lines.add("переплавка: " + XPSystem.getSpecName(smelt.spec().id) + " ур." + smelt.level());
 
         if (item instanceof net.minecraft.world.item.BlockItem bi) {
             var block = bi.getBlock();
-            var plant = com.kingdomrp.core.data.PlantTierMap.get(block);
+            var plant = com.kingdomrp.core.data.map.tier.PlantTierMap.get(block);
             if (plant != null) lines.add("посадка: " + XPSystem.getSpecName(plant.spec().id) + " ур." + plant.level());
-            var harvest = com.kingdomrp.core.data.BlockTierMap.get(block);
+            var harvest = com.kingdomrp.core.data.map.tier.BlockTierMap.get(block);
             if (harvest != null) lines.add("добыча: " + XPSystem.getSpecName(harvest.spec().id) + " ур." + harvest.level());
         }
 
@@ -220,13 +220,13 @@ public class RestrictionSystem {
     /** Заблокирована ли переплавка в данный результат по уровню Кузнеца. */
     public static boolean isSmeltBlocked(Player player, net.minecraft.world.item.Item resultItem) {
         if (!KRPConfig.RESTRICTIONS_ENABLED.get()) return false;
-        SpecRequirement req = com.kingdomrp.core.data.SmeltTierMap.get(resultItem);
+        SpecRequirement req = com.kingdomrp.core.data.map.tier.SmeltTierMap.get(resultItem);
         return req != null && !meetsRequirement(player, req);
     }
 
     /** Сообщение о блокировке переплавки (по факту попытки положить сырьё). */
     public static void sendSmeltRestriction(Player player, net.minecraft.world.item.Item resultItem) {
-        SpecRequirement req = com.kingdomrp.core.data.SmeltTierMap.get(resultItem);
+        SpecRequirement req = com.kingdomrp.core.data.map.tier.SmeltTierMap.get(resultItem);
         if (req != null) sendRestrictionMessage(player, req);
     }
 

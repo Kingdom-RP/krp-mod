@@ -2,7 +2,7 @@ package com.kingdomrp.core.network;
 
 import com.kingdomrp.core.KingdomRPCore;
 import com.kingdomrp.core.registry.KRPAttachments;
-import com.kingdomrp.core.specialization.SpecializationRegistry;
+import com.kingdomrp.core.data.type.SpecializationRegistry;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;

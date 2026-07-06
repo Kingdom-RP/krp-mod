@@ -1,12 +1,12 @@
 package com.kingdomrp.core.compat;
 
 import com.kingdomrp.core.KingdomRPCore;
-import com.kingdomrp.core.data.CraftEntry;
-import com.kingdomrp.core.data.ItemCraftMap;
-import com.kingdomrp.core.data.ItemCraftTierMap;
-import com.kingdomrp.core.data.Path;
-import com.kingdomrp.core.data.Spec;
-import com.kingdomrp.core.data.SpecRequirement;
+import com.kingdomrp.core.data.entry.CraftEntry;
+import com.kingdomrp.core.data.map.xp.ItemCraftMap;
+import com.kingdomrp.core.data.map.tier.ItemCraftTierMap;
+import com.kingdomrp.core.data.type.Path;
+import com.kingdomrp.core.data.type.Spec;
+import com.kingdomrp.core.data.type.SpecRequirement;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;

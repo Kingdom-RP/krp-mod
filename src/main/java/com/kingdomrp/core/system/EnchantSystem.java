@@ -2,7 +2,7 @@ package com.kingdomrp.core.system;
 
 import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.config.KRPConfig;
-import com.kingdomrp.core.data.Spec;
+import com.kingdomrp.core.data.type.Spec;
 import com.kingdomrp.core.util.ScalingFormula;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;

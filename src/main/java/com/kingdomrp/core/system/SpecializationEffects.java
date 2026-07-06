@@ -2,9 +2,13 @@ package com.kingdomrp.core.system;
 
 import com.kingdomrp.core.KingdomRPCore;
 import com.kingdomrp.core.capability.PlayerData;
-import com.kingdomrp.core.data.*;
+import com.kingdomrp.core.data.type.*;
+import com.kingdomrp.core.data.entry.*;
+import com.kingdomrp.core.data.map.*;
+import com.kingdomrp.core.data.map.tier.*;
+import com.kingdomrp.core.data.map.xp.*;
 import com.kingdomrp.core.registry.KRPAttachments;
-import com.kingdomrp.core.specialization.Specialization;
+import com.kingdomrp.core.data.type.Specialization;
 import com.kingdomrp.core.util.ScalingFormula;
 import com.kingdomrp.core.world.PlacedBlockTracker;
 import net.minecraft.core.BlockPos;
@@ -260,7 +264,7 @@ public class SpecializationEffects {
             // предсказание висит фантомом у игрока — принудительно ресинкаем инвентарь.
             player.containerMenu.sendAllDataToRemote();
 
-            String specName = com.kingdomrp.core.specialization.SpecializationRegistry
+            String specName = com.kingdomrp.core.data.type.SpecializationRegistry
                     .get(Spec.FARMER.id).map(Specialization::name).orElse("Фермер");
             String action = milking ? "доить это животное"
                     : shearing ? "стричь это животное"
@@ -295,7 +299,7 @@ public class SpecializationEffects {
         if (specLevel >= tierEntry.level()) return false;
 
         event.setCanceled(true);
-        String specName = com.kingdomrp.core.specialization.SpecializationRegistry
+        String specName = com.kingdomrp.core.data.type.SpecializationRegistry
                 .get(tierEntry.spec().id)
                 .map(Specialization::name)
                 .orElse(tierEntry.spec().id);
