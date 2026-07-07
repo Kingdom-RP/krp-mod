@@ -78,7 +78,7 @@ jobs:
       # Кэш Gradle: на mods-only прогонах код мода не меняется → инкрементальная
       # сборка (секунды вместо минут). Ключ по gradle-файлам; промах = полная сборка.
       - name: Cache Gradle
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.gradle/caches
@@ -98,7 +98,7 @@ jobs:
       # cache-hit → передаём сборщику --skip-install (см. шаг Build dist).
       - name: Cache NeoForge work + JRE
         id: workcache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: krp-launcher/build-work
           key: neowork-${{ runner.os }}-neo${{ env.NEO_VERSION }}-jre21
