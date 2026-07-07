@@ -112,8 +112,9 @@ public class ItemCraftTierMap {
 
     // Специализация "Кузнец" (металл, инструменты, броня, утилитарка)
     private static void initBlacksmith() {
-        // Тиры: медь 1, золото 2, железо 3, алмаз 5, незерит 7. Незеритовый ГИР
-        // гейтится на кузнечном столе (SmithingMenuMixin), здесь только слиток/магнетит.
+        // Тиры: медь 1, мелкая утилитарка 2, золото+кольчуга 3, железо (гир+утилитарка) 4,
+        // алмаз 5, незерит 7. Незеритовый ГИР гейтится на кузнечном столе
+        // (SmithingMenuMixin), здесь только слиток/магнетит. Лук/арбалет → Мастеровой.
 
         // Тир 1 — медь (+ декоративные медные блоки 1.21 во всех состояниях)
         gate(new SpecRequirement(Spec.BLACKSMITH, 1),
@@ -151,35 +152,35 @@ public class ItemCraftTierMap {
                 Items.WAXED_CUT_COPPER_STAIRS, Items.WAXED_EXPOSED_CUT_COPPER_STAIRS,
                 Items.WAXED_WEATHERED_CUT_COPPER_STAIRS, Items.WAXED_OXIDIZED_CUT_COPPER_STAIRS);
 
-        // Тир 2 — золото (инструменты + броня)
+        // Тир 2 — мелкая утилитарка + станции переработки
         gate(new SpecRequirement(Spec.BLACKSMITH, 2),
+                Items.SHEARS, Items.BUCKET, Items.FLINT_AND_STEEL,
+                Items.SHIELD, Items.STONECUTTER,
+                Items.SMOKER, Items.BLAST_FURNACE);
+
+        // Тир 3 — золото (инструменты + броня + приборы)
+        gate(new SpecRequirement(Spec.BLACKSMITH, 3),
                 Items.GOLDEN_SWORD, Items.GOLDEN_AXE, Items.GOLDEN_PICKAXE,
                 Items.GOLDEN_SHOVEL, Items.GOLDEN_HOE,
                 Items.GOLDEN_HELMET, Items.GOLDEN_CHESTPLATE,
-                Items.GOLDEN_LEGGINGS, Items.GOLDEN_BOOTS);
+                Items.GOLDEN_LEGGINGS, Items.GOLDEN_BOOTS,
+                Items.CLOCK, Items.LIGHT_WEIGHTED_PRESSURE_PLATE);
 
-        // Тир 2 — золотые приборы + ранняя утилитарка + станции переработки
-        gate(new SpecRequirement(Spec.BLACKSMITH, 2),
-                Items.CLOCK, Items.LIGHT_WEIGHTED_PRESSURE_PLATE,
-                Items.SHEARS, Items.BUCKET, Items.FLINT_AND_STEEL,
-                Items.SHIELD, Items.STONECUTTER, Items.BOW,
-                Items.SMOKER, Items.BLAST_FURNACE);
-
-        // Тир 2 — железное кольцо + кольчужная броня (из колец)
-        gate(new SpecRequirement(Spec.BLACKSMITH, 2),
+        // Тир 3 — железное кольцо + кольчужная броня (из колец)
+        gate(new SpecRequirement(Spec.BLACKSMITH, 3),
                 KRPItems.IRON_RING.get(),
                 Items.CHAINMAIL_HELMET, Items.CHAINMAIL_CHESTPLATE,
                 Items.CHAINMAIL_LEGGINGS, Items.CHAINMAIL_BOOTS);
 
-        // Тир 3 — железо (инструменты + броня)
-        gate(new SpecRequirement(Spec.BLACKSMITH, 3),
+        // Тир 4 — железо (инструменты + броня)
+        gate(new SpecRequirement(Spec.BLACKSMITH, 4),
                 Items.IRON_SWORD, Items.IRON_AXE, Items.IRON_PICKAXE,
                 Items.IRON_SHOVEL, Items.IRON_HOE,
                 Items.IRON_HELMET, Items.IRON_CHESTPLATE,
                 Items.IRON_LEGGINGS, Items.IRON_BOOTS);
 
-        // Тир 3 — железная утилитарка, приборы, транспорт, станции, механизмы
-        gate(new SpecRequirement(Spec.BLACKSMITH, 3),
+        // Тир 4 — железная утилитарка, приборы, транспорт, станции, механизмы
+        gate(new SpecRequirement(Spec.BLACKSMITH, 4),
                 Items.IRON_DOOR, Items.IRON_TRAPDOOR, Items.IRON_BARS,
                 Items.CAULDRON, Items.ANVIL, Items.GRINDSTONE, Items.HOPPER,
                 Items.CHAIN, Items.LANTERN, Items.SOUL_LANTERN,
@@ -189,9 +190,6 @@ public class ItemCraftTierMap {
                 Items.HOPPER_MINECART, Items.TNT_MINECART,
                 Items.PISTON, Items.STICKY_PISTON,
                 Items.DISPENSER, Items.DROPPER, Items.OBSERVER);
-
-        gate(new SpecRequirement(Spec.BLACKSMITH, 4),
-                Items.CROSSBOW);
 
         // Тир 5 — алмаз (инструменты + броня)
         gate(new SpecRequirement(Spec.BLACKSMITH, 5),
@@ -216,9 +214,9 @@ public class ItemCraftTierMap {
                 Items.LEATHER_BOOTS, Items.LEATHER_HELMET,
                 Items.LEATHER_CHESTPLATE, Items.LEATHER_LEGGINGS);
 
-        // Тир 2 — черепаший шлем (скют)
+        // Тир 2 — черепаший шлем (скют) + лук/арбалет (древко+тетива, натуральные мат.)
         gate(new SpecRequirement(Spec.CRAFTSMAN, 2),
-                Items.TURTLE_HELMET);
+                Items.TURTLE_HELMET, Items.BOW, Items.CROSSBOW);
 
         // Тир 3 — тонкая керамика + цветное стекло (витражи) + седло
         gate(new SpecRequirement(Spec.CRAFTSMAN, 3),
@@ -281,9 +279,6 @@ public class ItemCraftTierMap {
         // ТЕГ-FALLBACK — крашеная терракота (ваниль + моды)
         gateTag(new SpecRequirement(Spec.CRAFTSMAN, 2), ItemTags.TERRACOTTA);
 
-        // Стол зачарования НЕ гейтится — крафтабелен с ур.0 (профильный
-        // инструмент Зачарователя, нужен для старта прокачки). XP/двойной крафт
-        // привязаны к Зачарователю через ItemCraftMap.
     }
 
     // Путь "Магия"

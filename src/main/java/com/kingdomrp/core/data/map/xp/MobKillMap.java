@@ -49,40 +49,25 @@ public class MobKillMap {
                 EntityType.PIGLIN, EntityType.ZOMBIFIED_PIGLIN,
                 EntityType.CREEPER);
 
-        // D тир
+        // D тир — только враждебные членистоногие (пассивные животные → Промысел)
         register(new KillEntry(Path.WAR, 1f),
-                EntityType.SILVERFISH, EntityType.ENDERMITE,
-                EntityType.WOLF, EntityType.LLAMA,
-                EntityType.BEE, EntityType.POLAR_BEAR,
-                EntityType.GOAT);
-
-        // Промысел — животные
-        register(new KillEntry(Path.HARVEST, 3f),
-                EntityType.COW, EntityType.MOOSHROOM,
-                EntityType.PIG, EntityType.SHEEP,
-                EntityType.CHICKEN, EntityType.RABBIT,
-                EntityType.TURTLE, EntityType.FOX,
-                EntityType.PANDA);
-
-        register(new KillEntry(Path.HARVEST, 5f),
-                EntityType.BEE, EntityType.SQUID,
-                EntityType.GLOW_SQUID, EntityType.COD,
-                EntityType.SALMON, EntityType.TROPICAL_FISH,
-                EntityType.PUFFERFISH, EntityType.AXOLOTL,
-                EntityType.FROG, EntityType.TADPOLE);
+                EntityType.SILVERFISH, EntityType.ENDERMITE);
 
         // ================================================================
-        // ПУТЬ: ПРОМЫСЕЛ — Фермер (животные)
+        // ПУТЬ: ПРОМЫСЕЛ — Фермер (убийство животных = добыча пропитания)
         // ================================================================
 
+        // Наземные животные — 3 XP
         register(new KillEntry(Path.HARVEST, 3f),
                 EntityType.COW, EntityType.MOOSHROOM,
                 EntityType.PIG, EntityType.SHEEP,
                 EntityType.CHICKEN, EntityType.RABBIT,
                 EntityType.TURTLE, EntityType.FOX,
                 EntityType.PANDA, EntityType.POLAR_BEAR,
-                EntityType.GOAT, EntityType.ARMADILLO); // armadillo 1.20.5
+                EntityType.GOAT, EntityType.ARMADILLO,
+                EntityType.WOLF, EntityType.LLAMA);
 
+        // Водные животные + пчела — 5 XP
         register(new KillEntry(Path.HARVEST, 5f),
                 EntityType.BEE, EntityType.SQUID,
                 EntityType.GLOW_SQUID, EntityType.COD,

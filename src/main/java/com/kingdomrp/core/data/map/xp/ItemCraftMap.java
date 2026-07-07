@@ -255,12 +255,9 @@ public class ItemCraftMap {
                 Items.FURNACE, Items.DISPENSER, Items.DROPPER,
                 Items.OBSERVER, Items.PISTON, Items.STICKY_PISTON);
 
-        // Лук, стрелы, арбалет
+        // Стрелы (лук/арбалет — у Мастерового, древко+тетива)
         register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 3f),
-                Items.BOW, Items.ARROW);
-
-        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 4f),
-                Items.CROSSBOW);
+                Items.ARROW);
     }
 
     // Специализация "Мастеровой" (натуральные материалы - кожа, шерсть, глина, керамика и т.д.)
@@ -329,6 +326,12 @@ public class ItemCraftMap {
         // ================== Тир 1 (CRAFTSMAN 1): кожа, книги ==================
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 2f),
                 Items.LEATHER, Items.BOOK);
+
+        // Лук/арбалет — древко + тетива (натуральные материалы)
+        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 3f),
+                Items.BOW);
+        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 4f),
+                Items.CROSSBOW);
 
         // Кожаная броня — XP по затратам (ботинки/шлем < поножи/нагрудник)
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 4f),

@@ -50,12 +50,10 @@ public class MobDamageMap {
                 EntityType.PIGLIN, EntityType.ZOMBIFIED_PIGLIN,
                 EntityType.CREEPER);
 
-        // D тир
+        // D тир — только враждебные (пассивные животные дают опыт Промыслу на убийстве,
+        // урон по ним боевого опыта не даёт)
         register(0.2f,
-                EntityType.SILVERFISH, EntityType.ENDERMITE,
-                EntityType.WOLF, EntityType.LLAMA,
-                EntityType.BEE, EntityType.POLAR_BEAR,
-                EntityType.GOAT);
+                EntityType.SILVERFISH, EntityType.ENDERMITE);
     }
 
     private static void register(float xp, EntityType<?>... types) {

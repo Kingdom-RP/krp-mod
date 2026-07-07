@@ -136,8 +136,8 @@ public final class FarmersDelightCompat {
     // Крафт ножей гейтится как инструменты соответствующего материала.
 
     private static void registerTools() {
-        ItemCraftTierMap.addById(id("golden_knife"), new SpecRequirement(Spec.BLACKSMITH, 2));
-        ItemCraftTierMap.addById(id("iron_knife"), new SpecRequirement(Spec.BLACKSMITH, 3));
+        ItemCraftTierMap.addById(id("golden_knife"), new SpecRequirement(Spec.BLACKSMITH, 3));
+        ItemCraftTierMap.addById(id("iron_knife"), new SpecRequirement(Spec.BLACKSMITH, 4));
         ItemCraftTierMap.addById(id("diamond_knife"), new SpecRequirement(Spec.BLACKSMITH, 5));
         ItemCraftTierMap.addById(id("netherite_knife"), new SpecRequirement(Spec.BLACKSMITH, 7));
         // flint_knife — стартовый, без гейта.
