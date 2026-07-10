@@ -156,6 +156,8 @@ jobs:
             --mods-release "$MODS_REPO" \
             --mods-tag "$MODS_TAG" \
             --sides "${{ github.workspace }}/krp-modpack/sides.toml" \
+            --config-dir "${{ github.workspace }}/krp-modpack/config" \
+            --config-sides "${{ github.workspace }}/krp-modpack/config-sides.toml" \
             --version "1.0.${{ github.run_number }}" \
             --out "${{ github.workspace }}/dist" \
             "${SHADER_ARGS[@]}" \
