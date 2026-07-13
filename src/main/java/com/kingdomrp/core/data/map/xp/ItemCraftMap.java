@@ -40,25 +40,6 @@ public class ItemCraftMap {
         initCraftPath();
         initHarvestPath();
         initMagicPath();
-
-        capSlabsXP();
-    }
-
-    /**
-     * Плиты — самый абузный декор (6 шт из 3 блоков, XP не множится на кол-во).
-     * Кап всех slab-предметов до 0.5 XP с сохранением пути/спеца. Деревянные плиты
-     * идут через тег {@code WOODEN_SLABS} (не в MAP) — им XP выставлен при регистрации.
-     */
-    private static void capSlabsXP() {
-        for (var entry : new java.util.ArrayList<>(MAP.entrySet())) {
-            Item item = entry.getKey();
-            // По ID, не по тегу: init() может отработать на setup до привязки тегов.
-            if (!net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item)
-                    .getPath().endsWith("_slab")) continue;
-            CraftEntry old = entry.getValue();
-            if (old.xpReward() <= 0.5f) continue;
-            MAP.put(item, new CraftEntry(old.path(), old.spec(), 0.5f));
-        }
     }
 
     // Путь "Ремесло"
@@ -187,14 +168,16 @@ public class ItemCraftMap {
                 Items.WEATHERED_CUT_COPPER, Items.OXIDIZED_CUT_COPPER,
                 Items.WAXED_CUT_COPPER, Items.WAXED_EXPOSED_CUT_COPPER,
                 Items.WAXED_WEATHERED_CUT_COPPER, Items.WAXED_OXIDIZED_CUT_COPPER,
-                Items.CUT_COPPER_SLAB, Items.EXPOSED_CUT_COPPER_SLAB,
-                Items.WEATHERED_CUT_COPPER_SLAB, Items.OXIDIZED_CUT_COPPER_SLAB,
-                Items.WAXED_CUT_COPPER_SLAB, Items.WAXED_EXPOSED_CUT_COPPER_SLAB,
-                Items.WAXED_WEATHERED_CUT_COPPER_SLAB, Items.WAXED_OXIDIZED_CUT_COPPER_SLAB,
                 Items.CUT_COPPER_STAIRS, Items.EXPOSED_CUT_COPPER_STAIRS,
                 Items.WEATHERED_CUT_COPPER_STAIRS, Items.OXIDIZED_CUT_COPPER_STAIRS,
                 Items.WAXED_CUT_COPPER_STAIRS, Items.WAXED_EXPOSED_CUT_COPPER_STAIRS,
                 Items.WAXED_WEATHERED_CUT_COPPER_STAIRS, Items.WAXED_OXIDIZED_CUT_COPPER_STAIRS);
+        // Плиты — низкий XP (абуз 6/крафт)
+        register(new CraftEntry(Path.CRAFT, Spec.BLACKSMITH, 0.5f),
+                Items.CUT_COPPER_SLAB, Items.EXPOSED_CUT_COPPER_SLAB,
+                Items.WEATHERED_CUT_COPPER_SLAB, Items.OXIDIZED_CUT_COPPER_SLAB,
+                Items.WAXED_CUT_COPPER_SLAB, Items.WAXED_EXPOSED_CUT_COPPER_SLAB,
+                Items.WAXED_WEATHERED_CUT_COPPER_SLAB, Items.WAXED_OXIDIZED_CUT_COPPER_SLAB);
 
         // ---- Золото (тир 2): инструменты + броня ----
         registerGear(3f, 8f, 12f,
@@ -302,44 +285,44 @@ public class ItemCraftMap {
 
         // Кирпич / незер-кирпич / грязевой кирпич (резной незер-кирпич — тир 4)
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 3f),
-                Items.BRICKS, Items.BRICK_SLAB, Items.BRICK_STAIRS, Items.BRICK_WALL,
-                Items.NETHER_BRICKS, Items.NETHER_BRICK_SLAB, Items.NETHER_BRICK_STAIRS,
+                Items.BRICKS, Items.BRICK_STAIRS, Items.BRICK_WALL,
+                Items.NETHER_BRICKS, Items.NETHER_BRICK_STAIRS,
                 Items.NETHER_BRICK_WALL, Items.NETHER_BRICK_FENCE,
-                Items.RED_NETHER_BRICKS, Items.RED_NETHER_BRICK_SLAB, Items.RED_NETHER_BRICK_STAIRS,
+                Items.RED_NETHER_BRICKS, Items.RED_NETHER_BRICK_STAIRS,
                 Items.RED_NETHER_BRICK_WALL,
-                Items.MUD_BRICKS, Items.MUD_BRICK_SLAB, Items.MUD_BRICK_STAIRS, Items.MUD_BRICK_WALL);
+                Items.MUD_BRICKS, Items.MUD_BRICK_STAIRS, Items.MUD_BRICK_WALL);
 
         // Камень / каменный кирпич / булыжник (резьба и мшистость — тир 4)
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 3f),
-                Items.STONE_SLAB, Items.STONE_STAIRS, Items.SMOOTH_STONE_SLAB,
-                Items.STONE_BRICKS, Items.STONE_BRICK_SLAB, Items.STONE_BRICK_STAIRS,
+                Items.STONE_STAIRS,
+                Items.STONE_BRICKS, Items.STONE_BRICK_STAIRS,
                 Items.STONE_BRICK_WALL,
-                Items.COBBLESTONE_SLAB, Items.COBBLESTONE_STAIRS, Items.COBBLESTONE_WALL);
+                Items.COBBLESTONE_STAIRS, Items.COBBLESTONE_WALL);
 
         // Андезит / диорит / гранит (полировка + плиты/ступени/стены)
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 3f),
-                Items.POLISHED_ANDESITE, Items.POLISHED_ANDESITE_SLAB, Items.POLISHED_ANDESITE_STAIRS,
-                Items.ANDESITE_SLAB, Items.ANDESITE_STAIRS, Items.ANDESITE_WALL,
-                Items.POLISHED_DIORITE, Items.POLISHED_DIORITE_SLAB, Items.POLISHED_DIORITE_STAIRS,
-                Items.DIORITE_SLAB, Items.DIORITE_STAIRS, Items.DIORITE_WALL,
-                Items.POLISHED_GRANITE, Items.POLISHED_GRANITE_SLAB, Items.POLISHED_GRANITE_STAIRS,
-                Items.GRANITE_SLAB, Items.GRANITE_STAIRS, Items.GRANITE_WALL);
+                Items.POLISHED_ANDESITE, Items.POLISHED_ANDESITE_STAIRS,
+                Items.ANDESITE_STAIRS, Items.ANDESITE_WALL,
+                Items.POLISHED_DIORITE, Items.POLISHED_DIORITE_STAIRS,
+                Items.DIORITE_STAIRS, Items.DIORITE_WALL,
+                Items.POLISHED_GRANITE, Items.POLISHED_GRANITE_STAIRS,
+                Items.GRANITE_STAIRS, Items.GRANITE_WALL);
 
         // Песчаник / красный песчаник (резьба — тир 4)
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 3f),
-                Items.SANDSTONE, Items.SANDSTONE_SLAB, Items.SANDSTONE_STAIRS, Items.SANDSTONE_WALL,
-                Items.CUT_SANDSTONE, Items.CUT_STANDSTONE_SLAB, Items.SMOOTH_SANDSTONE_SLAB,
+                Items.SANDSTONE, Items.SANDSTONE_STAIRS, Items.SANDSTONE_WALL,
+                Items.CUT_SANDSTONE,
                 Items.SMOOTH_SANDSTONE_STAIRS,
-                Items.RED_SANDSTONE, Items.RED_SANDSTONE_SLAB, Items.RED_SANDSTONE_STAIRS,
-                Items.RED_SANDSTONE_WALL, Items.CUT_RED_SANDSTONE, Items.CUT_RED_SANDSTONE_SLAB,
-                Items.SMOOTH_RED_SANDSTONE_SLAB, Items.SMOOTH_RED_SANDSTONE_STAIRS);
+                Items.RED_SANDSTONE, Items.RED_SANDSTONE_STAIRS,
+                Items.RED_SANDSTONE_WALL, Items.CUT_RED_SANDSTONE,
+                Items.SMOOTH_RED_SANDSTONE_STAIRS);
 
         // Туф 1.21 (полировка/кирпич/плиты/ступени/стены) — резьба chiseled на тире 4
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 4f),
-                Items.TUFF_SLAB, Items.TUFF_STAIRS, Items.TUFF_WALL,
-                Items.POLISHED_TUFF, Items.POLISHED_TUFF_SLAB,
+                Items.TUFF_STAIRS, Items.TUFF_WALL,
+                Items.POLISHED_TUFF,
                 Items.POLISHED_TUFF_STAIRS, Items.POLISHED_TUFF_WALL,
-                Items.TUFF_BRICKS, Items.TUFF_BRICK_SLAB,
+                Items.TUFF_BRICKS,
                 Items.TUFF_BRICK_STAIRS, Items.TUFF_BRICK_WALL);
 
         // ================== Тир 1 (CRAFTSMAN 1): кожа, книги ==================
@@ -385,42 +368,60 @@ public class ItemCraftMap {
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 4f),
                 Items.CHISELED_STONE_BRICKS, Items.CHISELED_SANDSTONE, Items.CHISELED_RED_SANDSTONE,
                 Items.CHISELED_NETHER_BRICKS, Items.CHISELED_TUFF, Items.CHISELED_TUFF_BRICKS,
-                Items.MOSSY_STONE_BRICKS, Items.MOSSY_STONE_BRICK_SLAB,
+                Items.MOSSY_STONE_BRICKS,
                 Items.MOSSY_STONE_BRICK_STAIRS, Items.MOSSY_STONE_BRICK_WALL,
-                Items.MOSSY_COBBLESTONE_SLAB, Items.MOSSY_COBBLESTONE_STAIRS, Items.MOSSY_COBBLESTONE_WALL);
+                Items.MOSSY_COBBLESTONE_STAIRS, Items.MOSSY_COBBLESTONE_WALL);
 
         // ================== Тир 5 (CRAFTSMAN 5): дипслейт, XP 4 ==================
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 4f),
-                Items.COBBLED_DEEPSLATE_SLAB, Items.COBBLED_DEEPSLATE_STAIRS, Items.COBBLED_DEEPSLATE_WALL,
-                Items.POLISHED_DEEPSLATE, Items.POLISHED_DEEPSLATE_SLAB,
+                Items.COBBLED_DEEPSLATE_STAIRS, Items.COBBLED_DEEPSLATE_WALL,
+                Items.POLISHED_DEEPSLATE,
                 Items.POLISHED_DEEPSLATE_STAIRS, Items.POLISHED_DEEPSLATE_WALL,
-                Items.DEEPSLATE_BRICKS, Items.DEEPSLATE_BRICK_SLAB,
+                Items.DEEPSLATE_BRICKS,
                 Items.DEEPSLATE_BRICK_STAIRS, Items.DEEPSLATE_BRICK_WALL,
-                Items.DEEPSLATE_TILES, Items.DEEPSLATE_TILE_SLAB,
+                Items.DEEPSLATE_TILES,
                 Items.DEEPSLATE_TILE_STAIRS, Items.DEEPSLATE_TILE_WALL,
                 Items.CHISELED_DEEPSLATE);
 
         // ================== Тир 6 (CRAFTSMAN 6): блэкстоун + кварц, XP 5 ==================
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 5f),
-                Items.BLACKSTONE_SLAB, Items.BLACKSTONE_STAIRS, Items.BLACKSTONE_WALL,
-                Items.POLISHED_BLACKSTONE, Items.POLISHED_BLACKSTONE_SLAB,
+                Items.BLACKSTONE_STAIRS, Items.BLACKSTONE_WALL,
+                Items.POLISHED_BLACKSTONE,
                 Items.POLISHED_BLACKSTONE_STAIRS, Items.POLISHED_BLACKSTONE_WALL,
                 Items.POLISHED_BLACKSTONE_BUTTON, Items.POLISHED_BLACKSTONE_PRESSURE_PLATE,
-                Items.POLISHED_BLACKSTONE_BRICKS, Items.POLISHED_BLACKSTONE_BRICK_SLAB,
+                Items.POLISHED_BLACKSTONE_BRICKS,
                 Items.POLISHED_BLACKSTONE_BRICK_STAIRS, Items.POLISHED_BLACKSTONE_BRICK_WALL,
                 Items.CHISELED_POLISHED_BLACKSTONE,
                 Items.QUARTZ_BLOCK, Items.QUARTZ_BRICKS, Items.QUARTZ_PILLAR,
-                Items.QUARTZ_SLAB, Items.QUARTZ_STAIRS, Items.CHISELED_QUARTZ_BLOCK,
-                Items.SMOOTH_QUARTZ_SLAB, Items.SMOOTH_QUARTZ_STAIRS);
+                Items.QUARTZ_STAIRS, Items.CHISELED_QUARTZ_BLOCK,
+                Items.SMOOTH_QUARTZ_STAIRS);
 
         // ================== Тир 7 (CRAFTSMAN 7): призмарин/пурпур/энд-камень, XP 6 ==================
         register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 6f),
-                Items.PRISMARINE_SLAB, Items.PRISMARINE_STAIRS, Items.PRISMARINE_WALL,
-                Items.PRISMARINE_BRICKS, Items.PRISMARINE_BRICK_SLAB, Items.PRISMARINE_BRICK_STAIRS,
-                Items.DARK_PRISMARINE, Items.DARK_PRISMARINE_SLAB, Items.DARK_PRISMARINE_STAIRS,
-                Items.PURPUR_BLOCK, Items.PURPUR_PILLAR, Items.PURPUR_SLAB, Items.PURPUR_STAIRS,
-                Items.END_STONE_BRICKS, Items.END_STONE_BRICK_SLAB,
+                Items.PRISMARINE_STAIRS, Items.PRISMARINE_WALL,
+                Items.PRISMARINE_BRICKS, Items.PRISMARINE_BRICK_STAIRS,
+                Items.DARK_PRISMARINE, Items.DARK_PRISMARINE_STAIRS,
+                Items.PURPUR_BLOCK, Items.PURPUR_PILLAR, Items.PURPUR_STAIRS,
+                Items.END_STONE_BRICKS,
                 Items.END_STONE_BRICK_STAIRS, Items.END_STONE_BRICK_WALL);
+
+        // Каменные плиты (все семейства) — низкий XP: 6 плит из 3 блоков (абуз).
+        register(new CraftEntry(Path.CRAFT, Spec.CRAFTSMAN, 0.5f),
+                Items.STONE_SLAB, Items.SMOOTH_STONE_SLAB, Items.STONE_BRICK_SLAB, Items.COBBLESTONE_SLAB,
+                Items.BRICK_SLAB, Items.NETHER_BRICK_SLAB, Items.RED_NETHER_BRICK_SLAB, Items.MUD_BRICK_SLAB,
+                Items.POLISHED_ANDESITE_SLAB, Items.ANDESITE_SLAB,
+                Items.POLISHED_DIORITE_SLAB, Items.DIORITE_SLAB,
+                Items.POLISHED_GRANITE_SLAB, Items.GRANITE_SLAB,
+                Items.SANDSTONE_SLAB, Items.CUT_STANDSTONE_SLAB, Items.SMOOTH_SANDSTONE_SLAB,
+                Items.RED_SANDSTONE_SLAB, Items.CUT_RED_SANDSTONE_SLAB, Items.SMOOTH_RED_SANDSTONE_SLAB,
+                Items.TUFF_SLAB, Items.POLISHED_TUFF_SLAB, Items.TUFF_BRICK_SLAB,
+                Items.MOSSY_STONE_BRICK_SLAB, Items.MOSSY_COBBLESTONE_SLAB,
+                Items.COBBLED_DEEPSLATE_SLAB, Items.POLISHED_DEEPSLATE_SLAB,
+                Items.DEEPSLATE_BRICK_SLAB, Items.DEEPSLATE_TILE_SLAB,
+                Items.BLACKSTONE_SLAB, Items.POLISHED_BLACKSTONE_SLAB, Items.POLISHED_BLACKSTONE_BRICK_SLAB,
+                Items.QUARTZ_SLAB, Items.SMOOTH_QUARTZ_SLAB,
+                Items.PRISMARINE_SLAB, Items.PRISMARINE_BRICK_SLAB, Items.DARK_PRISMARINE_SLAB,
+                Items.PURPUR_SLAB, Items.END_STONE_BRICK_SLAB);
 
         // ТЕГ-FALLBACK (мод-совместимость) — Мастеровой.
         // Крашеное стекло/панели (XP 2) регистрируются поимённо выше → перекрывают
