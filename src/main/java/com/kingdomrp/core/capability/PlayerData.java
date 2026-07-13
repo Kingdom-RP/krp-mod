@@ -19,6 +19,11 @@ public class PlayerData implements INBTSerializable<CompoundTag> {
 
     private final Map<String, Integer> specializationLevels = new HashMap<>();
 
+    private boolean receivedStarterKit = false;
+
+    public boolean hasReceivedStarterKit()  { return receivedStarterKit; }
+    public void markStarterKitReceived()     { receivedStarterKit = true; }
+
     public int getMaxLevel(Path path) {
         return SpecializationRegistry.getCount(path) * MAX_SPEC_LEVEL;
     }
@@ -108,6 +113,7 @@ public class PlayerData implements INBTSerializable<CompoundTag> {
         CompoundTag specsTag = new CompoundTag();
         specializationLevels.forEach(specsTag::putInt);
         tag.put("specializations", specsTag);
+        tag.putBoolean("starterKit", receivedStarterKit);
         return tag;
     }
 
@@ -124,5 +130,6 @@ public class PlayerData implements INBTSerializable<CompoundTag> {
                 specializationLevels.put(key, specsTag.getInt(key));
             }
         }
+        receivedStarterKit = tag.getBoolean("starterKit");
     }
 }

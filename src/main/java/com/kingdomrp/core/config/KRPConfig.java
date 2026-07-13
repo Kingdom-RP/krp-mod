@@ -101,8 +101,8 @@ public class KRPConfig {
                 .comment("Уровень голода после возрождения (0–20; 10 = 50%)")
                 .defineInRange("respawnFoodLevel", 10, 0, 20);
         EXHAUSTION_MULTIPLIER = builder
-                .comment("Множитель расхода голода за все действия (2.0 = вдвое быстрее)")
-                .defineInRange("exhaustionMultiplier", 2.0, 1.0, 10.0);
+                .comment("Множитель расхода голода за все действия (1.5 = в полтора раза быстрее)")
+                .defineInRange("exhaustionMultiplier", 1.5, 1.0, 10.0);
         builder.pop();
 
         SPEC = builder.build();

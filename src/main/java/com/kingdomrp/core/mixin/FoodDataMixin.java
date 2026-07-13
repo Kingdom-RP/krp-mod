@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 /**
  * Баланс: множитель расхода голода. Все действия в ваниле тратят голод через
  * {@code FoodData.addExhaustion(float)} (бег, прыжки, атака, копание, урон и т.п.) —
- * домножаем входной аргумент на {@code balance.exhaustionMultiplier} (по умолч. 2.0),
+ * домножаем входной аргумент на {@code balance.exhaustionMultiplier} (по умолч. 1.5),
  * чтобы голод уходил быстрее и еда/Повар были важнее.
  */
 @Mixin(value = FoodData.class, remap = false)
