@@ -1,10 +1,10 @@
 # Автопубликация модпака Kingdom RP на GitHub Pages.
 #
-# По пушу в main (или тегу vX.Y.Z): собирает мод, прогоняет сборщик дистрибутива
+# По пу��у в main (или тегу vX.Y.Z): соб��рает мод, прогоняет сборщик дистрибутива
 # из krp-launcher и деплоит готовый dist/ на GitHub Pages.
 # Лаунчер тянет файлы с https://<логин>.github.io/krp-mod (= MANIFEST_BASE_URL).
 #
-# ОДНОРАЗОВАЯ НАСТРОЙКА:
+# ОДН��РАЗОВАЯ НАСТРОЙКА:
 #   1. Репозитории Kingdom-RP/krp-mod и Kingdom-RP/krp-launcher на GitHub.
 #   2. Settings → Pages → Source = "GitHub Actions" (в репо krp-mod).
 #   3. Если krp-launcher ПРИВАТНЫЙ — создать секрет LAUNCHER_PAT (PAT с доступом
@@ -17,7 +17,7 @@ on:
     branches: [main]
     tags: ["v*"]
   workflow_dispatch:
-  # Пересборка по событию из krp-modpack (новый/обновлённый Release с модами).
+  # Пересбор��а по событию из krp-modpack (н��вый/обновлённый Release с м��дами).
   # Шлёт его workflow notify.yml в krp-modpack через repository_dispatch.
   repository_dispatch:
     types: [modpack-updated]
@@ -27,26 +27,26 @@ permissions:
   pages: write
   id-token: write
 
-# Один деплой Pages за раз. НЕ отменяем текущий (cancel-in-progress: false) —
+# Оди�� деплой Pages за раз. НЕ отменяем текущий (cancel-in-progress: false) —
 # иначе обрыв деплоя на полпути оставляет environment github-pages с подвисшим
 # queued-деплоем, и следующий прогон надолго застревает в "deployment_queued".
-# Параллельные прогоны просто ждут завершения текущего (рекоменд. GitHub для Pages).
+# Параллельные прогоны просто ждут завершения текущего (��екоменд. GitHub для Pages).
 concurrency:
   group: pages
   cancel-in-progress: false
 
 env:
-  # Адрес Pages организации Kingdom-RP (поддомен — имя владельца, в нижнем регистре).
+  # Адрес Pages органи��ации Kingdom-RP (поддомен — имя владельца, в нижнем регистре).
   BASE_URL: https://kingdom-rp.github.io/krp-mod
-  # Источник сторонних модов: Release этого репо krp-modpack.
+  # Источник ст��ронних модов: Release этого репо krp-modpack.
   MODS_REPO: Kingdom-RP/krp-modpack
   MODS_TAG: v1
-  # Версия NeoForge — входит в ключ кэша build-work (installer-вывод + JRE).
+  # Версия NeoForge — входит в ключ кэш�� build-work (installer-вывод + JRE).
   NEO_VERSION: 21.1.233
 
 jobs:
   build:
-    runs-on: windows-latest # windows — чтобы нативы совпадали с целевой ОС
+    runs-on: windows-latest # windows — чтобы нативы совпадали с целе��ой ОС
     steps:
       - name: Checkout krp-mod
         uses: actions/checkout@v5
@@ -58,9 +58,9 @@ jobs:
         with:
           repository: Kingdom-RP/krp-launcher
           path: krp-launcher
-          # token: ${{ secrets.LAUNCHER_PAT }}   # раскомментировать, если krp-launcher приватный
+          # token: ${{ secrets.LAUNCHER_PAT }}   # рас��омментировать, если krp-launcher приватный
 
-      - name: Checkout krp-modpack (sides.toml — стороны модов)
+      - name: Checkout krp-modpack (sides.toml — сторон�� модов)
         uses: actions/checkout@v5
         with:
           repository: Kingdom-RP/krp-modpack
@@ -75,8 +75,8 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      # Кэш Gradle: на mods-only прогонах код мода не меняется → инкрементальная
-      # сборка (секунды вместо минут). Ключ по gradle-файлам; промах = полная сборка.
+      # Кэш Gradle: на mods-only прогонах код мода не меняется �� инкрементальная
+      # сборка (секунды вместо мин��т). Ключ по gradle-файлам; промах = полная сборка.
       - name: Cache Gradle
         uses: actions/cache@v6
         with:
@@ -93,8 +93,8 @@ jobs:
         with:
           workspaces: krp-launcher/builder
 
-      # Кэш вывода NeoForge-установщика (libraries/ + version JSON) и архивов JRE.
-      # Пока NEO_VERSION и JRE те же — installer и скачивание JRE пропускаются.
+      # Кэш вывода NeoForge-установщика (libraries/ + version JSON) и ар��ивов JRE.
+      # Пока NEO_VERSION �� JRE те же — installer и скачивание JRE пропускаются.
       # cache-hit → передаём сборщику --skip-install (см. шаг Build dist).
       - name: Cache NeoForge work + JRE
         id: workcache
@@ -126,16 +126,16 @@ jobs:
         shell: bash
         working-directory: krp-launcher
         env:
-          # Токен для GitHub API сборщика (список ассетов Release krp-modpack) —
-          # снимает лимит анонимных запросов.
+          # Токен для GitHub API сбор��ика (список ассетов Release krp-modpack) —
+          # снимает ��имит анонимных запросов.
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Секретный ключ minisign для подписи manifest.json (содержимое .key-файла).
-          # Если секрет не задан — сборщик просто не подпишет манифест (лаунчер тогда
-          # тоже не требует подпись). См. docs/manifest-signing.md в krp-launcher.
+          # Если секрет не задан — сборщик просто не подпишет манифест (лаунчер т��гда
+          # тоже не требу��т подпись). См. docs/manifest-signing.md в krp-launcher.
           KRP_MANIFEST_SECRET_KEY: ${{ secrets.KRP_MANIFEST_SECRET_KEY }}
           KRP_MANIFEST_SECRET_KEY_PASSWORD: ${{ secrets.KRP_MANIFEST_SECRET_KEY_PASSWORD }}
         run: |
-          # При попадании в кэш build-work (installer-вывод + JRE уже есть)
+          # При ��опадании в кэш build-work (installer-вывод + JRE уже есть)
           # пропускаем установку NeoForge; при промахе — полная установка.
           SKIP_INSTALL=""
           if [ "${{ steps.workcache.outputs.cache-hit }}" = "true" ]; then
@@ -162,6 +162,24 @@ jobs:
             --out "${{ github.workspace }}/dist" \
             "${SHADER_ARGS[@]}" \
             $SKIP_INSTALL
+
+      - name: Mirror dist to Yandex S3 (зеркало на случай блокировки GitHub из РФ)
+        shell: bash
+        env:
+          AWS_ACCESS_KEY_ID:     ${{ secrets.YC_S3_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.YC_S3_SECRET }}
+          AWS_DEFAULT_REGION:    ru-central1
+        run: |
+          D="${{ github.workspace }}/dist"
+          test -f "$D/manifest.json" || { echo "dist пуст — нечего лить"; ls -la "$D" || true; exit 1; }
+          EP="https://storage.yandexcloud.net"
+          # --size-only: моды/либы/JRE не меняют содержимое при том же размере →
+          # не перезаливаем их каждый прогон (сборщик пересоздаёт dist → mtime всегда
+          # свежий, обычный sync лил бы всё заново). --delete убирает снятые файлы.
+          aws s3 sync "$D" s3://kingdomrp/ --endpoint-url "$EP" --size-only --delete
+          # Манифест и подпись малы и меняются каждую сборку → заливаем принудительно.
+          aws s3 cp "$D/manifest.json" s3://kingdomrp/manifest.json --endpoint-url "$EP"
+          [ -f "$D/manifest.json.minisig" ] && aws s3 cp "$D/manifest.json.minisig" s3://kingdomrp/manifest.json.minisig --endpoint-url "$EP" || true
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
