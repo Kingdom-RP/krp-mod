@@ -9,10 +9,13 @@ import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 /**
  * Авто-шаг: постоянный бонус к высоте шага игрока (замена мода Accessible Step).
  * 0.6 (ваниль) + 0.65 = 1.25 — игрок автоматически заходит на блоки в 1 клетку.
+ * При сникании бонус снимается: высокий step-height + shift сталкивает игрока
+ * вниз по направлению движения на нижний блок.
  */
 @EventBusSubscriber(modid = KingdomRPCore.MODID)
 public final class StepHeightHandler {
@@ -31,6 +34,21 @@ public final class StepHeightHandler {
     @SubscribeEvent
     public static void onRespawn(PlayerEvent.PlayerRespawnEvent event) {
         apply(event.getEntity());
+    }
+
+    /** Снимаем бонус на время сникания, возвращаем после. */
+    @SubscribeEvent
+    public static void onTick(PlayerTickEvent.Post event) {
+        Player player = event.getEntity();
+        AttributeInstance inst = player.getAttribute(Attributes.STEP_HEIGHT);
+        if (inst == null) return;
+        boolean has = inst.getModifier(STEP_ID) != null;
+        if (player.isShiftKeyDown()) {
+            if (has) inst.removeModifier(STEP_ID);
+        } else if (!has) {
+            inst.addPermanentModifier(new AttributeModifier(
+                    STEP_ID, BONUS, AttributeModifier.Operation.ADD_VALUE));
+        }
     }
 
     private static void apply(Player player) {

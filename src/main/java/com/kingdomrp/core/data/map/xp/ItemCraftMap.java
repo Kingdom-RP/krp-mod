@@ -40,6 +40,25 @@ public class ItemCraftMap {
         initCraftPath();
         initHarvestPath();
         initMagicPath();
+
+        capSlabsXP();
+    }
+
+    /**
+     * Плиты — самый абузный декор (6 шт из 3 блоков, XP не множится на кол-во).
+     * Кап всех slab-предметов до 0.5 XP с сохранением пути/спеца. Деревянные плиты
+     * идут через тег {@code WOODEN_SLABS} (не в MAP) — им XP выставлен при регистрации.
+     */
+    private static void capSlabsXP() {
+        for (var entry : new java.util.ArrayList<>(MAP.entrySet())) {
+            Item item = entry.getKey();
+            // По ID, не по тегу: init() может отработать на setup до привязки тегов.
+            if (!net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item)
+                    .getPath().endsWith("_slab")) continue;
+            CraftEntry old = entry.getValue();
+            if (old.xpReward() <= 0.5f) continue;
+            MAP.put(item, new CraftEntry(old.path(), old.spec(), 0.5f));
+        }
     }
 
     // Путь "Ремесло"
@@ -103,7 +122,7 @@ public class ItemCraftMap {
         // Ловят modded-варианты, которым точный Items-ключ не соответствует.
         // Проверяются ПОСЛЕ точных Item, XP совпадает с ванильными семействами.
         registerTag(ItemTags.PLANKS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1f));
-        registerTag(ItemTags.WOODEN_SLABS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 1.5f));
+        registerTag(ItemTags.WOODEN_SLABS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 0.5f)); // плиты — низкий XP (абуз 6/крафт)
         registerTag(ItemTags.WOODEN_STAIRS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 2f));
         registerTag(ItemTags.WOODEN_BUTTONS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 0.5f));
         registerTag(ItemTags.SIGNS, new CraftEntry(Path.CRAFT, Spec.CARPENTER, 3f));

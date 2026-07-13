@@ -40,9 +40,12 @@ public class XPSystem {
             }
         }
 
-        // XP за получение урона
-        if (event.getEntity() instanceof ServerPlayer victim) {
-            if (!victim.level().isClientSide()) {
+        // XP за получение урона — только от живого атакующего (не куст/кактус/
+        // шипы/падение/огонь) и не в тик неуязвимости после прошлого удара, иначе
+        // средовой урон каждый тик спамит XP.
+        if (event.getEntity() instanceof ServerPlayer victim && !victim.level().isClientSide()) {
+            boolean fromLiving = event.getSource().getEntity() instanceof net.minecraft.world.entity.LivingEntity;
+            if (fromLiving && victim.invulnerableTime <= 0 && event.getAmount() > 0) {
                 giveXP(victim, Path.WAR, 1f);
             }
         }
@@ -115,9 +118,16 @@ public class XPSystem {
         if (event.getEntity() instanceof Player) return;
 
         KillEntry entry = MobKillMap.get(event.getEntity().getType());
-        if (entry == null) return;
+        if (entry != null) {
+            giveXP(player, entry.path(), entry.xpReward());
+            return;
+        }
 
-        giveXP(player, entry.path(), entry.xpReward());
+        // Fallback: модовые водные животные (Hybrid Aquatic, Tide и др.) не
+        // перечислены поимённо — все WaterAnimal без явной записи = Промысел 5 XP.
+        if (event.getEntity() instanceof net.minecraft.world.entity.animal.WaterAnimal) {
+            giveXP(player, Path.HARVEST, 5f);
+        }
     }
 
     /** Дебафф к опыту + неполный голод при возрождении (не при выходе из Энда). */
@@ -173,6 +183,11 @@ public class XPSystem {
             if (player instanceof ServerPlayer sp) CookSystem.sendRestriction(sp, result.getItem());
             return;
         }
+
+        // Анти-абуз: при полном инвентаре результат не попадает игроку (уходит на
+        // курсор/пол — QoL-моды роняют крафт на землю), а XP бы начислился. Даём XP
+        // только если под результат есть место в инвентаре.
+        if (!hasInventoryRoom(player, result)) return;
 
         var entry = com.kingdomrp.core.data.map.xp.ItemCraftMap.get(result.getItem());
         if (entry == null) return;
@@ -348,6 +363,19 @@ public class XPSystem {
      * результата (`CraftingMenuMixin` не даёт результату появиться в слоте), так
      * что для gated-крафта это событие недостижимо. Оставлен на случай иных путей.
      */
+    /** Есть ли в инвентаре место под результат крафта (свободный слот или недобитый стак того же предмета). */
+    private static boolean hasInventoryRoom(Player player, ItemStack result) {
+        var inv = player.getInventory();
+        if (inv.getFreeSlot() != -1) return true;
+        for (ItemStack s : inv.items) {
+            if (!s.isEmpty() && s.getCount() < s.getMaxStackSize()
+                    && ItemStack.isSameItemSameComponents(s, result)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static void burnCraft(Player player, ItemStack result) {
         result.setCount(0);
         var menu = player.containerMenu;

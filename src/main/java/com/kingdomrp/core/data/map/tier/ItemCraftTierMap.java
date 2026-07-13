@@ -83,9 +83,9 @@ public class ItemCraftTierMap {
 
         // Тир 5: транспорт (лодки/лодки с сундуком — по тегам)
 
-        // Тир 6: книжные полки (по тегу), улей, костры
+        // Тир 6: книжные полки (по тегу), улей. Костры НЕ гейтим (базовая готовка).
         gate(new SpecRequirement(Spec.CARPENTER, 6),
-                Items.BEEHIVE, Items.CAMPFIRE, Items.SOUL_CAMPFIRE);
+                Items.BEEHIVE);
 
         // Тир 7: рабочие станции профессий (кузнечный стол — у Кузнеца)
         gate(new SpecRequirement(Spec.CARPENTER, 7),
