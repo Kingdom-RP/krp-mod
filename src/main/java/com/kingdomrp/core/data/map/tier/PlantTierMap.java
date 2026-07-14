@@ -30,6 +30,18 @@ public class PlantTierMap {
 
     private static final Map<Block, PlantEntry> MAP = new HashMap<>();
     private static final Set<Block> GROWABLE = new HashSet<>();
+    private static final Map<Block, PlantEntry> OVERRIDE = new HashMap<>();
+    private static final java.util.List<Map.Entry<net.minecraft.tags.TagKey<Block>, PlantEntry>> OVERRIDE_TAGS = new java.util.ArrayList<>();
+    private static final Set<Block> OVERRIDE_GROWABLE = new HashSet<>();
+
+    public static void clearOverride() { OVERRIDE.clear(); OVERRIDE_TAGS.clear(); OVERRIDE_GROWABLE.clear(); }
+    public static void override(Block block, PlantEntry e, boolean growableFlag) {
+        OVERRIDE.put(block, e);
+        if (growableFlag) OVERRIDE_GROWABLE.add(block);
+    }
+    public static void overrideTag(net.minecraft.tags.TagKey<Block> tag, PlantEntry e) { OVERRIDE_TAGS.add(Map.entry(tag, e)); }
+    public static Map<Block, PlantEntry> baseEntries() { return MAP; }
+    public static Set<Block> baseGrowable() { return GROWABLE; }
 
     static {
         // Ур.0 — стартовые культуры
@@ -80,11 +92,14 @@ public class PlantTierMap {
     }
 
     public static PlantEntry get(Block block) {
+        PlantEntry o = OVERRIDE.get(block);
+        if (o != null) return o;
+        for (var e : OVERRIDE_TAGS) if (block.builtInRegistryHolder().is(e.getKey())) return e.getValue();
         return MAP.get(block);
     }
 
     public static boolean isGrowable(Block block) {
-        return GROWABLE.contains(block);
+        return OVERRIDE_GROWABLE.contains(block) || GROWABLE.contains(block);
     }
 
     /** Регистрация культуры по ID (мод-совместимость, напр. Farmer's Delight). No-op если блока нет. */

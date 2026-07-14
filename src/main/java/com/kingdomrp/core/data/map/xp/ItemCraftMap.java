@@ -26,7 +26,17 @@ public class ItemCraftMap {
     private static final Map<Item, CraftEntry> MAP = new HashMap<>();
     /** Тег-правила (fallback после точных Item; мод-совместимость: modded-варианты). */
     private static final List<Map.Entry<TagKey<Item>, CraftEntry>> TAGS = new ArrayList<>();
+    /** Датапак-оверрайд (перекрывает MAP/TAGS, перезагружается на /reload). */
+    private static final Map<Item, CraftEntry> OVERRIDE = new HashMap<>();
+    private static final List<Map.Entry<TagKey<Item>, CraftEntry>> OVERRIDE_TAGS = new ArrayList<>();
     private static boolean initialized = false;
+
+    public static void clearOverride() { OVERRIDE.clear(); OVERRIDE_TAGS.clear(); }
+    public static void override(Item item, CraftEntry entry) { OVERRIDE.put(item, entry); }
+    public static void overrideTag(TagKey<Item> tag, CraftEntry entry) { OVERRIDE_TAGS.add(Map.entry(tag, entry)); }
+    /** BASE-записи для экспорта датапака (exact + тег-правила). */
+    public static Map<Item, CraftEntry> baseExact() { if (!initialized) init(); return MAP; }
+    public static List<Map.Entry<TagKey<Item>, CraftEntry>> baseTags() { if (!initialized) init(); return TAGS; }
 
     /** Тег предметов по ID (для common-тегов вроде c:bookshelves). */
     private static TagKey<Item> itemTag(String id) {
@@ -520,6 +530,11 @@ public class ItemCraftMap {
 
     public static CraftEntry get(Item item) {
         if (!initialized) init();
+        CraftEntry over = OVERRIDE.get(item);
+        if (over != null) return over;
+        for (var e : OVERRIDE_TAGS) {
+            if (item.builtInRegistryHolder().is(e.getKey())) return e.getValue();
+        }
         CraftEntry direct = MAP.get(item);
         if (direct != null) return direct;
         for (var e : TAGS) {

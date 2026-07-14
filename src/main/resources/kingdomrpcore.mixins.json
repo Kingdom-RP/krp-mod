@@ -15,6 +15,7 @@
     "GrindstoneMenuMixin",
     "SmithingMenuMixin",
     "SlotMixin",
+    "StonecutterResultSlotMixin",
     "CraftingResultMixin",
     "FurnaceResultSlotMixin",
     "AbstractFurnaceMenuMixin",

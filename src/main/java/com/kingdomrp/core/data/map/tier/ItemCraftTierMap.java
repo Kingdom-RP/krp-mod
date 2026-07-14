@@ -33,6 +33,14 @@ public class ItemCraftTierMap {
     private static final Map<Item, List<SpecRequirement>> MAP = new HashMap<>();
     /** Тег-правила гейта (fallback после точных Item; мод-совместимость). */
     private static final List<Map.Entry<TagKey<Item>, List<SpecRequirement>>> TAGS = new ArrayList<>();
+    private static final Map<Item, List<SpecRequirement>> OVERRIDE = new HashMap<>();
+    private static final List<Map.Entry<TagKey<Item>, List<SpecRequirement>>> OVERRIDE_TAGS = new ArrayList<>();
+
+    public static void clearOverride() { OVERRIDE.clear(); OVERRIDE_TAGS.clear(); }
+    public static void override(Item item, List<SpecRequirement> reqs) { OVERRIDE.put(item, reqs); }
+    public static void overrideTag(TagKey<Item> tag, List<SpecRequirement> reqs) { OVERRIDE_TAGS.add(Map.entry(tag, reqs)); }
+    public static Map<Item, List<SpecRequirement>> baseExact() { return MAP; }
+    public static List<Map.Entry<TagKey<Item>, List<SpecRequirement>>> baseTags() { return TAGS; }
 
     private static TagKey<Item> itemTag(String id) {
         return TagKey.create(Registries.ITEM, ResourceLocation.parse(id));
@@ -331,6 +339,11 @@ public class ItemCraftTierMap {
 
     /** Список требований для крафта предмета, либо null (без ограничений). */
     public static List<SpecRequirement> get(Item item) {
+        List<SpecRequirement> over = OVERRIDE.get(item);
+        if (over != null) return over;
+        for (var e : OVERRIDE_TAGS) {
+            if (item.builtInRegistryHolder().is(e.getKey())) return e.getValue();
+        }
         List<SpecRequirement> direct = MAP.get(item);
         if (direct != null) return direct;
         for (var e : TAGS) {

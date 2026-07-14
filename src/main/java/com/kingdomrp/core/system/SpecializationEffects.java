@@ -2,6 +2,7 @@ package com.kingdomrp.core.system;
 
 import com.kingdomrp.core.KingdomRPCore;
 import com.kingdomrp.core.capability.PlayerData;
+import com.kingdomrp.core.network.PacketHelper;
 import com.kingdomrp.core.data.type.*;
 import com.kingdomrp.core.data.entry.*;
 import com.kingdomrp.core.data.map.*;
@@ -228,12 +229,20 @@ public class SpecializationEffects {
     // обновляется через PacketHelper.syncPlayer.
     @SubscribeEvent
     public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) refreshBlockReach(player);
+        if (event.getEntity() instanceof ServerPlayer player) {
+            refreshBlockReach(player);
+            // Новый entity после смерти — клиентская копия PlayerData сбрасывается,
+            // HUD/меню (K) показывают уровни как 0. Ре-синк восстанавливает.
+            PacketHelper.syncPlayer(player);
+        }
     }
 
     @SubscribeEvent
     public static void onChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) refreshBlockReach(player);
+        if (event.getEntity() instanceof ServerPlayer player) {
+            refreshBlockReach(player);
+            PacketHelper.syncPlayer(player);
+        }
     }
 
     @SubscribeEvent

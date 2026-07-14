@@ -7,15 +7,32 @@ import com.kingdomrp.core.data.map.xp.*;
 import com.kingdomrp.core.data.type.*;
 import com.kingdomrp.core.data.entry.*;
 
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.LivingEntity;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MobDamageMap {
 
     private static final Map<EntityType<?>, Float> MAP = new HashMap<>();
+    /** Датапак-оверрайд (перекрывает BASE, перезагружается на /reload). */
+    private static final Map<EntityType<?>, Float> OVERRIDE = new HashMap<>();
+    private static final List<Map.Entry<TagKey<EntityType<?>>, Float>> OVERRIDE_TAGS = new ArrayList<>();
+
+    public static void clearOverride() { OVERRIDE.clear(); OVERRIDE_TAGS.clear(); }
+    public static void override(EntityType<?> type, float xp) { OVERRIDE.put(type, xp); }
+    public static void overrideTag(TagKey<EntityType<?>> tag, float xp) { OVERRIDE_TAGS.add(Map.entry(tag, xp)); }
+
+    /** Эффективные записи (BASE+override) для экспорта датапака. */
+    public static Map<EntityType<?>, Float> exportEntries() {
+        Map<EntityType<?>, Float> m = new HashMap<>(MAP);
+        m.putAll(OVERRIDE);
+        return m;
+    }
 
     static {
         // S+ тир
@@ -62,6 +79,11 @@ public class MobDamageMap {
 
     // Возвращает XP за нанесение урона сущности
     public static float get(LivingEntity entity) {
+        Float o = OVERRIDE.get(entity.getType());
+        if (o != null) return o;
+        for (var e : OVERRIDE_TAGS) {
+            if (entity.getType().builtInRegistryHolder().is(e.getKey())) return e.getValue();
+        }
         if (entity instanceof ArmorStand) return 0.05f;
         return MAP.getOrDefault(entity.getType(), 0f);
     }

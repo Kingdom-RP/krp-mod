@@ -25,6 +25,13 @@ import java.util.Map;
 public class SmeltTierMap {
 
     private static final Map<Item, SpecRequirement> MAP = new HashMap<>();
+    private static final Map<Item, SpecRequirement> OVERRIDE = new HashMap<>();
+    private static final java.util.List<Map.Entry<net.minecraft.tags.TagKey<Item>, SpecRequirement>> OVERRIDE_TAGS = new java.util.ArrayList<>();
+
+    public static void clearOverride() { OVERRIDE.clear(); OVERRIDE_TAGS.clear(); }
+    public static void override(Item item, SpecRequirement r) { OVERRIDE.put(item, r); }
+    public static void overrideTag(net.minecraft.tags.TagKey<Item> tag, SpecRequirement r) { OVERRIDE_TAGS.add(Map.entry(tag, r)); }
+    public static Map<Item, SpecRequirement> baseEntries() { return MAP; }
 
     static {
         initCraftPath();
@@ -61,6 +68,9 @@ public class SmeltTierMap {
 
     /** Требование уровня Кузнеца для переплавки в этот результат, либо null. */
     public static SpecRequirement get(Item resultItem) {
+        SpecRequirement o = OVERRIDE.get(resultItem);
+        if (o != null) return o;
+        for (var e : OVERRIDE_TAGS) if (resultItem.builtInRegistryHolder().is(e.getKey())) return e.getValue();
         return MAP.get(resultItem);
     }
 }

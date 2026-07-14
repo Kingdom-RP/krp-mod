@@ -40,10 +40,20 @@ public final class BannedCraftMap {
             Items.DISPENSER, Items.DROPPER
     ));
 
+    private static final Set<Item> OVERRIDE = new HashSet<>();
+    private static final java.util.List<net.minecraft.tags.TagKey<Item>> OVERRIDE_TAGS = new java.util.ArrayList<>();
+
+    public static void clearOverride() { OVERRIDE.clear(); OVERRIDE_TAGS.clear(); }
+    public static void override(Item item) { OVERRIDE.add(item); }
+    public static void overrideTag(net.minecraft.tags.TagKey<Item> tag) { OVERRIDE_TAGS.add(tag); }
+    public static Set<Item> baseEntries() { return BANNED; }
+
     private BannedCraftMap() {}
 
     public static boolean isBanned(Item item) {
-        return BANNED.contains(item);
+        if (BANNED.contains(item) || OVERRIDE.contains(item)) return true;
+        for (var t : OVERRIDE_TAGS) if (item.builtInRegistryHolder().is(t)) return true;
+        return false;
     }
 
     /** Бан крафта по ID (мод-совместимость, напр. off-theme предметы). No-op если предмета нет. */

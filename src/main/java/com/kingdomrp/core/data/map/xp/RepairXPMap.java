@@ -9,6 +9,7 @@ import com.kingdomrp.core.data.entry.*;
 
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterials;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TieredItem;
 import net.minecraft.world.item.Tiers;
@@ -23,7 +24,20 @@ import net.minecraft.world.item.Tiers;
  */
 public class RepairXPMap {
 
+    /** Датапак-оверрайд по конкретному предмету (перекрывает правила по материалу). */
+    private static final java.util.Map<Item, Float> OVERRIDE = new java.util.HashMap<>();
+    private static final java.util.List<java.util.Map.Entry<net.minecraft.tags.TagKey<Item>, Float>> OVERRIDE_TAGS = new java.util.ArrayList<>();
+
+    public static void clearOverride() { OVERRIDE.clear(); OVERRIDE_TAGS.clear(); }
+    public static void override(Item item, float xp) { OVERRIDE.put(item, xp); }
+    public static void overrideTag(net.minecraft.tags.TagKey<Item> tag, float xp) { OVERRIDE_TAGS.add(java.util.Map.entry(tag, xp)); }
+
     public static float get(ItemStack stack) {
+        Float o = OVERRIDE.get(stack.getItem());
+        if (o != null) return o;
+        for (var e : OVERRIDE_TAGS) {
+            if (stack.getItem().builtInRegistryHolder().is(e.getKey())) return e.getValue();
+        }
         if (stack.getItem() instanceof TieredItem tiered) {
             var tier = tiered.getTier();
             if (tier == Tiers.NETHERITE) return 4f;

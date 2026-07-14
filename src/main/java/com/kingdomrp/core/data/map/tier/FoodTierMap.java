@@ -34,6 +34,13 @@ import java.util.Map;
 public class FoodTierMap {
 
     private static final Map<Item, FoodTierEntry> MAP = new HashMap<>();
+    private static final Map<Item, FoodTierEntry> OVERRIDE = new HashMap<>();
+    private static final java.util.List<Map.Entry<net.minecraft.tags.TagKey<Item>, FoodTierEntry>> OVERRIDE_TAGS = new java.util.ArrayList<>();
+
+    public static void clearOverride() { OVERRIDE.clear(); OVERRIDE_TAGS.clear(); }
+    public static void override(Item item, FoodTierEntry e) { OVERRIDE.put(item, e); }
+    public static void overrideTag(net.minecraft.tags.TagKey<Item> tag, FoodTierEntry e) { OVERRIDE_TAGS.add(Map.entry(tag, e)); }
+    public static Map<Item, FoodTierEntry> baseEntries() { return MAP; }
 
     static {
         // Ур.1: печёная картошка, жареная треска, жареный кролик
@@ -69,6 +76,9 @@ public class FoodTierMap {
 
     /** Требование уровня для производства предмета, либо null (ур.0 — без ограничений). */
     public static FoodTierEntry get(Item item) {
+        FoodTierEntry o = OVERRIDE.get(item);
+        if (o != null) return o;
+        for (var e : OVERRIDE_TAGS) if (item.builtInRegistryHolder().is(e.getKey())) return e.getValue();
         return MAP.get(item);
     }
 

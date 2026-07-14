@@ -65,9 +65,11 @@ public class SpecializationScreen extends Screen {
         for (int i = 0; i < specs.size(); i++) {
             Specialization spec = specs.get(i);
             boolean canAfford = canAfford(spec);
+            boolean maxed = getSpecLevel(spec.id()) >= PlayerData.MAX_SPEC_LEVEL;
+            String label = maxed ? spec.name() + " §a[МАКС]" : spec.name();
 
             this.addRenderableWidget(Button.builder(
-                            Component.literal(spec.name()),
+                            Component.literal(label),
                             btn -> chooseSpecialization(spec.id()))
                     .pos(x + PADDING, y + buttonYPositions[i])
                     .size(BG_WIDTH - PADDING * 2, 20)
@@ -123,7 +125,14 @@ public class SpecializationScreen extends Screen {
             Specialization spec = specs.get(i);
             int descY = y + buttonYPositions[i] + 22; // сразу под кнопкой
             int currentLevel = getSpecLevel(spec.id());
-            String lvlText = currentLevel > 0 ? " (ур. " + currentLevel + ")" : "";
+            String lvlText;
+            if (currentLevel >= PlayerData.MAX_SPEC_LEVEL) {
+                lvlText = " §a(ур. " + currentLevel + " — макс. уровень)";
+            } else if (currentLevel > 0) {
+                lvlText = " (ур. " + currentLevel + ")";
+            } else {
+                lvlText = "";
+            }
             String fullDesc = spec.description() + lvlText;
 
             var lines = this.font.split(

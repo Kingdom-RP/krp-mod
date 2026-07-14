@@ -37,7 +37,9 @@ import java.util.Objects;
  * остаётся. Бонусы: скидка на уровни (возврат части), игнор «Too Expensive» с
  * ур.{@value EnchantSystem#ANVIL_IGNORE_COST_LEVEL}.
  */
-@Mixin(value = AnvilMenu.class, remap = false)
+// priority 1500 (> дефолт 1000): применяемся ПОСЛЕ чужих микстинов на createResult
+// (UnionLib/Reforged тоже сюда лезут) — снижаем риск взаимного конфликта LVT/байткода.
+@Mixin(value = AnvilMenu.class, priority = 1500, remap = false)
 public class AnvilMenuMixin {
 
     @Unique private boolean krp$success;

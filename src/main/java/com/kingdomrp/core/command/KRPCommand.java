@@ -12,11 +12,19 @@ import com.kingdomrp.core.data.map.xp.ItemCraftMap;
 import com.kingdomrp.core.data.map.tier.ItemCraftTierMap;
 import com.kingdomrp.core.data.map.xp.BlockXPMap;
 import com.kingdomrp.core.data.map.xp.MobKillMap;
+import com.kingdomrp.core.data.map.xp.MobDamageMap;
 import com.kingdomrp.core.data.map.xp.FishingXPMap;
 import com.kingdomrp.core.data.map.xp.MetalSmeltMap;
 import com.kingdomrp.core.data.map.xp.NaturalSmeltMap;
 import com.kingdomrp.core.data.map.xp.RepairXPMap;
 import com.kingdomrp.core.data.map.xp.FoodCookMap;
+import com.kingdomrp.core.data.map.tier.FoodTierMap;
+import com.kingdomrp.core.data.map.tier.BlockTierMap;
+import com.kingdomrp.core.data.map.tier.ItemUseTierMap;
+import com.kingdomrp.core.data.map.tier.SmeltTierMap;
+import com.kingdomrp.core.data.map.tier.PlantTierMap;
+import com.kingdomrp.core.data.map.tier.AnimalTierMap;
+import com.kingdomrp.core.data.map.BannedCraftMap;
 import com.kingdomrp.core.data.type.SpecializationRegistry;
 import com.kingdomrp.core.network.PacketHelper;
 import com.kingdomrp.core.system.XPSystem;
@@ -36,8 +44,12 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.storage.LevelResource;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -162,6 +174,16 @@ public class KRPCommand {
                                 .executes(ctx -> cmdReset(ctx, false))
                                 .then(Commands.argument("target", EntityArgument.player())
                                         .executes(ctx -> cmdReset(ctx, true)))
+                        )
+                        // ===== reload =====
+                        .then(Commands.literal("reload")
+                                .requires(src -> src.hasPermission(2))
+                                .executes(KRPCommand::cmdReloadMappings)
+                        )
+                        // ===== exportdatapack =====
+                        .then(Commands.literal("exportdatapack")
+                                .requires(src -> src.hasPermission(2))
+                                .executes(KRPCommand::cmdExportDatapack)
                         )
         );
     }
@@ -313,6 +335,176 @@ public class KRPCommand {
         ctx.getSource().sendSuccess(() -> Component.literal(
                 "§aПрогресс игрока §f" + target.getName().getString() + " §aсброшен"), true);
         return 1;
+    }
+
+    // ===================== reload =====================
+    // Анонс в общий чат → пауза 10с → перезагрузка датапаков (=/reload,
+    // пересобирает XP-оверрайды через XpMappingReloader) → сообщение об итоге.
+
+    private static final int RELOAD_DELAY_SEC = 10;
+
+    private static int cmdReloadMappings(CommandContext<CommandSourceStack> ctx) {
+        MinecraftServer server = ctx.getSource().getServer();
+        server.getPlayerList().broadcastSystemMessage(Component.literal(
+                "§e[Kingdom RP] Через " + RELOAD_DELAY_SEC
+                        + " секунд произойдёт обновление маппингов опыта..."), false);
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "§aПерезагрузка маппингов запланирована (" + RELOAD_DELAY_SEC + "с)."), true);
+
+        java.util.concurrent.CompletableFuture
+                .delayedExecutor(RELOAD_DELAY_SEC, java.util.concurrent.TimeUnit.SECONDS)
+                .execute(() -> server.execute(() -> doReloadMappings(server)));
+        return 1;
+    }
+
+    private static void doReloadMappings(MinecraftServer server) {
+        server.reloadResources(server.getPackRepository().getSelectedIds())
+                .thenRunAsync(() -> server.getPlayerList().broadcastSystemMessage(Component.literal(
+                        "§a[Kingdom RP] Маппинги опыта обновлены."), false), server)
+                .exceptionally(e -> {
+                    server.getPlayerList().broadcastSystemMessage(Component.literal(
+                            "§c[Kingdom RP] Ошибка обновления маппингов: " + e.getMessage()), false);
+                    return null;
+                });
+    }
+
+    // ===================== exportdatapack =====================
+    // Выгружает текущие значения XP-карт в валидный датапак. block_xp/item_craft —
+    // BASE exact + тег-правила как #tag (не разворачиваются). Прочие — эффективные
+    // концретные значения (BASE+compat+override).
+    // <world>/datapacks/krp_balance/. Дальше правится вручную + /krp reload.
+    // Правило-based карты (fishing/repair/brew) не выгружаются — вернули бы шум по
+    // всем предметам; их override правится вручную по конкретному id.
+
+    private static int cmdExportDatapack(CommandContext<CommandSourceStack> ctx) {
+        MinecraftServer server = ctx.getSource().getServer();
+        java.nio.file.Path packRoot = server.getWorldPath(LevelResource.DATAPACK_DIR).resolve("krp_balance");
+        java.nio.file.Path dir = packRoot.resolve("data/kingdomrpcore/krp_xp");
+        var g = new GsonBuilder().setPrettyPrinting().create();
+        try {
+            Files.createDirectories(dir);
+            Files.writeString(packRoot.resolve("pack.mcmeta"),
+                    "{\n  \"pack\": {\n    \"pack_format\": 48,\n    \"description\": \"Kingdom RP XP export\"\n  }\n}\n");
+
+            Files.writeString(dir.resolve("food_cook.json"), g.toJson(itemFloatJson(FoodCookMap::get)));
+            Files.writeString(dir.resolve("metal_smelt.json"), g.toJson(itemFloatJson(MetalSmeltMap::get)));
+            Files.writeString(dir.resolve("natural_smelt.json"), g.toJson(itemFloatJson(NaturalSmeltMap::get)));
+
+            JsonObject md = new JsonObject();
+            MobDamageMap.exportEntries().forEach((t, xp) ->
+                    md.addProperty(BuiltInRegistries.ENTITY_TYPE.getKey(t).toString(), xp));
+            Files.writeString(dir.resolve("mob_damage.json"), g.toJson(md));
+
+            JsonObject mk = new JsonObject();
+            for (EntityType<?> t : BuiltInRegistries.ENTITY_TYPE) {
+                KillEntry e = MobKillMap.get(t);
+                if (e == null) continue;
+                mk.add(BuiltInRegistries.ENTITY_TYPE.getKey(t).toString(), pathXp(e.path().name(), e.xpReward()));
+            }
+            Files.writeString(dir.resolve("mob_kill.json"), g.toJson(mk));
+
+            // BASE exact + тег-правила как #tag (не разворачиваем в конкретные предметы).
+            JsonObject bx = new JsonObject();
+            BlockXPMap.baseExact().forEach((b, e) ->
+                    bx.add(BuiltInRegistries.BLOCK.getKey(b).toString(), pathXp(e.path().name(), e.xpReward())));
+            for (var te : BlockXPMap.baseTags()) {
+                bx.add("#" + te.getKey().location(), pathXp(te.getValue().path().name(), te.getValue().xpReward()));
+            }
+            Files.writeString(dir.resolve("block_xp.json"), g.toJson(bx));
+
+            JsonObject ic = new JsonObject();
+            ItemCraftMap.baseExact().forEach((it, e) -> {
+                JsonObject o = pathXp(e.path().name(), e.xpReward());
+                o.addProperty("spec", e.spec().name());
+                ic.add(itemName(it), o);
+            });
+            for (var te : ItemCraftMap.baseTags()) {
+                JsonObject o = pathXp(te.getValue().path().name(), te.getValue().xpReward());
+                o.addProperty("spec", te.getValue().spec().name());
+                ic.add("#" + te.getKey().location(), o);
+            }
+            Files.writeString(dir.resolve("item_craft.json"), g.toJson(ic));
+
+            // ---- тир-гейты ----
+            JsonObject ft = new JsonObject();
+            FoodTierMap.baseEntries().forEach((it, e) -> ft.add(itemName(it), specLevel(e.spec().name(), e.level())));
+            Files.writeString(dir.resolve("food_tier.json"), g.toJson(ft));
+
+            JsonObject bt = new JsonObject();
+            BlockTierMap.baseEntries().forEach((b, e) ->
+                    bt.add(BuiltInRegistries.BLOCK.getKey(b).toString(), specLevel(e.spec().name(), e.level())));
+            Files.writeString(dir.resolve("block_tier.json"), g.toJson(bt));
+
+            JsonObject ut = new JsonObject();
+            ItemUseTierMap.baseEntries().forEach((it, r) -> ut.add(itemName(it), specLevel(r.spec().name(), r.level())));
+            Files.writeString(dir.resolve("item_use_tier.json"), g.toJson(ut));
+
+            JsonObject st = new JsonObject();
+            SmeltTierMap.baseEntries().forEach((it, r) -> st.add(itemName(it), specLevel(r.spec().name(), r.level())));
+            Files.writeString(dir.resolve("smelt_tier.json"), g.toJson(st));
+
+            JsonObject ct = new JsonObject();
+            ItemCraftTierMap.baseExact().forEach((it, reqs) -> ct.add(itemName(it), specLevelArray(reqs)));
+            for (var te : ItemCraftTierMap.baseTags()) {
+                ct.add("#" + te.getKey().location(), specLevelArray(te.getValue()));
+            }
+            Files.writeString(dir.resolve("craft_tier.json"), g.toJson(ct));
+
+            JsonObject pt = new JsonObject();
+            PlantTierMap.baseEntries().forEach((b, e) -> {
+                JsonObject o = specLevel(e.spec().name(), e.level());
+                o.addProperty("growable", PlantTierMap.baseGrowable().contains(b));
+                pt.add(BuiltInRegistries.BLOCK.getKey(b).toString(), o);
+            });
+            Files.writeString(dir.resolve("plant_tier.json"), g.toJson(pt));
+
+            JsonObject at = new JsonObject();
+            AnimalTierMap.baseEntries().forEach((t, e) -> {
+                JsonObject o = specLevel(e.spec().name(), e.level());
+                o.addProperty("breedXp", e.breedXP());
+                at.add(BuiltInRegistries.ENTITY_TYPE.getKey(t).toString(), o);
+            });
+            Files.writeString(dir.resolve("animal_tier.json"), g.toJson(at));
+
+            JsonObject cb = new JsonObject();
+            BannedCraftMap.baseEntries().forEach(it -> cb.addProperty(itemName(it), true));
+            Files.writeString(dir.resolve("craft_ban.json"), g.toJson(cb));
+        } catch (IOException e) {
+            ctx.getSource().sendFailure(Component.literal("§cОшибка экспорта: " + e.getMessage()));
+            return 0;
+        }
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "§aДатапак выгружен: §f" + packRoot + "\n§7Правь JSON → §f/krp reload"), false);
+        return 1;
+    }
+
+    private static JsonObject itemFloatJson(Function<Item, Float> fn) {
+        JsonObject o = new JsonObject();
+        for (Item it : BuiltInRegistries.ITEM) {
+            float v = fn.apply(it);
+            if (v > 0) o.addProperty(itemName(it), v);
+        }
+        return o;
+    }
+
+    private static JsonObject pathXp(String path, float xp) {
+        JsonObject o = new JsonObject();
+        o.addProperty("path", path);
+        o.addProperty("xp", xp);
+        return o;
+    }
+
+    private static JsonObject specLevel(String spec, int level) {
+        JsonObject o = new JsonObject();
+        o.addProperty("spec", spec);
+        o.addProperty("level", level);
+        return o;
+    }
+
+    private static com.google.gson.JsonArray specLevelArray(List<SpecRequirement> reqs) {
+        com.google.gson.JsonArray arr = new com.google.gson.JsonArray();
+        for (SpecRequirement r : reqs) arr.add(specLevel(r.spec().name(), r.level()));
+        return arr;
     }
 
     // ===================== xpaudit =====================

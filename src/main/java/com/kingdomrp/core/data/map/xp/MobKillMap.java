@@ -7,13 +7,23 @@ import com.kingdomrp.core.data.map.xp.*;
 import com.kingdomrp.core.data.type.*;
 import com.kingdomrp.core.data.entry.*;
 
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MobKillMap {
 
     private static final Map<EntityType<?>, KillEntry> MAP = new HashMap<>();
+    /** Датапак-оверрайд (перекрывает BASE, перезагружается на /reload). */
+    private static final Map<EntityType<?>, KillEntry> OVERRIDE = new HashMap<>();
+    private static final List<Map.Entry<TagKey<EntityType<?>>, KillEntry>> OVERRIDE_TAGS = new ArrayList<>();
+
+    public static void clearOverride() { OVERRIDE.clear(); OVERRIDE_TAGS.clear(); }
+    public static void override(EntityType<?> type, KillEntry entry) { OVERRIDE.put(type, entry); }
+    public static void overrideTag(TagKey<EntityType<?>> tag, KillEntry entry) { OVERRIDE_TAGS.add(Map.entry(tag, entry)); }
 
     static {
         // S+ тир
@@ -81,6 +91,11 @@ public class MobKillMap {
     }
 
     public static KillEntry get(EntityType<?> type) {
+        KillEntry o = OVERRIDE.get(type);
+        if (o != null) return o;
+        for (var e : OVERRIDE_TAGS) {
+            if (type.builtInRegistryHolder().is(e.getKey())) return e.getValue();
+        }
         return MAP.get(type);
     }
 }

@@ -63,6 +63,7 @@ public class PlayerData implements INBTSerializable<CompoundTag> {
     }
 
     public boolean canAffordSpecialization(Path path, String specId) {
+        if (getSpecializationLevel(specId) >= MAX_SPEC_LEVEL) return false; // макс — дальше нельзя
         return (pathLevel[path.index] - getTotalSpentInPath(path)) >= 1;
     }
 

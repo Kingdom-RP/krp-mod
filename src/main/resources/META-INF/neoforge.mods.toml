@@ -39,6 +39,10 @@ config="${mod_id}.alcocraft.mixins.json"
 [[mixins]]
 config="${mod_id}.emi.mixins.json"
 
+# Гейт рефоржа Tiered More по уровню Мастерового (soft — только если мод загружен).
+[[mixins]]
+config="${mod_id}.tieredmore.mixins.json"
+
 [[dependencies.${mod_id}]]
     modId="neoforge"
     type="required"

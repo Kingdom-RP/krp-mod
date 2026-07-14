@@ -19,6 +19,13 @@ import java.util.Map;
 public class BlockTierMap {
 
     private static final Map<Block, BlockTierEntry> MAP = new HashMap<>();
+    private static final Map<Block, BlockTierEntry> OVERRIDE = new HashMap<>();
+    private static final java.util.List<Map.Entry<net.minecraft.tags.TagKey<Block>, BlockTierEntry>> OVERRIDE_TAGS = new java.util.ArrayList<>();
+
+    public static void clearOverride() { OVERRIDE.clear(); OVERRIDE_TAGS.clear(); }
+    public static void override(Block block, BlockTierEntry e) { OVERRIDE.put(block, e); }
+    public static void overrideTag(net.minecraft.tags.TagKey<Block> tag, BlockTierEntry e) { OVERRIDE_TAGS.add(Map.entry(tag, e)); }
+    public static Map<Block, BlockTierEntry> baseEntries() { return MAP; }
 
     static {
         initMiningPath();
@@ -120,6 +127,9 @@ public class BlockTierMap {
     }
 
     public static BlockTierEntry get(Block block) {
+        BlockTierEntry o = OVERRIDE.get(block);
+        if (o != null) return o;
+        for (var e : OVERRIDE_TAGS) if (block.builtInRegistryHolder().is(e.getKey())) return e.getValue();
         return MAP.get(block);
     }
 

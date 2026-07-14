@@ -23,6 +23,16 @@ public class BlockXPMap {
     private static final Map<Block, BlockEntry> MAP = new HashMap<>();
     /** Тег-правила (проверяются после точных Block, для мод-совместимости). */
     private static final List<Map.Entry<TagKey<Block>, BlockEntry>> TAGS = new ArrayList<>();
+    /** Датапак-оверрайд (перекрывает MAP/TAGS, перезагружается на /reload). */
+    private static final Map<Block, BlockEntry> OVERRIDE = new HashMap<>();
+    private static final List<Map.Entry<TagKey<Block>, BlockEntry>> OVERRIDE_TAGS = new ArrayList<>();
+
+    public static void clearOverride() { OVERRIDE.clear(); OVERRIDE_TAGS.clear(); }
+    public static void override(Block block, BlockEntry entry) { OVERRIDE.put(block, entry); }
+    public static void overrideTag(TagKey<Block> tag, BlockEntry entry) { OVERRIDE_TAGS.add(Map.entry(tag, entry)); }
+    /** BASE-записи для экспорта датапака (exact + тег-правила). */
+    public static Map<Block, BlockEntry> baseExact() { return MAP; }
+    public static List<Map.Entry<TagKey<Block>, BlockEntry>> baseTags() { return TAGS; }
 
     static {
         initMiningPath();
@@ -308,6 +318,11 @@ public class BlockXPMap {
     }
 
     public static BlockEntry get(Block block) {
+        BlockEntry over = OVERRIDE.get(block);
+        if (over != null) return over;
+        for (var e : OVERRIDE_TAGS) {
+            if (block.builtInRegistryHolder().is(e.getKey())) return e.getValue();
+        }
         BlockEntry direct = MAP.get(block);
         if (direct != null) return direct;
         for (var e : TAGS) {

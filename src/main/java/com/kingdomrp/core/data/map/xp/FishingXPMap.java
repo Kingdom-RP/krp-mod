@@ -35,6 +35,13 @@ public class FishingXPMap {
     private static final Set<Item> COMMON_FISH = new HashSet<>();
     private static final Set<Item> UNCOMMON_FISH = new HashSet<>();
     private static final Set<Item> TREASURE = new HashSet<>();
+    /** Датапак-оверрайд по конкретному предмету (перекрывает правила по редкости). */
+    private static final java.util.Map<Item, Float> OVERRIDE = new java.util.HashMap<>();
+    private static final java.util.List<java.util.Map.Entry<net.minecraft.tags.TagKey<Item>, Float>> OVERRIDE_TAGS = new java.util.ArrayList<>();
+
+    public static void clearOverride() { OVERRIDE.clear(); OVERRIDE_TAGS.clear(); }
+    public static void override(Item item, float xp) { OVERRIDE.put(item, xp); }
+    public static void overrideTag(net.minecraft.tags.TagKey<Item> tag, float xp) { OVERRIDE_TAGS.add(java.util.Map.entry(tag, xp)); }
 
     static {
         // Обычная рыба
@@ -55,6 +62,11 @@ public class FishingXPMap {
 
     /** XP за конкретный предмет улова. */
     public static float get(Item item) {
+        Float o = OVERRIDE.get(item);
+        if (o != null) return o;
+        for (var e : OVERRIDE_TAGS) {
+            if (item.builtInRegistryHolder().is(e.getKey())) return e.getValue();
+        }
         if (TREASURE.contains(item)) return TREASURE_XP;
         if (UNCOMMON_FISH.contains(item)) return UNCOMMON_XP;
         if (COMMON_FISH.contains(item)) return COMMON_XP;

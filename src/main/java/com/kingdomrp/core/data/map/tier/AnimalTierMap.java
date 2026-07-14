@@ -19,6 +19,13 @@ import java.util.Map;
 public class AnimalTierMap {
 
     private static final Map<EntityType<?>, AnimalTierEntry> MAP = new HashMap<>();
+    private static final Map<EntityType<?>, AnimalTierEntry> OVERRIDE = new HashMap<>();
+    private static final java.util.List<Map.Entry<net.minecraft.tags.TagKey<EntityType<?>>, AnimalTierEntry>> OVERRIDE_TAGS = new java.util.ArrayList<>();
+
+    public static void clearOverride() { OVERRIDE.clear(); OVERRIDE_TAGS.clear(); }
+    public static void override(EntityType<?> type, AnimalTierEntry e) { OVERRIDE.put(type, e); }
+    public static void overrideTag(net.minecraft.tags.TagKey<EntityType<?>> tag, AnimalTierEntry e) { OVERRIDE_TAGS.add(Map.entry(tag, e)); }
+    public static Map<EntityType<?>, AnimalTierEntry> baseEntries() { return MAP; }
 
     static {
         // Ур.1 — стартовые (мясо/яйца)
@@ -56,6 +63,9 @@ public class AnimalTierMap {
     }
 
     public static AnimalTierEntry get(EntityType<?> type) {
+        AnimalTierEntry o = OVERRIDE.get(type);
+        if (o != null) return o;
+        for (var e : OVERRIDE_TAGS) if (type.builtInRegistryHolder().is(e.getKey())) return e.getValue();
         return MAP.get(type);
     }
 }

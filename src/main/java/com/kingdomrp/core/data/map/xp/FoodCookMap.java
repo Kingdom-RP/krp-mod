@@ -7,10 +7,13 @@ import com.kingdomrp.core.data.map.xp.*;
 import com.kingdomrp.core.data.type.*;
 import com.kingdomrp.core.data.entry.*;
 
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,6 +30,13 @@ public class FoodCookMap {
     private static final double CURVE = 1.5;
 
     private static final Map<Item, Float> MAP = new HashMap<>();
+    /** Датапак-оверрайд (перекрывает BASE/compat, перезагружается на /reload). */
+    private static final Map<Item, Float> OVERRIDE = new HashMap<>();
+    private static final List<Map.Entry<TagKey<Item>, Float>> OVERRIDE_TAGS = new ArrayList<>();
+
+    public static void clearOverride() { OVERRIDE.clear(); OVERRIDE_TAGS.clear(); }
+    public static void override(Item item, float xp) { OVERRIDE.put(item, xp); }
+    public static void overrideTag(TagKey<Item> tag, float xp) { OVERRIDE_TAGS.add(Map.entry(tag, xp)); }
 
     static {
         register(xpForTier(0), Items.DRIED_KELP);
@@ -50,6 +60,11 @@ public class FoodCookMap {
 
     /** XP за готовку одной штуки продукта, либо 0, если предмет не относится к Повару. */
     public static float get(Item item) {
+        Float o = OVERRIDE.get(item);
+        if (o != null) return o;
+        for (var e : OVERRIDE_TAGS) {
+            if (item.builtInRegistryHolder().is(e.getKey())) return e.getValue();
+        }
         return MAP.getOrDefault(item, 0f);
     }
 

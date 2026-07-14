@@ -363,6 +363,20 @@ public class XPSystem {
      * результата (`CraftingMenuMixin` не даёт результату появиться в слоте), так
      * что для gated-крафта это событие недостижимо. Оставлен на случай иных путей.
      */
+    /**
+     * XP за резку на камнерезке (вызывается из {@code StonecutterResultSlotMixin.onTake}).
+     * Камнерезка не шлёт {@code ItemCraftedEvent}. Гейт уровня — через {@code SlotMixin}
+     * (mayPickup), поэтому под-уровневый результат сюда не доходит. Плоско за изъятие
+     * (шифт-стак = один грант, не абузнее верстака).
+     */
+    public static void onStonecut(Player player) {
+        if (player.level().isClientSide()) return;
+        // Фикс 1 XP Ремесла за любой рез. onTake вызывается ровно раз на один рез
+        // (клик и shift-loop); стак-параметр не используем — при shift он уже обнулён
+        // после moveItemStackTo, а изъятие в полный инвентарь ваниль отсекает до onTake.
+        giveXP(player, Path.CRAFT, 1f);
+    }
+
     /** Есть ли в инвентаре место под результат крафта (свободный слот или недобитый стак того же предмета). */
     private static boolean hasInventoryRoom(Player player, ItemStack result) {
         var inv = player.getInventory();
