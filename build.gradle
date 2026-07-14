@@ -13,6 +13,14 @@ base {
     archivesName = mod_id
 }
 
+// Имя jar БЕЗ версии → kingdomrpcore.jar. Причина: доставка через krp-launcher —
+// постоянный manifest.path, апдейт = смена sha256 (лаунчер перезаписывает на
+// месте), старый versioned jar удаляется prune_mods'ом лаунчера. Версия мода
+// остаётся в neoforge.mods.toml (через ${mod_version}).
+tasks.named('jar') {
+    archiveVersion = ''
+}
+
 // 1.21.1 требует Java 21.
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
