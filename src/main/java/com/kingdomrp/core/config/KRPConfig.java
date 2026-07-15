@@ -86,8 +86,9 @@ public class KRPConfig {
                 .define("enabled", true);
         MOD_WHITELIST_EXTRA = builder
                 .comment("Дополнительно разрешённые modId на клиенте, помимо модов сервера",
-                        "(клиентские моды: миникарта, шейдеры и т.п.). Пример: [\"journeymap\", \"iris\"]")
-                .defineListAllowEmpty("extraAllowedMods", List.of(),
+                        "(клиентские моды: миникарта, шейдеры и т.п.). Пример: [\"journeymap\", \"iris\"]",
+                        "obsidianui — клиентский UI-мод (dist=CLIENT), на сервере не грузится.")
+                .defineListAllowEmpty("extraAllowedMods", List.of("obsidianui"),
                         o -> o instanceof String);
         builder.pop();
 
