@@ -21,6 +21,11 @@ public class PlayerData implements INBTSerializable<CompoundTag> {
 
     private boolean receivedStarterKit = false;
 
+    // Множитель XP от баффа довольствия королевства (transient — пересчёт на логине/событиях).
+    private float kingdomXpMultiplier = 1f;
+    public float getKingdomXpMultiplier()          { return kingdomXpMultiplier; }
+    public void setKingdomXpMultiplier(float mult)  { this.kingdomXpMultiplier = mult; }
+
     public boolean hasReceivedStarterKit()  { return receivedStarterKit; }
     public void markStarterKitReceived()     { receivedStarterKit = true; }
 

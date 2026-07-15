@@ -1,7 +1,7 @@
 package com.kingdomrp.core.client;
 
 import com.kingdomrp.core.KingdomRPCore;
-import com.kingdomrp.core.client.screen.PathScreen;
+import com.kingdomrp.core.client.screen.KingdomHubScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -22,7 +22,7 @@ public class ClientEvents {
         if (mc.player == null || mc.screen != null) return;
 
         while (KeyBindings.OPEN_PATHS.consumeClick()) {
-            mc.setScreen(new PathScreen());
+            mc.setScreen(new KingdomHubScreen());
         }
     }
 

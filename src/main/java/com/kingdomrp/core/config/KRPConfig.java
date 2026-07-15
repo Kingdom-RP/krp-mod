@@ -36,6 +36,11 @@ public class KRPConfig {
     public static final ModConfigSpec.IntValue RESPAWN_FOOD_LEVEL;
     public static final ModConfigSpec.DoubleValue EXHAUSTION_MULTIPLIER;
 
+    // Содержание королевства (upkeep) — потребление/день
+    public static final ModConfigSpec.DoubleValue UPKEEP_FOOD_PER_RESIDENT;
+    public static final ModConfigSpec.DoubleValue UPKEEP_MATERIALS_PER_CHUNK;
+    public static final ModConfigSpec.DoubleValue UPKEEP_PROSPERITY_PER_LEVEL;
+
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
 
@@ -103,6 +108,19 @@ public class KRPConfig {
         EXHAUSTION_MULTIPLIER = builder
                 .comment("Множитель расхода голода за все действия (1.5 = в полтора раза быстрее)")
                 .defineInRange("exhaustionMultiplier", 1.5, 1.0, 10.0);
+        builder.pop();
+
+        builder.comment("Содержание — расход за период потребления (~20 мин). Дефолт (3 жителя/",
+                        "25 чанков/Σур.50) держит 500 ~3 РЕАЛЬНЫХ дня (216 периодов).").push("upkeep");
+        UPKEEP_FOOD_PER_RESIDENT = builder
+                .comment("Расход продовольствия за жителя за период")
+                .defineInRange("foodPerResident", 0.77, 0.0, 1000.0);
+        UPKEEP_MATERIALS_PER_CHUNK = builder
+                .comment("Расход материалов за чанк за период")
+                .defineInRange("materialsPerChunk", 0.093, 0.0, 1000.0);
+        UPKEEP_PROSPERITY_PER_LEVEL = builder
+                .comment("Расход довольствия за суммарный уровень жителей за период")
+                .defineInRange("prosperityPerLevel", 0.046, 0.0, 1000.0);
         builder.pop();
 
         SPEC = builder.build();

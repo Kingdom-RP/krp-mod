@@ -185,7 +185,113 @@ public class KRPCommand {
                                 .requires(src -> src.hasPermission(2))
                                 .executes(KRPCommand::cmdExportDatapack)
                         )
+                        // ===== kingdom disband / accept / decline =====
+                        .then(Commands.literal("kingdom")
+                                .then(Commands.literal("disband")
+                                        .requires(src -> src.hasPermission(2))
+                                        .then(Commands.argument("target", EntityArgument.player())
+                                                .executes(KRPCommand::cmdKingdomDisband))
+                                )
+                                // Скрытые — дёргаются кликабельным текстом приглашения, не вручную.
+                                .then(Commands.literal("accept").executes(KRPCommand::cmdKingdomAccept))
+                                .then(Commands.literal("decline").executes(KRPCommand::cmdKingdomDecline))
+                                .then(Commands.literal("consume")     // форс дневного потребления (тест)
+                                        .requires(src -> src.hasPermission(2))
+                                        .then(Commands.argument("target", EntityArgument.player())
+                                                .executes(KRPCommand::cmdKingdomConsume)))
+                                .then(Commands.literal("info")        // текущие характеристики
+                                        .requires(src -> src.hasPermission(2))
+                                        .then(Commands.argument("target", EntityArgument.player())
+                                                .executes(KRPCommand::cmdKingdomInfo)))
+                        )
         );
+    }
+
+    private static int cmdKingdomDisband(CommandContext<CommandSourceStack> ctx)
+            throws CommandSyntaxException {
+        ServerPlayer target = EntityArgument.getPlayer(ctx, "target");
+        MinecraftServer server = ctx.getSource().getServer();
+        var kingdom = com.kingdomrp.core.kingdom.KingdomData.get(server).byPlayer(target.getUUID());
+        if (kingdom == null) {
+            ctx.getSource().sendFailure(Component.literal("§cИгрок не состоит в королевстве."));
+            return 0;
+        }
+        var members = new java.util.ArrayList<>(kingdom.getMembers());
+        String name = kingdom.getName();
+        com.kingdomrp.core.kingdom.KingdomManager.disband(server, kingdom);
+        for (var uuid : members) {
+            ServerPlayer p = server.getPlayerList().getPlayer(uuid);
+            if (p != null) com.kingdomrp.core.kingdom.KingdomSync.send(p);
+        }
+        ctx.getSource().sendSuccess(() -> Component.literal("§6Королевство «" + name + "» распущено."), true);
+        return 1;
+    }
+
+    private static int cmdKingdomAccept(CommandContext<CommandSourceStack> ctx)
+            throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        MinecraftServer server = ctx.getSource().getServer();
+        var data = com.kingdomrp.core.kingdom.KingdomData.get(server);
+
+        java.util.UUID kingdomId = com.kingdomrp.core.kingdom.KingdomInvites.remove(player.getUUID());
+        if (kingdomId == null) {
+            player.displayClientMessage(Component.translatable("kingdomrp.invite.none")
+                    .withStyle(net.minecraft.ChatFormatting.RED), false);
+            return 0;
+        }
+        if (data.byPlayer(player.getUUID()) != null) {
+            player.displayClientMessage(Component.translatable("kingdomrp.invite.you_in_kingdom")
+                    .withStyle(net.minecraft.ChatFormatting.RED), false);
+            return 0;
+        }
+        var k = data.byId(kingdomId);
+        if (k == null) {
+            player.displayClientMessage(Component.translatable("kingdomrp.invite.gone")
+                    .withStyle(net.minecraft.ChatFormatting.RED), false);
+            return 0;
+        }
+        com.kingdomrp.core.kingdom.KingdomManager.addMember(server, k, player);
+        player.displayClientMessage(Component.translatable("kingdomrp.invite.joined", k.getName())
+                .withStyle(net.minecraft.ChatFormatting.GREEN), false);
+        return 1;
+    }
+
+    private static int cmdKingdomConsume(CommandContext<CommandSourceStack> ctx)
+            throws CommandSyntaxException {
+        ServerPlayer target = EntityArgument.getPlayer(ctx, "target");
+        MinecraftServer server = ctx.getSource().getServer();
+        var k = com.kingdomrp.core.kingdom.KingdomData.get(server).byPlayer(target.getUUID());
+        if (k == null) { ctx.getSource().sendFailure(Component.literal("§cНе в королевстве.")); return 0; }
+        boolean disbanded = com.kingdomrp.core.kingdom.upkeep.KingdomUpkeep.consumeOne(server, k);
+        ctx.getSource().sendSuccess(() -> Component.literal(disbanded
+                ? "§cКоролевство распущено (характеристика достигла 0)."
+                : "§6Потребление применено."), true);
+        return 1;
+    }
+
+    private static int cmdKingdomInfo(CommandContext<CommandSourceStack> ctx)
+            throws CommandSyntaxException {
+        ServerPlayer target = EntityArgument.getPlayer(ctx, "target");
+        var k = com.kingdomrp.core.kingdom.KingdomData.get(ctx.getSource().getServer()).byPlayer(target.getUUID());
+        if (k == null) { ctx.getSource().sendFailure(Component.literal("§cНе в королевстве.")); return 0; }
+        ctx.getSource().sendSuccess(() -> Component.literal(String.format(
+                "§6%s §7— еда §f%.0f§7, материалы §f%.0f§7, довольствие §f%.0f §7| жителей §f%d§7, чанков §f%d§7, ΣLvl §f%d",
+                k.getName(),
+                k.getCharacteristic(com.kingdomrp.core.kingdom.upkeep.Characteristic.FOOD),
+                k.getCharacteristic(com.kingdomrp.core.kingdom.upkeep.Characteristic.MATERIALS),
+                k.getCharacteristic(com.kingdomrp.core.kingdom.upkeep.Characteristic.PROSPERITY),
+                k.getMembers().size(), k.getClaims().size(), k.sumMemberLevels())), false);
+        return 1;
+    }
+
+    private static int cmdKingdomDecline(CommandContext<CommandSourceStack> ctx)
+            throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        if (com.kingdomrp.core.kingdom.KingdomInvites.remove(player.getUUID()) != null) {
+            player.displayClientMessage(Component.translatable("kingdomrp.invite.declined")
+                    .withStyle(net.minecraft.ChatFormatting.YELLOW), false);
+        }
+        return 1;
     }
 
     // ===================== обработчики =====================

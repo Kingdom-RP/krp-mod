@@ -336,6 +336,8 @@ public class XPSystem {
         if (player.hasEffect(KRPEffects.DEATH_XP_PENALTY)) {
             multiplier *= KRPConfig.DEATH_XP_MULTIPLIER.get().floatValue();
         }
+        // Бафф/дебафф довольствия королевства — тоже мультипликативно.
+        multiplier *= data.getKingdomXpMultiplier();
         float finalAmount = amount * multiplier;
 
         boolean leveledUp = data.addXP(path, finalAmount);

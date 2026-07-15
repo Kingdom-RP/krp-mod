@@ -40,6 +40,7 @@ public record ChooseSpecializationPacket(String specId) implements CustomPacketP
 
         data.levelUpSpecialization(packet.specId());
         PacketHelper.syncPlayer(player);
+        com.kingdomrp.core.kingdom.KingdomManager.refreshMemberLevel(player);  // снапшот для довольствия
 
         player.sendSystemMessage(Component.literal(
                 "§6[Kingdom RP] §eСпециализация «" + spec.name()

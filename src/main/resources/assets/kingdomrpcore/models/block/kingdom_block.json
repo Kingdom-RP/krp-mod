@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "kingdomrpcore:block/kingdom_block_top",
+    "bottom": "kingdomrpcore:block/kingdom_block_top",
+    "side": "kingdomrpcore:block/kingdom_block_side"
+  }
+}

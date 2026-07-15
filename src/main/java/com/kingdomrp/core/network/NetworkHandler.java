@@ -15,8 +15,20 @@ public class NetworkHandler {
                 SyncPlayerDataPacket::handle);
         registrar.playToClient(XPGainPacket.TYPE, XPGainPacket.STREAM_CODEC,
                 XPGainPacket::handle);
+        registrar.playToClient(SyncKingdomInfoPacket.TYPE, SyncKingdomInfoPacket.STREAM_CODEC,
+                SyncKingdomInfoPacket::handle);
         registrar.playToServer(ChooseSpecializationPacket.TYPE, ChooseSpecializationPacket.STREAM_CODEC,
                 ChooseSpecializationPacket::handle);
+        registrar.playToServer(SignCharterPacket.TYPE, SignCharterPacket.STREAM_CODEC,
+                SignCharterPacket::handle);
+        registrar.playToServer(CreateKingdomPacket.TYPE, CreateKingdomPacket.STREAM_CODEC,
+                CreateKingdomPacket::handle);
+        registrar.playToServer(SetKingdomColorPacket.TYPE, SetKingdomColorPacket.STREAM_CODEC,
+                SetKingdomColorPacket::handle);
+        registrar.playToServer(InvitePlayerPacket.TYPE, InvitePlayerPacket.STREAM_CODEC,
+                InvitePlayerPacket::handle);
+        registrar.playToServer(KickMemberPacket.TYPE, KickMemberPacket.STREAM_CODEC,
+                KickMemberPacket::handle);
 
         // Проверка модов клиента (config-фаза). Пэйлоады обязательные (не optional) —
         // ванильные/не-Neo клиенты отсекаются хендшейком ещё до проверки.

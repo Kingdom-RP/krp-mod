@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "   ",
+    "SBS",
+    "III"
+  ],
+  "key": {
+    "S": { "item": "minecraft:smooth_stone" },
+    "B": { "item": "minecraft:beacon" },
+    "I": { "item": "minecraft:iron_block" }
+  },
+  "result": { "id": "kingdomrpcore:kingdom_block", "count": 1 }
+}

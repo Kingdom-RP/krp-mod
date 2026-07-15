@@ -3,8 +3,12 @@ package com.kingdomrp.core;
 import com.kingdomrp.core.config.KRPConfig;
 import com.kingdomrp.core.network.NetworkHandler;
 import com.kingdomrp.core.registry.KRPAttachments;
+import com.kingdomrp.core.registry.KRPBlockEntities;
+import com.kingdomrp.core.registry.KRPBlocks;
+import com.kingdomrp.core.registry.KRPComponents;
 import com.kingdomrp.core.registry.KRPEffects;
 import com.kingdomrp.core.registry.KRPItems;
+import com.kingdomrp.core.registry.KRPMenus;
 import com.kingdomrp.core.system.ModWhitelist;
 import com.mojang.logging.LogUtils;
 import net.neoforged.bus.api.IEventBus;
@@ -23,6 +27,10 @@ public class KingdomRPCore {
     public KingdomRPCore(IEventBus modEventBus, ModContainer modContainer) {
         KRPAttachments.register(modEventBus);
         KRPEffects.register(modEventBus);
+        KRPComponents.register(modEventBus);
+        KRPBlocks.register(modEventBus);
+        KRPBlockEntities.register(modEventBus);
+        KRPMenus.register(modEventBus);
         KRPItems.register(modEventBus);
         // Регистрация сетевых пакетов — событие RegisterPayloadHandlersEvent на шине мода.
         modEventBus.addListener(NetworkHandler::register);

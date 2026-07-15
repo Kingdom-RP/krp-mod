@@ -74,6 +74,18 @@ dependencies {
     // Полный jar (не :api) — нужен доступ к внутренним классам EMI для
     // клиентского микстина «distraction-free» (скрытие индекс-панели).
     compileOnly 'dev.emi:emi-neoforge:1.1.24+1.21.1'
+
+    // Королевства: интеграция с FTB Teams/Chunks (создание команды, клейм чанков,
+    // блокировка ручных действий) + ObsidianUI (интерфейс). Jar-ы уже в run/mods —
+    // компилируем против них, в рантайме грузит сам мод. architectury нужен для
+    // ClaimedChunkEvent (шина architectury, не NeoForge).
+    compileOnly files(
+            'run/mods/ftb-teams-neoforge-2101.1.10.jar',
+            'run/mods/ftb-chunks-neoforge-2101.1.20.jar',
+            'run/mods/ftb-library-neoforge-2101.1.32.jar',
+            'run/mods/architectury-13.0.8-neoforge.jar',
+            'run/mods/ObsidianUI-neoforge-0.2.9+mc1.21.1.jar',
+    )
 }
 
 // Ресурсы, сгенерированные датагеном.

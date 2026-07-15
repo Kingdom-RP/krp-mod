@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " D ",
+    "G G",
+    " G "
+  ],
+  "key": {
+    "D": { "item": "minecraft:diamond_block" },
+    "G": { "item": "minecraft:gold_ingot" }
+  },
+  "result": { "id": "kingdomrpcore:lord_ring", "count": 1 }
+}
