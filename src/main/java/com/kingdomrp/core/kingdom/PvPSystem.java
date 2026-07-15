@@ -76,4 +76,21 @@ public class PvPSystem {
         }
         if (!allow) event.setCanceled(true);
     }
+
+    /**
+     * Пройдёт ли урон attacker → victim по PvP-политике (без побочных эффектов).
+     * Для гейта XP там, где урон считается отдельным событием (напр. попадание стрелой,
+     * {@code ProjectileImpactEvent}), чтобы не давать опыт за заблокированный удар.
+     */
+    public static boolean isPvpAllowed(ServerPlayer attacker, ServerPlayer victim) {
+        if (attacker == victim) return false;
+        Kingdom kdef = KingdomData.get(victim.server)
+                .byChunk(victim.level().dimension(), victim.chunkPosition());
+        if (kdef == null) return false;
+        boolean aMember = kdef.isMember(attacker.getUUID());
+        boolean vMember = kdef.isMember(victim.getUUID());
+        if (aMember && !vMember) return true;                        // житель бьёт чужака на своей земле
+        if (!aMember && vMember) return kdef.getId().equals(provoked.get(attacker.getUUID()));
+        return false;                                                // свои-по-своим / прочее
+    }
 }

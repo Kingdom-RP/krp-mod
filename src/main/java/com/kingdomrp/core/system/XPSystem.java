@@ -59,6 +59,11 @@ public class XPSystem {
         if (!(event.getRayTraceResult() instanceof net.minecraft.world.phys.EntityHitResult hitResult)) return;
         if (!(hitResult.getEntity() instanceof net.minecraft.world.entity.LivingEntity)) return;
 
+        // Не давать XP за выстрел по игроку, если урон заблокирован PvP-политикой
+        // (ProjectileImpactEvent не отменяется PvP, в отличие от LivingIncomingDamageEvent).
+        if (hitResult.getEntity() instanceof ServerPlayer victim
+                && !com.kingdomrp.core.kingdom.PvPSystem.isPvpAllowed(player, victim)) return;
+
         giveXP(player, Path.WAR, 2f);
     }
 
