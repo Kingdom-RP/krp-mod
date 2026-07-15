@@ -5,6 +5,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityEvent;
@@ -51,7 +52,9 @@ public class PvPSystem {
         if (pk != null && (knew == null || !knew.getId().equals(pk))) provoked.remove(player.getUUID());
     }
 
-    @SubscribeEvent
+    // HIGH — отменяем запрещённый pvp РАНЬШЕ XPSystem (NORMAL), иначе отменённый урон
+    // всё равно даёт War-XP (отменённое событие не доходит до NORMAL-обработчиков).
+    @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onDamage(LivingIncomingDamageEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer victim)) return;
         if (!(event.getSource().getEntity() instanceof ServerPlayer attacker)) return;
