@@ -24,7 +24,8 @@
   "client": [
     "client.EnchantmentScreenMixin",
     "client.EffectTooltipMixin",
-    "client.KeyMappingMixin"
+    "client.KeyMappingMixin",
+    "client.DebugRendererAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

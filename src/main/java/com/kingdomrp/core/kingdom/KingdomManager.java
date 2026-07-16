@@ -41,9 +41,11 @@ public final class KingdomManager {
     }
 
     /** Свободна ли вся область под новое королевство (нет пересечений с чужими claim). */
-    public static boolean isAreaFree(KingdomData data, ChunkPos center) {
+    public static boolean isAreaFree(KingdomData data,
+                                     net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dim,
+                                     ChunkPos center) {
         for (ChunkPos pos : areaChunks(center))
-            if (data.byChunk(pos) != null) return false;
+            if (data.byChunk(dim, pos) != null) return false;
         return true;
     }
 

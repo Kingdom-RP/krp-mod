@@ -43,9 +43,15 @@ public class PvPSystem {
         Kingdom knew = data.byChunk(dim, nc);
         Kingdom kold = data.byChunk(dim, event.getOldPos().chunk());
 
-        if (knew != null && !knew.isMember(player.getUUID()) && knew != kold) {
+        boolean enteredForeign = knew != null && !knew.isMember(player.getUUID());
+        boolean leftForeign = kold != null && !kold.isMember(player.getUUID());
+
+        if (enteredForeign && knew != kold) {
             player.displayClientMessage(
                     Component.translatable("kingdomrp.pvp.entered").withStyle(ChatFormatting.RED), false);
+        } else if (leftForeign && knew != kold) {   // покинул чужую территорию (в дикие/другое)
+            player.displayClientMessage(
+                    Component.translatable("kingdomrp.pvp.left").withStyle(ChatFormatting.GREEN), false);
         }
         // Вышел из территории спровоцировавшего королевства → сброс флага.
         UUID pk = provoked.get(player.getUUID());

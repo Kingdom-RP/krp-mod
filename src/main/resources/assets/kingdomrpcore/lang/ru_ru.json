@@ -76,6 +76,7 @@
   "kingdomrp.invite.joined": "Вы вступили в королевство %s",
   "kingdomrp.invite.declined": "Приглашение отклонено",
   "kingdomrp.pvp.entered": "Вы вошли на территорию королевства — жители королевства могут напасть на вас",
+  "kingdomrp.pvp.left": "Вы покинули территорию королевства",
   "kingdomrp.block.not_member": "Использовать блок могут только жители королевства",
   "kingdomrp.upkeep.food": "Продовольствие",
   "kingdomrp.upkeep.materials": "Материалы",

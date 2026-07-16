@@ -63,7 +63,7 @@ public record CreateKingdomPacket(BlockPos pos, int color) implements CustomPack
         }
 
         KingdomData data = KingdomData.get(player.server);
-        if (!KingdomManager.isAreaFree(data, new net.minecraft.world.level.ChunkPos(packet.pos()))) {
+        if (!KingdomManager.isAreaFree(data, level.dimension(), new net.minecraft.world.level.ChunkPos(packet.pos()))) {
             msg(player, "kingdomrp.create.area_taken", ChatFormatting.RED);
             return;
         }

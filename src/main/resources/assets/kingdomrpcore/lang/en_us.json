@@ -76,6 +76,7 @@
   "kingdomrp.invite.joined": "You joined the kingdom %s",
   "kingdomrp.invite.declined": "Invite declined",
   "kingdomrp.pvp.entered": "You entered kingdom territory — its residents may attack you",
+  "kingdomrp.pvp.left": "You left kingdom territory",
   "kingdomrp.block.not_member": "Only kingdom residents can use this block",
   "kingdomrp.upkeep.food": "Food",
   "kingdomrp.upkeep.materials": "Materials",
