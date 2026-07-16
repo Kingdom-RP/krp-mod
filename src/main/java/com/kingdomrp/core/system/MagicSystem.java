@@ -104,7 +104,7 @@ public class MagicSystem {
         int specLevel = getAlchemistLevel(owner);
 
         if (specLevel < required) {
-            warnGated(owner, pos, items, required, specLevel);
+            warnGated(owner, pos, items, required);
             return false;
         }
 
@@ -127,14 +127,13 @@ public class MagicSystem {
     }
 
     private static void warnGated(ServerPlayer owner, BlockPos pos, NonNullList<ItemStack> items,
-                                  int required, int current) {
+                                  int required) {
         int hash = contentHash(items);
         Integer prev = warnedHashMap.get(pos);
         if (prev != null && prev == hash) return; // уже предупреждали об этом наборе
         warnedHashMap.put(pos, hash);
         owner.sendSystemMessage(Component.literal(
-                "§c[Kingdom RP] Это зелье недоступно — нужен «Алхимик» ур. "
-                        + required + " (у вас " + current + ")."
+                "§c[Kingdom RP] Это зелье недоступно — нужен «Алхимик» ур. " + required + "."
         ));
     }
 
