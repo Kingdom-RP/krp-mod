@@ -5,7 +5,8 @@
   "compatibilityLevel": "JAVA_21",
   "plugin": "com.kingdomrp.core.compat.TieredMoreMixinPlugin",
   "mixins": [
-    "ReforgeScreenHandlerMixin"
+    "ReforgeScreenHandlerMixin",
+    "ReforgeLuckMixin"
   ],
   "injectors": {
     "defaultRequire": 1
