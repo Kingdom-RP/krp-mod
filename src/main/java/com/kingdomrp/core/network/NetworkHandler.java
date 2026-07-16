@@ -29,6 +29,8 @@ public class NetworkHandler {
                 InvitePlayerPacket::handle);
         registrar.playToServer(KickMemberPacket.TYPE, KickMemberPacket.STREAM_CODEC,
                 KickMemberPacket::handle);
+        registrar.playToServer(LeaveKingdomPacket.TYPE, LeaveKingdomPacket.STREAM_CODEC,
+                LeaveKingdomPacket::handle);
 
         // Проверка модов клиента (config-фаза). Пэйлоады обязательные (не optional) —
         // ванильные/не-Neo клиенты отсекаются хендшейком ещё до проверки.

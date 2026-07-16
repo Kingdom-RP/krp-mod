@@ -58,13 +58,14 @@ public final class FtbBridge {
         if (handlersRegistered || !chunksLoaded()) return;
         handlersRegistered = true;
         ClaimedChunkEvent.BEFORE_CLAIM.register((source, chunk) -> {
-            if (claimBypass) return CompoundEventResult.pass();
+            if (claimBypass || source.hasPermission(2)) return CompoundEventResult.pass();
             return CompoundEventResult.interruptFalse(
                     ClaimResult.customProblem("kingdomrp.claim.blocked"));
         });
         // Блок ручного отклейма (клик по карте FTB) — снимать чанки королевства нельзя.
+        // Оператор (в т.ч. /ftbchunks admin) не гейтится.
         ClaimedChunkEvent.BEFORE_UNCLAIM.register((source, chunk) -> {
-            if (unclaimBypass) return CompoundEventResult.pass();
+            if (unclaimBypass || source.hasPermission(2)) return CompoundEventResult.pass();
             return CompoundEventResult.interruptFalse(
                     ClaimResult.customProblem("kingdomrp.claim.blocked"));
         });
@@ -131,6 +132,26 @@ public final class FtbBridge {
             }
         } catch (Exception e) {
             LOG.error("FTB: не удалось заклеймить чанк расширения для {}", k.getName(), e);
+        }
+    }
+
+    /**
+     * Переклеймить чанк, который уже числится за королевством в наших данных, но
+     * в FTB отклеймлен (десинк после admin-отклейма). Клеймим от лица действующего
+     * жителя (его команда = команда королевства). Аллованс не трогаем — слот
+     * освободился при отклейме.
+     */
+    public static void reclaim(MinecraftServer server, Kingdom k, ServerPlayer actor, ChunkPos chunk) {
+        if (!chunksLoaded() || k.getTeamId() == null) return;
+        try {
+            claimBypass = true;
+            try {
+                FTBChunksAPI.api().claimAsPlayer(actor, k.getDimension(), chunk, false);
+            } finally {
+                claimBypass = false;
+            }
+        } catch (Exception e) {
+            LOG.error("FTB: не удалось переклеймить чанк для {}", k.getName(), e);
         }
     }
 

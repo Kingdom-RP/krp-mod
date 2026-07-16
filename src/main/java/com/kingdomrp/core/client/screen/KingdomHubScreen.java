@@ -143,7 +143,9 @@ public class KingdomHubScreen extends SpruceScreen implements KingdomSyncListene
         int barsY = 56, buffsY = barsY + 3 * 24 + 6;
         int buffsEnd = buffsY + 14 + buffs.size() * 12;
         int resY = buffsEnd + 6;
-        int panelH = resY + 16 + info.members().size() * 20 + 8;
+        boolean isKing = ClientKingdomData.get().isKing();
+        int membersEnd = resY + 16 + info.members().size() * 20;
+        int panelH = membersEnd + 8 + (isKing ? 0 : 26);
         int panelX = this.width / 2 - panelW / 2 - sideOffset(width);
         var panel = styledPanel(panelX, Math.max(0, (height - panelH) / 2), panelW, panelH);
 
@@ -182,6 +184,17 @@ public class KingdomHubScreen extends SpruceScreen implements KingdomSyncListene
                 adder.accept(new SpruceLabelWidget(Position.of(w / 2 - 48, ry + 4),
                         Component.literal(king ? "♔ " + name : name)
                                 .withStyle(king ? ChatFormatting.GOLD : ChatFormatting.WHITE), 140, false));
+            }
+
+            // Кнопка выхода — только не-королю (король уходит через роспуск).
+            if (!isKing) {
+                adder.accept(new SpruceButtonWidget(Position.of(w / 2 - 75, membersEnd + 4), 150, 20,
+                        Component.translatable("kingdomrp.menu.leave").withStyle(ChatFormatting.RED),
+                        btn -> {
+                            net.neoforged.neoforge.network.PacketDistributor.sendToServer(
+                                    new com.kingdomrp.core.network.LeaveKingdomPacket());
+                            this.onClose();
+                        }));
             }
         });
         outer.addChild(panel);

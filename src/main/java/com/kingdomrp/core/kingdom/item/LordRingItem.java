@@ -36,7 +36,17 @@ public class LordRingItem extends Item {
         }
 
         ChunkPos target = new ChunkPos(ctx.getClickedPos());
-        if (data.byChunk(target) != null) {
+        Kingdom owner = data.byChunk(target);
+        if (owner != null) {
+            // Свой чанк, но в FTB отклеймлен (десинк после admin-отклейма) —
+            // переприватить, а не «уже захвачен».
+            if (owner.getId().equals(k.getId())) {
+                com.kingdomrp.core.kingdom.ftb.FtbBridge.reclaim(server, k, player, target);
+                com.kingdomrp.core.kingdom.KingdomSync.broadcast(server, k);
+                msg(player, "kingdomrp.ring.expanded", ChatFormatting.GREEN);
+                consume(player, ctx);
+                return InteractionResult.CONSUME;
+            }
             msg(player, "kingdomrp.ring.occupied", ChatFormatting.RED);
             return InteractionResult.FAIL;
         }
@@ -48,9 +58,16 @@ public class LordRingItem extends Item {
         if (KingdomManager.expand(server, k, target)) {
             com.kingdomrp.core.kingdom.KingdomSync.broadcast(server, k);
             msg(player, "kingdomrp.ring.expanded", ChatFormatting.GREEN);
+            consume(player, ctx);
             return InteractionResult.CONSUME;
         }
         return InteractionResult.FAIL;
+    }
+
+    /** Расходовать 1 кольцо (в творческом не тратим). */
+    private static void consume(ServerPlayer player, UseOnContext ctx) {
+        if (!player.getAbilities().instabuild)
+            ctx.getItemInHand().shrink(1);
     }
 
     private static void msg(ServerPlayer player, String key, ChatFormatting color) {
