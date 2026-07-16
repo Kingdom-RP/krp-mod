@@ -203,6 +203,9 @@ public class KRPCommand {
                                         .requires(src -> src.hasPermission(2))
                                         .then(Commands.argument("target", EntityArgument.player())
                                                 .executes(KRPCommand::cmdKingdomInfo)))
+                                .then(Commands.literal("debugmember") // тест: стать жителем (король — фейк-офлайн)
+                                        .requires(src -> src.hasPermission(2))
+                                        .executes(KRPCommand::cmdKingdomDebugMember))
                         )
         );
     }
@@ -224,6 +227,33 @@ public class KRPCommand {
             if (p != null) com.kingdomrp.core.kingdom.KingdomSync.send(p);
         }
         ctx.getSource().sendSuccess(() -> Component.literal("§6Королевство «" + name + "» распущено."), true);
+        return 1;
+    }
+
+    /**
+     * Дев-тест: создать королевство с фейковым офлайн-королём и записать вызывающего
+     * жителем — чтобы проверить member-view (кнопка выхода, головы) в одиночке. Король
+     * офлайн → FTB-часть (команда/клеймы) пропускается; для теста UI/leave этого хватает.
+     */
+    private static int cmdKingdomDebugMember(CommandContext<CommandSourceStack> ctx)
+            throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        MinecraftServer server = ctx.getSource().getServer();
+        var data = com.kingdomrp.core.kingdom.KingdomData.get(server);
+        if (data.byPlayer(player.getUUID()) != null) {
+            ctx.getSource().sendFailure(Component.literal("§cВы уже в королевстве."));
+            return 0;
+        }
+        java.util.UUID fakeKing = java.util.UUID.randomUUID();
+        var members = new java.util.HashSet<>(java.util.List.of(fakeKing, player.getUUID()));
+        int color = com.kingdomrp.core.kingdom.KingdomManager.COLOR_PALETTE[
+                player.getRandom().nextInt(com.kingdomrp.core.kingdom.KingdomManager.COLOR_PALETTE.length)];
+        com.kingdomrp.core.kingdom.KingdomManager.create(server, player.serverLevel(),
+                player.blockPosition(), "DebugRealm", fakeKing, members, color);
+        com.kingdomrp.core.kingdom.KingdomSync.send(player);
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "§6Вы житель тестового королевства «DebugRealm» (король — фейк). "
+                        + "§7Роспуск: /krp kingdom disband " + player.getGameProfile().getName()), false);
         return 1;
     }
 
