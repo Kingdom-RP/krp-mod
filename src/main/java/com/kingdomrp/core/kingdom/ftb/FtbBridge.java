@@ -39,6 +39,7 @@ public final class FtbBridge {
     private static boolean handlersRegistered = false;
     /** Пропуск блокировки клейма — только для наших собственных claim-вызовов. */
     private static boolean claimBypass = false;
+    private static boolean unclaimBypass = false;   // пропуск блокировки отклейма (наш роспуск)
 
     private FtbBridge() {}
 
@@ -61,6 +62,12 @@ public final class FtbBridge {
             return CompoundEventResult.interruptFalse(
                     ClaimResult.customProblem("kingdomrp.claim.blocked"));
         });
+        // Блок ручного отклейма (клик по карте FTB) — снимать чанки королевства нельзя.
+        ClaimedChunkEvent.BEFORE_UNCLAIM.register((source, chunk) -> {
+            if (unclaimBypass) return CompoundEventResult.pass();
+            return CompoundEventResult.interruptFalse(
+                    ClaimResult.customProblem("kingdomrp.claim.blocked"));
+        });
     }
 
     /** Создать команду королевства, присоединить онлайн-соподписантов, заклеймить 25 чанков. */
@@ -74,7 +81,12 @@ public final class FtbBridge {
             k.setTeamId(team.getTeamId());
             team.setProperty(TeamProperties.COLOR, Color4I.rgb(k.getColor()));
             // Разрешаем pvp на клеймах FTB — иначе FTB Chunks сам режет урон; политику ведёт PvPSystem.
-            if (chunksLoaded()) team.setProperty(dev.ftb.mods.ftbchunks.api.FTBChunksProperties.ALLOW_PVP, true);
+            if (chunksLoaded()) {
+                team.setProperty(dev.ftb.mods.ftbchunks.api.FTBChunksProperties.ALLOW_PVP, true);
+                // Приват виден всем (в т.ч. не-жителям) на карте/миникарте.
+                team.setProperty(dev.ftb.mods.ftbchunks.api.FTBChunksProperties.CLAIM_VISIBILITY,
+                        dev.ftb.mods.ftbteams.api.property.PrivacyMode.PUBLIC);
+            }
             team.markDirty();
 
             if (team instanceof PartyTeam party) {
@@ -168,6 +180,22 @@ public final class FtbBridge {
         }
     }
 
+    /** Переприменить свойства команды (pvp + публичная видимость привата). Для старых
+     *  королевств на старте сервера — иначе созданные до фикса остаются невидимыми. */
+    public static void applyTeamSettings(MinecraftServer server, Kingdom k) {
+        if (!teamsLoaded() || !chunksLoaded() || k.getTeamId() == null) return;
+        try {
+            Team team = FTBTeamsAPI.api().getManager().getTeamByID(k.getTeamId()).orElse(null);
+            if (team == null) return;
+            team.setProperty(dev.ftb.mods.ftbchunks.api.FTBChunksProperties.ALLOW_PVP, true);
+            team.setProperty(dev.ftb.mods.ftbchunks.api.FTBChunksProperties.CLAIM_VISIBILITY,
+                    dev.ftb.mods.ftbteams.api.property.PrivacyMode.PUBLIC);
+            team.markDirty();
+        } catch (Exception e) {
+            LOG.error("FTB: не удалось переприменить свойства команды {}", k.getName(), e);
+        }
+    }
+
     /** Снять клеймы всех чанков королевства и распустить команду FTB. */
     public static void onDisband(MinecraftServer server, Kingdom k) {
         if (!teamsLoaded() || k.getTeamId() == null) return;
@@ -176,15 +204,20 @@ public final class FtbBridge {
             if (team.isEmpty()) return;
             CommandSourceStack source = server.createCommandSourceStack();
 
-            // forceDisband сам чанки не снимает — отклеймиваем явно.
-            if (chunksLoaded()) {
-                ChunkTeamData td = FTBChunksAPI.api().getManager().getOrCreateData(team.get());
-                for (long l : k.getClaims()) {
-                    ChunkPos cp = new ChunkPos(l);
-                    td.unclaim(source, new ChunkDimPos(k.getDimension(), cp), false);
+            unclaimBypass = true;   // весь роспуск (отклейм + forceDisband) — мимо блокировки
+            try {
+                // forceDisband сам чанки не снимает — отклеймиваем явно.
+                if (chunksLoaded()) {
+                    ChunkTeamData td = FTBChunksAPI.api().getManager().getOrCreateData(team.get());
+                    for (long l : k.getClaims()) {
+                        ChunkPos cp = new ChunkPos(l);
+                        td.unclaim(source, new ChunkDimPos(k.getDimension(), cp), false);
+                    }
                 }
+                if (team.get() instanceof PartyTeam party) party.forceDisband(source);
+            } finally {
+                unclaimBypass = false;
             }
-            if (team.get() instanceof PartyTeam party) party.forceDisband(source);
         } catch (Exception e) {
             LOG.error("FTB: не удалось распустить команду королевства {}", k.getName(), e);
         }

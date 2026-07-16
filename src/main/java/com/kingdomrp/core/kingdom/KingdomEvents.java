@@ -56,6 +56,7 @@ public class KingdomEvents {
         for (Kingdom k : orphans) KingdomManager.disband(server, k);
 
         KingdomManager.reForceAll(server);
+        for (Kingdom k : data.all()) FtbBridge.applyTeamSettings(server, k);   // pvp + публ. видимость
     }
 
     @SubscribeEvent
