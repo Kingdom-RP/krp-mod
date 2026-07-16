@@ -2,6 +2,9 @@ package com.kingdomrp.core.compat;
 
 import com.kingdomrp.core.KingdomRPCore;
 import com.kingdomrp.core.data.map.xp.FoodCookMap;
+import com.kingdomrp.core.data.map.tier.ItemCraftTierMap;
+import com.kingdomrp.core.data.type.Spec;
+import com.kingdomrp.core.data.type.SpecRequirement;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -39,11 +42,22 @@ public final class HybridAquaticCompat {
         cook(2, "cooked_crab", "cooked_tentacle", "cooked_fish_meat");
         cook(3, "cooked_lobster_tail", "cooked_fish_steak");
         cook(4, "cooked_lobster");
+
+        // Крючки HA — гейт крафта по уровню Рыбака (как крючки Tide, только гейт, без XP).
+        craft(3, "barbed_hook", "glowing_hook");
+        craft(5, "magnetic_hook");
+        craft(7, "creepermagnet_hook", "ominous_hook");
     }
 
     private static void cook(int tier, String... paths) {
         for (String p : paths) {
             FoodCookMap.addById(id(p), FoodCookMap.xpForTier(tier));
+        }
+    }
+
+    private static void craft(int level, String... paths) {
+        for (String p : paths) {
+            ItemCraftTierMap.addById(id(p), new SpecRequirement(Spec.FISHERMAN, level));
         }
     }
 }
