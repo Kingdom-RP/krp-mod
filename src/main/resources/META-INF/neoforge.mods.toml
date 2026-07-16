@@ -43,6 +43,11 @@ config="${mod_id}.emi.mixins.json"
 [[mixins]]
 config="${mod_id}.tieredmore.mixins.json"
 
+# Фикс мода Backpacks — только если мод загружен (см. BackpacksMixinPlugin).
+# Защита открытого рюкзака от перемещения хоткеем (SWAP) в собственный слот.
+[[mixins]]
+config="${mod_id}.backpacks.mixins.json"
+
 [[dependencies.${mod_id}]]
     modId="neoforge"
     type="required"
