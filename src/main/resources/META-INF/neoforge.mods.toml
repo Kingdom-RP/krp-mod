@@ -75,3 +75,13 @@ config="${mod_id}.tieredmore.mixins.json"
     versionRange="*"
     ordering="AFTER"
     side="BOTH"
+
+# Optional + ordering=AFTER: оверрайды записей sea_message Hybrid Aquatic
+# (data/hybrid-aquatic/hybrid-aquatic/sea_message/*) перекрывают оригиналы —
+# river_to_sea / free_gaza / free_palestine переводятся на безобидный текст.
+[[dependencies.${mod_id}]]
+    modId="hybrid_aquatic"
+    type="optional"
+    versionRange="*"
+    ordering="AFTER"
+    side="BOTH"

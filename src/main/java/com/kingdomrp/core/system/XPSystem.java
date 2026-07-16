@@ -12,6 +12,7 @@ import com.kingdomrp.core.data.map.xp.*;
 import com.kingdomrp.core.network.PacketHelper;
 import com.kingdomrp.core.registry.KRPEffects;
 import com.kingdomrp.core.world.PlacedBlockTracker;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.server.level.ServerPlayer;
@@ -76,9 +77,17 @@ public class XPSystem {
         // нехватке уровня — за запрещённую добычу XP не даём.
         if (event.isCanceled()) return;
 
-        // Не даём XP за поставленные игроком блоки
-        if (PlacedBlockTracker.isPlacedByPlayer(event.getPos())) {
-            PlacedBlockTracker.onBroken(event.getPos());
+        // Не даём XP за поставленные игроком блоки. Двухблочные растения
+        // (подсолнух, розовый куст, сирень, пион) трекаются только нижней
+        // половиной — при доломе верхней проверяем позицию основания.
+        BlockPos placedPos = event.getPos();
+        if (event.getState().getBlock() instanceof net.minecraft.world.level.block.DoublePlantBlock
+                && event.getState().getValue(net.minecraft.world.level.block.DoublePlantBlock.HALF)
+                == net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER) {
+            placedPos = event.getPos().below();
+        }
+        if (PlacedBlockTracker.isPlacedByPlayer(placedPos)) {
+            PlacedBlockTracker.onBroken(placedPos);
             return;
         }
 
