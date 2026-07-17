@@ -103,13 +103,13 @@ public class SpecializationEffects {
         ItemStack result = event.getCrafting();
         if (result.isEmpty()) return;
 
+        if (!XPSystem.hasInventoryRoom(player, result)) return;
+
         checkCraftBonus(player, result);
         checkCarpenterEconomy(player, result, event.getInventory());
         checkCarpenterBatch(player, result);
         checkCraftsmanEconomy(player, result, event.getInventory());
         checkCraftsmanBatch(player, result);
-        // Закалка — не здесь, а при сборке результата (CraftingResultMixin):
-        // ItemCraftedEvent при shift-click срабатывает уже после перемещения стака.
     }
 
     @SubscribeEvent
@@ -144,6 +144,8 @@ public class SpecializationEffects {
             arrow.shootFromRotation(player,
                     player.getXRot(), player.getYRot(),
                     0f, event.getCharge() / 20f * 3f, 1f);
+
+            arrow.pickup = net.minecraft.world.entity.projectile.AbstractArrow.Pickup.DISALLOWED;
 
             ((net.minecraft.server.level.ServerLevel) player.level()).addFreshEntity(arrow);
         });
@@ -231,6 +233,7 @@ public class SpecializationEffects {
     public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             refreshBlockReach(player);
+            ArmorWeightHandler.recompute(player);   // новый entity — трансиент штрафа скорости потерян
             // Новый entity после смерти — клиентская копия PlayerData сбрасывается,
             // HUD/меню (K) показывают уровни как 0. Ре-синк восстанавливает.
             PacketHelper.syncPlayer(player);
@@ -325,7 +328,7 @@ public class SpecializationEffects {
 
     private static void checkMiner(ServerPlayer player, Block block,
                                    BlockPos pos, BlockEvent.BreakEvent event) {
-        if (!block.builtInRegistryHolder().is(Tags.Blocks.ORES)) return;
+        if (!event.getState().is(Tags.Blocks.ORES)) return;
 
         withData(player, data -> {
             int specLevel = data.getSpecializationLevel(Spec.MINER.id);
@@ -823,8 +826,13 @@ public class SpecializationEffects {
         if (!(state.getBlock() instanceof CropBlock crop)) return;
         if (!crop.isMaxAge(state)) return;
 
-        net.minecraft.world.item.Item seed = combineSeed(state.getBlock());
-        if (seed == null) return; // комбайн только для базовых культур
+        // Сид для пересадки — из самой культуры (getBaseSeedId у CropBlock). Покрывает
+        // ваниль + модовые CropBlock-культуры (Farmer's Delight onion и др.). NeoForge-
+        // версия getCloneItemStack (не deprecated 3-арг).
+        var hit = new net.minecraft.world.phys.BlockHitResult(
+                net.minecraft.world.phys.Vec3.atCenterOf(pos), net.minecraft.core.Direction.UP, pos, false);
+        ItemStack seedStack = state.getCloneItemStack(hit, level, pos, player);
+        net.minecraft.world.item.Item seed = seedStack.isEmpty() ? null : seedStack.getItem();
 
         withData(player, data -> {
             int farmerLevel = data.getSpecializationLevel(Spec.FARMER.id);
@@ -837,13 +845,19 @@ public class SpecializationEffects {
                     player, player.getMainHandItem());
 
             // Один сид уходит на пересадку
-            removeOne(drops, seed);
+            if (seed != null) removeOne(drops, seed);
 
             boolean doubled = level.random.nextFloat() < farmerLevel * 0.05f;
             for (ItemStack drop : drops) {
                 giveToPlayer(player, drop.copy());
                 if (doubled) giveToPlayer(player, drop.copy());
             }
+
+            // Звук сбора (дефолтный звук ломания культуры).
+            var sound = state.getSoundType(level, pos, player);
+            level.playSound(null, pos, sound.getBreakSound(),
+                    net.minecraft.sounds.SoundSource.BLOCKS,
+                    (sound.getVolume() + 1f) / 2f, sound.getPitch() * 0.8f);
 
             // Пересадка (age 0)
             level.setBlock(pos, crop.getStateForAge(0), 3);
@@ -873,14 +887,6 @@ public class SpecializationEffects {
         event.setCancellationResult(net.minecraft.world.InteractionResult.FAIL);
         player.containerMenu.sendAllDataToRemote();
         CookSystem.sendRestriction(player, result);
-    }
-
-    private static net.minecraft.world.item.Item combineSeed(Block block) {
-        if (block == Blocks.WHEAT) return net.minecraft.world.item.Items.WHEAT_SEEDS;
-        if (block == Blocks.CARROTS) return net.minecraft.world.item.Items.CARROT;
-        if (block == Blocks.POTATOES) return net.minecraft.world.item.Items.POTATO;
-        if (block == Blocks.BEETROOTS) return net.minecraft.world.item.Items.BEETROOT_SEEDS;
-        return null;
     }
 
     private static void removeOne(java.util.List<ItemStack> drops,

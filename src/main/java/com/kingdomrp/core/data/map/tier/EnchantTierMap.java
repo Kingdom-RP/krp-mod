@@ -32,7 +32,7 @@ public class EnchantTierMap {
     public static final int MAXLEVEL_LEVEL = 7;
 
     private static int weightTier(int weight) {
-        if (weight >= 5) return 0; // COMMON/UNCOMMON — доступны с ур.0, гейтятся шансом
+        if (weight >= 5) return 1; // COMMON/UNCOMMON — доступны с ур.1
         if (weight >= 2) return 3; // RARE
         return 5;                  // VERY_RARE (вес 1)
     }

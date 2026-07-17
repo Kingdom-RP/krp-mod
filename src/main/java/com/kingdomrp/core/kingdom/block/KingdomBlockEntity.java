@@ -34,6 +34,7 @@ public class KingdomBlockEntity extends BlockEntity implements MenuProvider {
         @Override public int getMaxStackSize() { return RESOURCE_MAX_STACK; }
     };
     @Nullable private UUID kingdomId;
+    private int beamColor = 0xFFFFFF;    // цвет луча (клиент); сервер шлёт из цвета королевства
 
     private boolean absorbing = false;   // защита от рекурсии листенера при поглощении
 
@@ -65,6 +66,13 @@ public class KingdomBlockEntity extends BlockEntity implements MenuProvider {
 
     @Nullable public UUID getKingdomId()    { return kingdomId; }
     public boolean isActive()               { return kingdomId != null; }
+    public int getBeamColor()               { return beamColor; }
+
+    /** Форс-пуш обновления BE на клиент (пересинк цвета луча при смене цвета королевства). */
+    public void syncToClient() {
+        if (level != null && !level.isClientSide)
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+    }
 
     public void setKingdomId(@Nullable UUID id) {
         this.kingdomId = id;
@@ -84,6 +92,7 @@ public class KingdomBlockEntity extends BlockEntity implements MenuProvider {
                     ? ItemStack.parseOptional(registries, tag.getCompound("res" + i))
                     : ItemStack.EMPTY);
         kingdomId = tag.hasUUID("kingdom") ? tag.getUUID("kingdom") : null;
+        if (tag.contains("beamColor")) beamColor = tag.getInt("beamColor");
     }
 
     @Override
@@ -103,7 +112,14 @@ public class KingdomBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
         CompoundTag tag = super.getUpdateTag(registries);
-        if (kingdomId != null) tag.putUUID("kingdom", kingdomId);
+        if (kingdomId != null) {
+            tag.putUUID("kingdom", kingdomId);
+            // Цвет луча берём из данных королевства (сервер), чтобы клиент рисовал маяк.
+            if (level != null && level.getServer() != null) {
+                var k = com.kingdomrp.core.kingdom.KingdomData.get(level.getServer()).byId(kingdomId);
+                if (k != null) tag.putInt("beamColor", k.getColor());
+            }
+        }
         return tag;
     }
 

@@ -43,6 +43,9 @@ public final class FtbBridge {
 
     private FtbBridge() {}
 
+    /** Активен ли наш клейм — для миксина обхода лимита FTB (claim авторитетен у нас). */
+    public static boolean isClaimBypass() { return claimBypass; }
+
     public static boolean teamsLoaded()  { return ModList.get().isLoaded("ftbteams"); }
     public static boolean chunksLoaded() { return ModList.get().isLoaded("ftbchunks"); }
 
@@ -69,6 +72,38 @@ public final class FtbBridge {
             return CompoundEventResult.interruptFalse(
                     ClaimResult.customProblem("kingdomrp.claim.blocked"));
         });
+    }
+
+    /**
+     * DEBUG: создать команду королевства от лица {@code actor} (не короля), заклеймить
+     * область. Нужно для теста, когда король — фейк-офлайн, а приват должен реально
+     * существовать (команда-владелец = actor, он же житель).
+     */
+    public static void onCreateDebug(MinecraftServer server, Kingdom k, ServerPlayer actor) {
+        if (!teamsLoaded() || !chunksLoaded() || actor == null) return;
+        try {
+            Team team = FTBTeamsAPI.api().getManager()
+                    .createPartyTeam(actor, k.getName(), "", Color4I.rgb(k.getColor()));
+            k.setTeamId(team.getTeamId());
+            team.setProperty(TeamProperties.COLOR, Color4I.rgb(k.getColor()));
+            team.setProperty(dev.ftb.mods.ftbchunks.api.FTBChunksProperties.ALLOW_PVP, true);
+            team.setProperty(dev.ftb.mods.ftbchunks.api.FTBChunksProperties.CLAIM_VISIBILITY,
+                    dev.ftb.mods.ftbteams.api.property.PrivacyMode.PUBLIC);
+            team.markDirty();
+
+            ChunkTeamData td = FTBChunksAPI.api().getManager().getOrCreateData(team);
+            td.setExtraClaimChunks(td.getExtraClaimChunks() + k.getClaims().size());
+
+            claimBypass = true;
+            try {
+                for (long l : k.getClaims())
+                    FTBChunksAPI.api().claimAsPlayer(actor, k.getDimension(), new ChunkPos(l), false);
+            } finally {
+                claimBypass = false;
+            }
+        } catch (Exception e) {
+            LOG.error("FTB: не удалось создать debug-королевство {}", k.getName(), e);
+        }
     }
 
     /** Создать команду королевства, присоединить онлайн-соподписантов, заклеймить 25 чанков. */
@@ -113,11 +148,13 @@ public final class FtbBridge {
         }
     }
 
-    /** Заклеймить один расширенный чанк. */
-    public static void onExpand(MinecraftServer server, Kingdom k, ChunkPos chunk) {
-        if (!chunksLoaded() || k.getTeamId() == null) return;
-        ServerPlayer king = server.getPlayerList().getPlayer(k.getKing());
-        if (king == null) return;   // клеймим от лица короля; офлайн — пропуск (данные уже наши)
+    /**
+     * Заклеймить один расширенный чанк. Клеймим от лица ДЕЙСТВУЮЩЕГО игрока
+     * (его команда = команда королевства), а не короля — иначе при офлайн-короле
+     * чанк не заклеймился бы в FTB (данные наши обновлены, а защиты нет).
+     */
+    public static void onExpand(MinecraftServer server, Kingdom k, ServerPlayer actor, ChunkPos chunk) {
+        if (!chunksLoaded() || k.getTeamId() == null || actor == null) return;
         try {
             Team team = FTBTeamsAPI.api().getManager().getTeamByID(k.getTeamId()).orElse(null);
             if (team != null) {
@@ -126,7 +163,7 @@ public final class FtbBridge {
             }
             claimBypass = true;
             try {
-                FTBChunksAPI.api().claimAsPlayer(king, k.getDimension(), chunk, false);
+                FTBChunksAPI.api().claimAsPlayer(actor, k.getDimension(), chunk, false);
             } finally {
                 claimBypass = false;
             }
@@ -153,6 +190,38 @@ public final class FtbBridge {
         } catch (Exception e) {
             LOG.error("FTB: не удалось переклеймить чанк для {}", k.getName(), e);
         }
+    }
+
+    /**
+     * Ресинк: заклеймить в FTB все чанки из {@code KingdomData}, которых там нет
+     * (десинк после ранних багов с кольцом/лимитом). Клеймим от лица КОМАНДЫ
+     * ({@code td.claim}), не игрока — чинит и при офлайн-жителях. Уже заклеймленные
+     * → {@code ALREADY_CLAIMED} (no-op). Возвращает число доклеймленных чанков.
+     */
+    public static int resyncClaims(MinecraftServer server) {
+        if (!teamsLoaded() || !chunksLoaded()) return 0;
+        int claimed = 0;
+        CommandSourceStack source = server.createCommandSourceStack();
+        com.kingdomrp.core.kingdom.KingdomData data = com.kingdomrp.core.kingdom.KingdomData.get(server);
+        claimBypass = true;
+        try {
+            for (Kingdom k : data.all()) {
+                if (k.getTeamId() == null) continue;
+                Team team = FTBTeamsAPI.api().getManager().getTeamByID(k.getTeamId()).orElse(null);
+                if (team == null) continue;
+                ChunkTeamData td = FTBChunksAPI.api().getManager().getOrCreateData(team);
+                for (long l : k.getClaims()) {
+                    ChunkPos cp = new ChunkPos(l);
+                    var res = td.claim(source, new ChunkDimPos(k.getDimension(), cp), false);
+                    if (res instanceof dev.ftb.mods.ftbchunks.api.ClaimedChunk) claimed++;
+                }
+            }
+        } catch (Exception e) {
+            LOG.error("FTB: ресинк клеймов не удался", e);
+        } finally {
+            claimBypass = false;
+        }
+        return claimed;
     }
 
     /** Обновить цвет команды FTB (заливка на карте). */

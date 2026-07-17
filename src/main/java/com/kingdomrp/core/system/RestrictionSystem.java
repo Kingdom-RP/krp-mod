@@ -14,6 +14,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerContainerEvent;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -23,15 +24,28 @@ import java.util.List;
 @EventBusSubscriber(modid = KingdomRPCore.MODID)
 public class RestrictionSystem {
 
+    // Стол зачарования на 0 уровне Зачарователя не предлагает ни одной чары (базовая
+    // группа — с ур.1). Без подсказки игрок видит пустой стол. Сообщаем при открытии.
+    @SubscribeEvent
+    public static void onContainerOpen(PlayerContainerEvent.Open event) {
+        if (!KRPConfig.RESTRICTIONS_ENABLED.get()) return;
+        if (event.getEntity().level().isClientSide()) return;
+        if (!(event.getContainer() instanceof net.minecraft.world.inventory.EnchantmentMenu)) return;
+        if (com.kingdomrp.core.system.EnchantSystem.getEnchanterLevel(event.getEntity()) < 1) {
+            event.getEntity().sendSystemMessage(Component.literal(
+                    "§c[Kingdom RP] Зачарование на столе доступно с 1 уровня навыка «Зачарователь»."));
+        }
+    }
+
     @SubscribeEvent
     public static void onItemUse(PlayerInteractEvent.RightClickItem event) {
         Player player = event.getEntity();
         if (player.level().isClientSide()) return;
 
-        SpecRequirement req = RestrictionSystem.getUseRequirement(event.getItemStack());
+        List<SpecRequirement> req = RestrictionSystem.getUseRequirement(event.getItemStack());
         if (req == null) return;
 
-        if (!meetsRequirement(player, req)) {
+        if (!meetsAny(player, req)) {
             event.setCanceled(true);
             sendRestrictionMessage(player, req);
             // Ресинк инвентаря: клиент предсказал надевание брони по ПКМ, иначе фантом.
@@ -46,11 +60,15 @@ public class RestrictionSystem {
         // Требование для ношения/использования — показывается всегда (актуально и
         // в инвентаре). Подсказка для КРАФТА — только в меню верстака, вынесена в
         // клиентский CraftTooltipClient (нужен доступ к открытому экрану).
-        SpecRequirement useReq = RestrictionSystem.getUseRequirement(event.getItemStack());
-        if (useReq != null) {
-            event.getToolTip().add(Component.literal(
-                    "§7Требует: §e" + XPSystem.getSpecName(useReq.spec().id) + " §7ур. §f" + useReq.level()
-            ));
+        List<SpecRequirement> useReqs = RestrictionSystem.getUseRequirement(event.getItemStack());
+        if (useReqs != null && !useReqs.isEmpty()) {
+            StringBuilder sb = new StringBuilder("§7Требует: ");
+            for (int i = 0; i < useReqs.size(); i++) {
+                SpecRequirement r = useReqs.get(i);
+                if (i > 0) sb.append(" §7или ");
+                sb.append("§e").append(XPSystem.getSpecName(r.spec().id)).append(" §7ур. §f").append(r.level());
+            }
+            event.getToolTip().add(Component.literal(sb.toString()));
         }
 
         // F3+H (advanced): показываем ВСЕ настроенные ограничения предмета.
@@ -77,8 +95,16 @@ public class RestrictionSystem {
             }
             lines.add(sb.toString());
         }
-        SpecRequirement use = ItemUseTierMap.get(item);
-        if (use != null) lines.add("ношение: " + XPSystem.getSpecName(use.spec().id) + " ур." + use.level());
+        List<SpecRequirement> use = ItemUseTierMap.get(item);
+        if (use != null && !use.isEmpty()) {
+            StringBuilder sb = new StringBuilder("ношение: ");
+            for (int i = 0; i < use.size(); i++) {
+                SpecRequirement r = use.get(i);
+                if (i > 0) sb.append(" или ");
+                sb.append(XPSystem.getSpecName(r.spec().id)).append(" ур.").append(r.level());
+            }
+            lines.add(sb.toString());
+        }
 
         var food = com.kingdomrp.core.data.map.tier.FoodTierMap.get(item);
         if (food != null) lines.add("еда (произв.): " + XPSystem.getSpecName(food.spec().id) + " ур." + food.level());
@@ -108,14 +134,15 @@ public class RestrictionSystem {
         if (slot != EquipmentSlot.HEAD && slot != EquipmentSlot.CHEST
                 && slot != EquipmentSlot.LEGS && slot != EquipmentSlot.FEET) return;
 
-        SpecRequirement req = RestrictionSystem.getUseRequirement(event.getTo());
-        if (req == null) return;
-
-        if (!meetsRequirement(player, req)) {
+        List<SpecRequirement> req = RestrictionSystem.getUseRequirement(event.getTo());
+        if (req != null && !meetsAny(player, req)) {
             player.setItemSlot(slot, ItemStack.EMPTY);
             player.getInventory().add(event.getTo());
             sendRestrictionMessage(player, req);
         }
+
+        // Штраф скорости за броню — пересчёт по фактически надетому (после снятия).
+        ArmorWeightHandler.recompute(player);
     }
 
     /** Анти-грифинг: закрываем доступ в Энд — отменяем телепорт в это измерение. */
@@ -136,11 +163,30 @@ public class RestrictionSystem {
                 .getSpecializationLevel(req.spec().id) >= req.level();
     }
 
+    /** Выполнено ли ХОТЯ БЫ ОДНО требование (OR-семантика ношения). */
+    public static boolean meetsAny(Player player, List<SpecRequirement> reqs) {
+        if (reqs == null || reqs.isEmpty()) return true;
+        for (SpecRequirement r : reqs) if (meetsRequirement(player, r)) return true;
+        return false;
+    }
+
     public static void sendRestrictionMessage(Player player, SpecRequirement req) {
         player.sendSystemMessage(Component.literal(
                 "§c[Kingdom RP] Требуется навык «" + XPSystem.getSpecName(req.spec().id)
                         + "» уровня " + req.level() + "!"
         ));
+    }
+
+    /** Сообщение для OR-требований ношения: «Воин ур.1 или Лучник ур.2». */
+    public static void sendRestrictionMessage(Player player, List<SpecRequirement> reqs) {
+        StringBuilder sb = new StringBuilder("§c[Kingdom RP] Требуется навык ");
+        for (int i = 0; i < reqs.size(); i++) {
+            SpecRequirement r = reqs.get(i);
+            if (i > 0) sb.append(" §cили ");
+            sb.append("«").append(XPSystem.getSpecName(r.spec().id)).append("» уровня ").append(r.level());
+        }
+        sb.append("!");
+        player.sendSystemMessage(Component.literal(sb.toString()));
     }
 
     /** Список требований для крафта (все обязательны), либо null. */
@@ -150,7 +196,7 @@ public class RestrictionSystem {
         return ItemCraftTierMap.get(stack.getItem());
     }
 
-    public static SpecRequirement getUseRequirement(ItemStack stack) {
+    public static List<SpecRequirement> getUseRequirement(ItemStack stack) {
         if (!KRPConfig.RESTRICTIONS_ENABLED.get()) return null;
         if (stack.isEmpty()) return null;
         return ItemUseTierMap.get(stack.getItem());

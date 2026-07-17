@@ -66,6 +66,7 @@ public class KingdomEvents {
             Kingdom k = KingdomData.get(player.server).byPlayer(player.getUUID());
             if (k != null) com.kingdomrp.core.kingdom.upkeep.KingdomBuffs.apply(player, k);
             KingdomSync.send(player);
+            com.kingdomrp.core.system.ArmorWeightHandler.recompute(player);   // штраф скорости брони (трансиент теряется на релоге)
         }
     }
 

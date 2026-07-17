@@ -394,7 +394,7 @@ public class XPSystem {
     }
 
     /** Есть ли в инвентаре место под результат крафта (свободный слот или недобитый стак того же предмета). */
-    private static boolean hasInventoryRoom(Player player, ItemStack result) {
+    public static boolean hasInventoryRoom(Player player, ItemStack result) {
         var inv = player.getInventory();
         if (inv.getFreeSlot() != -1) return true;
         for (ItemStack s : inv.items) {

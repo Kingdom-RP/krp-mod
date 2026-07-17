@@ -57,7 +57,10 @@ public record CreateKingdomPacket(BlockPos pos, int color) implements CustomPack
         CharterData d = CharterItem.data(charter);
         if (d == null) { msg(player, "kingdomrp.create.no_charter", ChatFormatting.RED); return; }
         if (!d.king().equals(player.getUUID())) { msg(player, "kingdomrp.create.not_king", ChatFormatting.RED); return; }
-        if (!d.readyToCreate()) {
+
+        // DEBUG: пропуск проверки подписей/онлайна соподписантов (флаг в конфиге).
+        boolean noSign = com.kingdomrp.core.config.KRPConfig.KINGDOM_DEBUG_NO_SIGNATURES.get();
+        if (!noSign && !d.readyToCreate()) {
             msg(player, "kingdomrp.create.need_cosigners", ChatFormatting.RED);
             return;
         }
@@ -69,10 +72,12 @@ public record CreateKingdomPacket(BlockPos pos, int color) implements CustomPack
         }
 
         // Соподписанты должны быть онлайн — присоединяем их в команду FTB при создании.
-        for (UUID c : d.cosigners()) {
-            if (player.server.getPlayerList().getPlayer(c) == null) {
-                msg(player, "kingdomrp.create.cosigner_offline", ChatFormatting.RED);
-                return;
+        if (!noSign) {
+            for (UUID c : d.cosigners()) {
+                if (player.server.getPlayerList().getPlayer(c) == null) {
+                    msg(player, "kingdomrp.create.cosigner_offline", ChatFormatting.RED);
+                    return;
+                }
             }
         }
 

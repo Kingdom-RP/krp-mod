@@ -1,6 +1,9 @@
 # eclipse
 bin
 *.launch
+
+# внутренняя документация — только локально, не в репозитории
+docs/
 .settings
 .metadata
 .classpath

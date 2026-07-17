@@ -100,6 +100,7 @@ public class Kingdom {
 
     public void setMemberLevel(UUID uuid, int total) { memberLevels.put(uuid, total); }
     public void removeMemberLevel(UUID uuid)         { memberLevels.remove(uuid); }
+    public int getMemberLevel(UUID uuid)             { return memberLevels.getOrDefault(uuid, 0); }
 
     public int sumMemberLevels() {
         int sum = 0;

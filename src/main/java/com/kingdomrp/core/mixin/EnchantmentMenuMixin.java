@@ -112,16 +112,18 @@ public class EnchantmentMenuMixin {
 
         if (EnchantSystem.restrictionsEnabled()) {
             if (buttonId >= EnchantTierMap.slotCount(level)) {
-                EnchantSystem.msg(player, "§c[Kingdom RP] Этот вариант заперт — прокачайте «Зачарователь».");
+                EnchantSystem.msg(player, "§c[Kingdom RP] Этот вариант зачарования вам пока не по силам. "
+                        + "Повысьте уровень навыка «Зачарователь».");
                 cir.setReturnValue(false);
                 return;
             }
             if (level < required) {
                 if (isBook && level < EnchantSystem.BOOK_TABLE_LEVEL) {
-                    EnchantSystem.msg(player, "§c[Kingdom RP] Зачарование книг доступно с уровня "
-                            + EnchantSystem.BOOK_TABLE_LEVEL + " навыка «Зачарователь».");
+                    EnchantSystem.msg(player, "§c[Kingdom RP] Зачарование книг откроется на "
+                            + EnchantSystem.BOOK_TABLE_LEVEL + "-м уровне навыка «Зачарователь».");
                 } else {
-                    EnchantSystem.msg(player, "§c[Kingdom RP] Эти чары недоступны — прокачайте «Зачарователь».");
+                    EnchantSystem.msg(player, "§c[Kingdom RP] Эти чары слишком сильны для вашего уровня. "
+                            + "Повысьте навык «Зачарователь».");
                 }
                 cir.setReturnValue(false);
                 return;
@@ -145,33 +147,59 @@ public class EnchantmentMenuMixin {
         // наложилось) — не наказываем не-зачарованный предмет.
         if (EnchantmentHelper.getEnchantmentsForCrafting(result).isEmpty()) return;
 
-        // XP по ценности наложенных чар — и при успехе, и при провале.
+        // XP по ценности наложенных чар. Зачарование детерминированное (без RNG):
+        // доступ решает тир-гейт выше (slotCount + required), при доступе — всегда успех.
         float xp = EnchantXPMap.xp(result);
         if (xp > 0f) XPSystem.giveXP(serverPlayer, Path.MAGIC, xp);
-
-        float chance = EnchantSystem.successChance(
-                krp$level, krp$required, EnchantSystem.tableBaseChance());
-
-        if (player.level().random.nextFloat() > chance) {
-            if (krp$wasBook) {
-                this.enchantSlots.setItem(0, ItemStack.EMPTY); // книга пропадает
-            } else {
-                EnchantmentHelper.setEnchantments(result, net.minecraft.world.item.enchantment.ItemEnchantments.EMPTY);
-                if (result.isDamageableItem()) {
-                    int dmg = (int) (result.getMaxDamage() * EnchantSystem.failDurabilityFrac(krp$level));
-                    result.setDamageValue(Math.min(result.getMaxDamage() - 1,
-                            result.getDamageValue() + dmg));
-                }
-            }
-            EnchantSystem.msg(player, "§c[Kingdom RP] Зачарование провалилось!");
-            this.enchantSlots.setChanged();
-            ((AbstractContainerMenu) (Object) this).broadcastChanges();
-            return;
-        }
 
         krp$applyBonuses(player, result);
         this.enchantSlots.setChanged();
         ((AbstractContainerMenu) (Object) this).broadcastChanges();
+
+        // Жертва крови: успешное зачарование забирает 2 ❤ (магия питается кровью чародея).
+        // genericKill — чистый урон: игнорирует броню, зачарования, эффекты.
+        serverPlayer.hurt(serverPlayer.damageSources().genericKill(), 4.0f);
+        EnchantSystem.msg(serverPlayer, "§4Зачарование потребовало жертвы крови (−2 ❤).");
+
+        // 5% — «пробуждение злых духов»: рядом спавнятся 3 вредителя, агрятся на игрока.
+        krp$awakenEvilSpirits(serverPlayer);
+    }
+
+    @Unique
+    private void krp$awakenEvilSpirits(ServerPlayer player) {
+        var level = player.serverLevel();
+        if (level.random.nextFloat() >= 0.05f) return;
+
+        // Предупреждение сразу (звук + сообщение) — у игрока есть 3 сек среагировать.
+        level.playSound(null, player.blockPosition(),
+                net.minecraft.sounds.SoundEvents.TRIAL_SPAWNER_AMBIENT_OMINOUS,
+                net.minecraft.sounds.SoundSource.HOSTILE, 1.0f, 0.65f);
+        EnchantSystem.msg(player, "§5Вы случайно пробудили злых духов...");
+
+        // Спавн через 3 сек (60 тик), в ~10 блоках от чародея.
+        com.kingdomrp.core.system.DelayScheduler.schedule(player.server, 60,
+                () -> krp$spawnVexes(player));
+    }
+
+    @Unique
+    private void krp$spawnVexes(ServerPlayer player) {
+        if (!player.isAlive()) return;
+        var level = player.serverLevel();
+        for (int i = 0; i < 3; i++) {
+            net.minecraft.world.entity.monster.Vex vex =
+                    net.minecraft.world.entity.EntityType.VEX.create(level);
+            if (vex == null) continue;
+            double angle = level.random.nextDouble() * Math.PI * 2.0;
+            double radius = 8.0 + level.random.nextDouble() * 4.0;   // ~8–12 блоков
+            double vx = player.getX() + Math.cos(angle) * radius;
+            double vz = player.getZ() + Math.sin(angle) * radius;
+            vex.moveTo(vx, player.getY() + 1, vz, level.random.nextFloat() * 360f, 0f);
+            vex.finalizeSpawn(level, level.getCurrentDifficultyAt(vex.blockPosition()),
+                    net.minecraft.world.entity.MobSpawnType.EVENT, null);
+            vex.setLimitedLife(20 * 60);                            // живут ~1 минуту
+            vex.setTarget(player);                                  // сразу агрятся на чародея
+            level.addFreshEntity(vex);
+        }
     }
 
     @Unique

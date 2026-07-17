@@ -35,5 +35,13 @@ public record SetKingdomColorPacket(int color) implements CustomPacketPayload {
         data.markDirty();
         FtbBridge.applyColor(player.server, k);
         KingdomSync.broadcast(player.server, k);
+
+        // Пересинк блока → перекрасить луч-маяк на клиентах.
+        var level = player.server.getLevel(k.getDimension());
+        if (level != null && level.isLoaded(k.getBlockPos())
+                && level.getBlockEntity(k.getBlockPos())
+                    instanceof com.kingdomrp.core.kingdom.block.KingdomBlockEntity be) {
+            be.syncToClient();
+        }
     }
 }

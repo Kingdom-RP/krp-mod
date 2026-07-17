@@ -10,13 +10,13 @@ import com.kingdomrp.core.system.XPSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.thinkingstudio.obsidianui.screen.SpruceScreen;
 
 import java.util.List;
 
-public class SpecializationScreen extends Screen {
+public class SpecializationScreen extends SpruceScreen {
 
     private static final int BG_WIDTH  = 300;
     private static final int BG_HEIGHT = 260;
@@ -43,11 +43,12 @@ public class SpecializationScreen extends Screen {
             currentY += lines.size() * 10 + 8; // строки + отступ снизу
         }
 
-        calculatedHeight = Math.max(BG_HEIGHT, currentY + 20);
+        calculatedHeight = Math.max(BG_HEIGHT, currentY + 34);   // +место под кнопку «Назад»
     }
 
     private final Path path;
     private final List<Specialization> specs;
+    private Button[] specButtons = new Button[0];
 
     public SpecializationScreen(Path path) {
         super(Component.literal("Выбор специализации"));
@@ -62,19 +63,42 @@ public class SpecializationScreen extends Screen {
         int x = (this.width - BG_WIDTH) / 2;
         int y = (this.height - calculatedHeight) / 2;
 
+        specButtons = new Button[specs.size()];
         for (int i = 0; i < specs.size(); i++) {
             Specialization spec = specs.get(i);
-            boolean canAfford = canAfford(spec);
-            boolean maxed = getSpecLevel(spec.id()) >= PlayerData.MAX_SPEC_LEVEL;
-            String label = maxed ? spec.name() + " §a[МАКС]" : spec.name();
-
-            this.addRenderableWidget(Button.builder(
-                            Component.literal(label),
+            Button b = this.addRenderableWidget(Button.builder(
+                            Component.literal(labelFor(spec)),
                             btn -> chooseSpecialization(spec.id()))
                     .pos(x + PADDING, y + buttonYPositions[i])
                     .size(BG_WIDTH - PADDING * 2, 20)
-                    .build()
-            ).active = canAfford;
+                    .build());
+            b.active = canAfford(spec);
+            specButtons[i] = b;
+        }
+
+        // Кнопка «Назад» — вернуться к экрану путей (хаб, вкладка «Прокачка»).
+        this.addRenderableWidget(Button.builder(
+                        Component.literal("§e← Назад"),
+                        btn -> Minecraft.getInstance().setScreen(new KingdomHubScreen()))
+                .pos(x + PADDING, y + calculatedHeight - 26)
+                .size(BG_WIDTH - PADDING * 2, 20)
+                .build());
+    }
+
+    private String labelFor(Specialization spec) {
+        return getSpecLevel(spec.id()) >= PlayerData.MAX_SPEC_LEVEL
+                ? spec.name() + " §a[МАКС]" : spec.name();
+    }
+
+    /** Экран не закрывается на выбор — обновляем доступность/подписи после синка данных. */
+    @Override
+    public void tick() {
+        for (int i = 0; i < specButtons.length && i < specs.size(); i++) {
+            Specialization spec = specs.get(i);
+            if (specButtons[i] != null) {
+                specButtons[i].active = canAfford(spec);
+                specButtons[i].setMessage(Component.literal(labelFor(spec)));
+            }
         }
     }
 
@@ -85,15 +109,14 @@ public class SpecializationScreen extends Screen {
     }
 
     private void chooseSpecialization(String specId) {
+        // Экран НЕ закрываем — при нескольких свободных очках можно качать подряд.
+        // Доступность кнопок обновится в tick() после серверного синка данных.
         PacketDistributor.sendToServer(new ChooseSpecializationPacket(specId));
-        Minecraft.getInstance().setScreen(null);
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        // Затемнение без блюра (см. PathScreen).
-        graphics.fill(0, 0, this.width, this.height, 0xC0101010);
-
+        // Оверлей поверх игры без полноэкранного затемнения — единый вид с хабом.
         int x = (this.width - BG_WIDTH) / 2;
         int y = (this.height - calculatedHeight) / 2;
 
@@ -154,7 +177,8 @@ public class SpecializationScreen extends Screen {
         return player.getData(KRPAttachments.PLAYER_DATA).getSpecializationLevel(specId);
     }
 
-    // Глушим блюр и фон-текстуру меню (см. PathScreen).
+    // Глушим ванильный блюр/фон-текстуру меню (иначе ручной бокс+текст уезжают за размытие).
+    // Полноэкранного затемнения НЕ добавляем — единый вид с хабом (игра видна за оверлеем).
     @Override
     protected void renderBlurredBackground(float partialTick) {}
 

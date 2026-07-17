@@ -76,17 +76,44 @@ public final class KingdomManager {
     }
 
     /**
+     * DEBUG: создать королевство с реальным приватом от лица {@code actor} (жителя),
+     * даже если король офлайн/фейковый. FTB-команду создаёт actor. Для теста
+     * расширения от лица жителя в одиночке.
+     */
+    public static Kingdom createDebug(MinecraftServer server, ServerLevel level, BlockPos blockPos,
+                                      String name, UUID king, ServerPlayer actor, Set<UUID> members, int color) {
+        KingdomData data = KingdomData.get(server);
+
+        ChunkPos center = new ChunkPos(blockPos);
+        Kingdom k = new Kingdom(UUID.randomUUID(), name, king, center, blockPos, level.dimension());
+        k.setColor(color);
+        k.getMembers().addAll(members);
+        for (UUID m : members) {
+            ServerPlayer p = server.getPlayerList().getPlayer(m);
+            if (p != null) k.setMemberLevel(m, totalLevel(p));
+        }
+        for (ChunkPos pos : areaChunks(center)) k.getClaims().add(pos.toLong());
+        data.put(k);
+
+        setForced(server, k, true);
+        FtbBridge.onCreateDebug(server, k, actor);   // команда-владелец = actor
+        com.kingdomrp.core.kingdom.upkeep.KingdomBuffs.update(server, k);
+        data.markDirty();
+        return k;
+    }
+
+    /**
      * Расширить королевство на чанк newChunk (должен соседствовать с существующим claim
      * и быть свободным — проверяет вызывающий/этот метод).
      */
-    public static boolean expand(MinecraftServer server, Kingdom k, ChunkPos newChunk) {
+    public static boolean expand(MinecraftServer server, Kingdom k, ServerPlayer actor, ChunkPos newChunk) {
         KingdomData data = KingdomData.get(server);
         if (data.byChunk(newChunk) != null) return false;   // уже занят
         if (!isAdjacent(k, newChunk))       return false;
 
         k.getClaims().add(newChunk.toLong());
         data.markDirty();
-        FtbBridge.onExpand(server, k, newChunk);
+        FtbBridge.onExpand(server, k, actor, newChunk);
         return true;
     }
 

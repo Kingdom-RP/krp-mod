@@ -18,11 +18,10 @@ public class KRPConfig {
 
     // Магия
     public static final ModConfigSpec.DoubleValue BREW_BASE_CHANCE;
-    public static final ModConfigSpec.DoubleValue ENCHANT_TABLE_BASE_CHANCE;
-    public static final ModConfigSpec.DoubleValue ENCHANT_ANVIL_BASE_CHANCE;
 
     // Общее
     public static final ModConfigSpec.BooleanValue RESTRICTIONS_ENABLED;
+    public static final ModConfigSpec.BooleanValue KINGDOM_DEBUG_NO_SIGNATURES;
 
     // Проверка модов клиента (анти-чит whitelist)
     public static final ModConfigSpec.BooleanValue MOD_CHECK_ENABLED;
@@ -63,18 +62,15 @@ public class KRPConfig {
         BREW_BASE_CHANCE = builder
                 .comment("Базовый шанс успешной варки зелья без навыка")
                 .defineInRange("brewBaseChance", 0.4, 0.0, 1.0);
-        ENCHANT_TABLE_BASE_CHANCE = builder
-                .comment("Базовый шанс успешного зачарования на столе без навыка")
-                .defineInRange("enchantTableBaseChance", 0.35, 0.0, 1.0);
-        ENCHANT_ANVIL_BASE_CHANCE = builder
-                .comment("Базовый шанс успешного зачарования книгой на наковальне без навыка")
-                .defineInRange("enchantAnvilBaseChance", 0.2, 0.0, 1.0);
         builder.pop();
 
         builder.comment("Общие настройки").push("general");
         RESTRICTIONS_ENABLED = builder
                 .comment("Включить ограничения по тирам (false = все предметы доступны всем)")
                 .define("restrictionsEnabled", true);
+        KINGDOM_DEBUG_NO_SIGNATURES = builder
+                .comment("DEBUG: создавать королевство без соподписантов (пропуск проверки подписей)")
+                .define("kingdomDebugNoSignatures", false);
         builder.pop();
 
         builder.comment("Проверка модов подключающегося клиента (анти-чит).",
@@ -112,7 +108,7 @@ public class KRPConfig {
         builder.pop();
 
         builder.comment("Содержание — расход за период потребления (~20 мин). Дефолт (3 жителя/",
-                        "25 чанков/Σур.50) держит 500 ~3 РЕАЛЬНЫХ дня (216 периодов).").push("upkeep");
+                        "25 чанков/средний ур.25) держит 500 ~3 РЕАЛЬНЫХ дня (216 периодов).").push("upkeep");
         UPKEEP_FOOD_PER_RESIDENT = builder
                 .comment("Расход продовольствия за жителя за период")
                 .defineInRange("foodPerResident", 0.77, 0.0, 1000.0);
@@ -120,8 +116,8 @@ public class KRPConfig {
                 .comment("Расход материалов за чанк за период")
                 .defineInRange("materialsPerChunk", 0.093, 0.0, 1000.0);
         UPKEEP_PROSPERITY_PER_LEVEL = builder
-                .comment("Расход довольствия за суммарный уровень жителей за период")
-                .defineInRange("prosperityPerLevel", 0.046, 0.0, 1000.0);
+                .comment("Расход довольствия за СРЕДНИЙ уровень жителя за период (avg=25 → 500 на ~3 дня)")
+                .defineInRange("prosperityPerLevel", 0.0926, 0.0, 1000.0);
         builder.pop();
 
         SPEC = builder.build();

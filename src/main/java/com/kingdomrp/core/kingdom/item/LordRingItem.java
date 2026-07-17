@@ -55,7 +55,7 @@ public class LordRingItem extends Item {
             return InteractionResult.FAIL;
         }
 
-        if (KingdomManager.expand(server, k, target)) {
+        if (KingdomManager.expand(server, k, player, target)) {
             com.kingdomrp.core.kingdom.KingdomSync.broadcast(server, k);
             msg(player, "kingdomrp.ring.expanded", ChatFormatting.GREEN);
             consume(player, ctx);

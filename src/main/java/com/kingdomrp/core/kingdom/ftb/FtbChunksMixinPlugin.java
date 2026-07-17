@@ -1,4 +1,4 @@
-package com.kingdomrp.core.compat;
+package com.kingdomrp.core.kingdom.ftb;
 
 import net.neoforged.fml.loading.LoadingModList;
 import org.objectweb.asm.tree.ClassNode;
@@ -9,18 +9,17 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Mixin-плагин для конфига {@code kingdomrpcore.backpacks.mixins.json}: применяет
- * мизин ТОЛЬКО если мод Backpacks загружен (иначе целевой класс отсутствует →
- * мизин упал бы). Проверка через {@link LoadingModList} (доступна на фазе микстинов).
+ * Mixin-плагин для {@code kingdomrpcore.ftbchunks.mixins.json}: применяет мизин
+ * ТОЛЬКО если FTB Chunks загружен (иначе целевой класс отсутствует → мизин упал бы).
  */
-public class BackpacksMixinPlugin implements IMixinConfigPlugin {
+public class FtbChunksMixinPlugin implements IMixinConfigPlugin {
 
     private boolean present;
 
     @Override
     public void onLoad(String mixinPackage) {
         present = LoadingModList.get() != null
-                && LoadingModList.get().getModFileById("backpacks") != null;
+                && LoadingModList.get().getModFileById("ftbchunks") != null;
     }
 
     @Override

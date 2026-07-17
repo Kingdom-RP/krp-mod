@@ -19,7 +19,8 @@
     "CraftingResultMixin",
     "FurnaceResultSlotMixin",
     "AbstractFurnaceMenuMixin",
-    "FoodDataMixin"
+    "FoodDataMixin",
+    "ContainerMenuBackpackMixin"
   ],
   "client": [
     "client.EnchantmentScreenMixin",

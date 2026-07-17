@@ -1,6 +1,7 @@
 package com.kingdomrp.core.command;
 
 import com.kingdomrp.core.capability.PlayerData;
+import com.kingdomrp.core.config.KRPConfig;
 import com.kingdomrp.core.registry.KRPAttachments;
 import com.kingdomrp.core.data.type.Path;
 import com.kingdomrp.core.data.type.Spec;
@@ -203,9 +204,12 @@ public class KRPCommand {
                                         .requires(src -> src.hasPermission(2))
                                         .then(Commands.argument("target", EntityArgument.player())
                                                 .executes(KRPCommand::cmdKingdomInfo)))
-                                .then(Commands.literal("debugmember") // тест: стать жителем (король — фейк-офлайн)
+                                .then(Commands.literal("debugkingdom") // тест: реальный приват на позиции, ты житель
                                         .requires(src -> src.hasPermission(2))
-                                        .executes(KRPCommand::cmdKingdomDebugMember))
+                                        .executes(KRPCommand::cmdKingdomDebugKingdom))
+                                .then(Commands.literal("resyncclaims") // доклеймить в FTB чанки из наших данных
+                                        .requires(src -> src.hasPermission(2))
+                                        .executes(KRPCommand::cmdKingdomResyncClaims))
                         )
         );
     }
@@ -231,11 +235,11 @@ public class KRPCommand {
     }
 
     /**
-     * Дев-тест: создать королевство с фейковым офлайн-королём и записать вызывающего
-     * жителем — чтобы проверить member-view (кнопка выхода, головы) в одиночке. Король
-     * офлайн → FTB-часть (команда/клеймы) пропускается; для теста UI/leave этого хватает.
+     * Дев-тест: создать РЕАЛЬНОЕ королевство с приватом (25 чанков + FTB-команда) на
+     * позиции оператора. Король — фейк-офлайн, оператор записан жителем; команда FTB
+     * создаётся от лица оператора → можно проверить расширение кольцом от лица жителя.
      */
-    private static int cmdKingdomDebugMember(CommandContext<CommandSourceStack> ctx)
+    private static int cmdKingdomDebugKingdom(CommandContext<CommandSourceStack> ctx)
             throws CommandSyntaxException {
         ServerPlayer player = ctx.getSource().getPlayerOrException();
         MinecraftServer server = ctx.getSource().getServer();
@@ -244,16 +248,31 @@ public class KRPCommand {
             ctx.getSource().sendFailure(Component.literal("§cВы уже в королевстве."));
             return 0;
         }
+        var center = new net.minecraft.world.level.ChunkPos(player.blockPosition());
+        if (!com.kingdomrp.core.kingdom.KingdomManager.isAreaFree(data, player.level().dimension(), center)) {
+            ctx.getSource().sendFailure(Component.literal("§cОбласть 5×5 занята — отойдите."));
+            return 0;
+        }
         java.util.UUID fakeKing = java.util.UUID.randomUUID();
         var members = new java.util.HashSet<>(java.util.List.of(fakeKing, player.getUUID()));
         int color = com.kingdomrp.core.kingdom.KingdomManager.COLOR_PALETTE[
                 player.getRandom().nextInt(com.kingdomrp.core.kingdom.KingdomManager.COLOR_PALETTE.length)];
-        com.kingdomrp.core.kingdom.KingdomManager.create(server, player.serverLevel(),
-                player.blockPosition(), "DebugRealm", fakeKing, members, color);
+        com.kingdomrp.core.kingdom.KingdomManager.createDebug(server, player.serverLevel(),
+                player.blockPosition(), "DebugRealm", fakeKing, player, members, color);
         com.kingdomrp.core.kingdom.KingdomSync.send(player);
         ctx.getSource().sendSuccess(() -> Component.literal(
-                "§6Вы житель тестового королевства «DebugRealm» (король — фейк). "
-                        + "§7Роспуск: /krp kingdom disband " + player.getGameProfile().getName()), false);
+                "§6Создан приват «DebugRealm» (25 чанков), вы житель. "
+                        + "§7Расширяйте кольцом лорда. Роспуск: /krp kingdom disband "
+                        + player.getGameProfile().getName()), false);
+        return 1;
+    }
+
+    /** Доклеймить в FTB все чанки королевств из KingdomData (чинит десинк ранних багов). */
+    private static int cmdKingdomResyncClaims(CommandContext<CommandSourceStack> ctx) {
+        MinecraftServer server = ctx.getSource().getServer();
+        int n = com.kingdomrp.core.kingdom.ftb.FtbBridge.resyncClaims(server);
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "§6Ресинк клеймов: доклеймлено " + n + " чанк(ов)."), true);
         return 1;
     }
 
@@ -302,16 +321,47 @@ public class KRPCommand {
     private static int cmdKingdomInfo(CommandContext<CommandSourceStack> ctx)
             throws CommandSyntaxException {
         ServerPlayer target = EntityArgument.getPlayer(ctx, "target");
-        var k = com.kingdomrp.core.kingdom.KingdomData.get(ctx.getSource().getServer()).byPlayer(target.getUUID());
+        MinecraftServer server = ctx.getSource().getServer();
+        var k = com.kingdomrp.core.kingdom.KingdomData.get(server).byPlayer(target.getUUID());
         if (k == null) { ctx.getSource().sendFailure(Component.literal("§cНе в королевстве.")); return 0; }
-        ctx.getSource().sendSuccess(() -> Component.literal(String.format(
-                "§6%s §7— еда §f%.0f§7, материалы §f%.0f§7, довольствие §f%.0f §7| жителей §f%d§7, чанков §f%d§7, ΣLvl §f%d",
-                k.getName(),
-                k.getCharacteristic(com.kingdomrp.core.kingdom.upkeep.Characteristic.FOOD),
-                k.getCharacteristic(com.kingdomrp.core.kingdom.upkeep.Characteristic.MATERIALS),
-                k.getCharacteristic(com.kingdomrp.core.kingdom.upkeep.Characteristic.PROSPERITY),
-                k.getMembers().size(), k.getClaims().size(), k.sumMemberLevels())), false);
+
+        int residents = k.getMembers().size();
+        int chunks = k.getClaims().size();
+        int sumLvl = k.sumMemberLevels();
+        float avgLvl = residents > 0 ? (float) sumLvl / residents : 0f;
+
+        float dFood = (float) (residents * KRPConfig.UPKEEP_FOOD_PER_RESIDENT.get());
+        float dMat  = (float) (chunks * KRPConfig.UPKEEP_MATERIALS_PER_CHUNK.get());
+        float dPros = (float) (avgLvl * KRPConfig.UPKEEP_PROSPERITY_PER_LEVEL.get());
+
+        float food = k.getCharacteristic(com.kingdomrp.core.kingdom.upkeep.Characteristic.FOOD);
+        float mat  = k.getCharacteristic(com.kingdomrp.core.kingdom.upkeep.Characteristic.MATERIALS);
+        float pros = k.getCharacteristic(com.kingdomrp.core.kingdom.upkeep.Characteristic.PROSPERITY);
+
+        var src = ctx.getSource();
+        src.sendSuccess(() -> Component.literal(String.format(
+                "§6=== %s §7(король: §f%s§7) ===", k.getName(), name(server, k.getKing()))), false);
+        src.sendSuccess(() -> Component.literal(String.format(
+                "§7Жителей §f%d§7, чанков §f%d§7, ΣLvl §f%d§7, средний §f%.1f", residents, chunks, sumLvl, avgLvl)), false);
+        src.sendSuccess(() -> Component.literal(String.format(
+                "§7Еда §f%.0f §8(-%.2f/п)  §7Материалы §f%.0f §8(-%.2f/п)  §7Довольствие §f%.0f §8(-%.2f/п)",
+                food, dFood, mat, dMat, pros, dPros)), false);
+        // Список жителей с уровнями
+        StringBuilder sb = new StringBuilder("§7Жители: ");
+        for (java.util.UUID m : k.getMembers()) {
+            sb.append("§f").append(name(server, m)).append("§8(").append(k.getMemberLevel(m)).append(") ");
+        }
+        src.sendSuccess(() -> Component.literal(sb.toString()), false);
         return 1;
+    }
+
+    /** Имя игрока по UUID (онлайн → профиль, иначе кэш профилей, иначе UUID). */
+    private static String name(MinecraftServer server, java.util.UUID uuid) {
+        ServerPlayer online = server.getPlayerList().getPlayer(uuid);
+        if (online != null) return online.getGameProfile().getName();
+        return server.getProfileCache() != null
+                ? server.getProfileCache().get(uuid).map(p -> p.getName()).orElse(uuid.toString())
+                : uuid.toString();
     }
 
     private static int cmdKingdomDecline(CommandContext<CommandSourceStack> ctx)
@@ -572,7 +622,11 @@ public class KRPCommand {
             Files.writeString(dir.resolve("block_tier.json"), g.toJson(bt));
 
             JsonObject ut = new JsonObject();
-            ItemUseTierMap.baseEntries().forEach((it, r) -> ut.add(itemName(it), specLevel(r.spec().name(), r.level())));
+            ItemUseTierMap.baseEntries().forEach((it, reqs) -> {
+                com.google.gson.JsonArray arr = new com.google.gson.JsonArray();
+                for (SpecRequirement r : reqs) arr.add(specLevel(r.spec().name(), r.level()));
+                ut.add(itemName(it), arr.size() == 1 ? arr.get(0) : arr);
+            });
             Files.writeString(dir.resolve("item_use_tier.json"), g.toJson(ut));
 
             JsonObject st = new JsonObject();

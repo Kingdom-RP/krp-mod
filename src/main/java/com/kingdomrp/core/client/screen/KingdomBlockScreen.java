@@ -67,7 +67,9 @@ public class KingdomBlockScreen extends AbstractContainerScreen<KingdomMenu> {
 
     private boolean readyToCreate() {
         CharterData d = CharterItem.data(this.menu.getCharter());
-        return d != null && d.readyToCreate();
+        if (d == null) return false;
+        // DEBUG: флаг пропуска подписей (серверный конфиг синкается на клиент).
+        return d.readyToCreate() || com.kingdomrp.core.config.KRPConfig.KINGDOM_DEBUG_NO_SIGNATURES.get();
     }
 
     @Override

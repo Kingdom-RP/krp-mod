@@ -43,10 +43,10 @@ config="${mod_id}.emi.mixins.json"
 [[mixins]]
 config="${mod_id}.tieredmore.mixins.json"
 
-# Фикс мода Backpacks — только если мод загружен (см. BackpacksMixinPlugin).
-# Защита открытого рюкзака от перемещения хоткеем (SWAP) в собственный слот.
+# FTB Chunks — только если мод загружен (см. FtbChunksMixinPlugin). Обход лимита
+# claim для наших клеймов королевства (KingdomData — авторитет).
 [[mixins]]
-config="${mod_id}.backpacks.mixins.json"
+config="${mod_id}.ftbchunks.mixins.json"
 
 [[dependencies.${mod_id}]]
     modId="neoforge"

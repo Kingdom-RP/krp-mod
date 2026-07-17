@@ -70,14 +70,16 @@ public final class KingdomUpkeep {
     private static boolean consume(MinecraftServer server, Kingdom k) {
         int residents = k.getMembers().size();
         int chunks = k.getClaims().size();
-        int levels = k.sumMemberLevels();
+        // Довольствие — по СРЕДНЕМУ уровню жителя (не сумме): прокачка отдельного игрока
+        // почти не увеличивает расход, добор низкоуровневых жителей его снижает.
+        float avgLevel = residents > 0 ? (float) k.sumMemberLevels() / residents : 0f;
 
         k.addCharacteristic(Characteristic.FOOD,
                 -(float) (residents * KRPConfig.UPKEEP_FOOD_PER_RESIDENT.get()));
         k.addCharacteristic(Characteristic.MATERIALS,
                 -(float) (chunks * KRPConfig.UPKEEP_MATERIALS_PER_CHUNK.get()));
         k.addCharacteristic(Characteristic.PROSPERITY,
-                -(float) (levels * KRPConfig.UPKEEP_PROSPERITY_PER_LEVEL.get()));
+                -(float) (avgLevel * KRPConfig.UPKEEP_PROSPERITY_PER_LEVEL.get()));
 
         for (Characteristic c : Characteristic.VALUES) {
             if (k.getCharacteristic(c) <= 0f) {

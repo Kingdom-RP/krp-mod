@@ -171,9 +171,10 @@ public final class XpMappingReloader implements ResourceManagerReloadListener {
         });
 
         forEach(rm, "item_use_tier.json", (id, el) -> {
-            SpecRequirement r = specReq(el.getAsJsonObject()); if (r == null) return;
-            if (id.startsWith("#")) { ItemUseTierMap.overrideTag(itemTag(id), r); count[0]++; }
-            else item(id, it -> { ItemUseTierMap.override(it, r); count[0]++; });
+            java.util.List<SpecRequirement> reqs = craftReqs(el);   // array-или-object → список (OR)
+            if (reqs.isEmpty()) return;
+            if (id.startsWith("#")) { ItemUseTierMap.overrideTag(itemTag(id), reqs); count[0]++; }
+            else item(id, it -> { ItemUseTierMap.override(it, reqs); count[0]++; });
         });
 
         forEach(rm, "smelt_tier.json", (id, el) -> {

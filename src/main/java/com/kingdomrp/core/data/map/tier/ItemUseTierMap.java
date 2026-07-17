@@ -11,25 +11,29 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Гейтинг НОШЕНИЯ/ИСПОЛЬЗОВАНИЯ предмета по уровню специализации.
- * Броня и ближнее оружие — по уровню Воина (а не пути Война целиком), арбалет —
- * по уровню Лучника. Одно требование на предмет (носить умеет один спек).
+ * Значение — список требований с семантикой ИЛИ (OR): предмет доступен, если
+ * выполнено ХОТЯ БЫ ОДНО (напр. кожаная броня = Воин 1 ИЛИ Лучник 2). Броня и
+ * ближнее оружие — Воин; арбалет — Лучник; лёгкая броня — ещё и Лучник.
  * <p>
  * Крафт гейтится отдельно ({@link ItemCraftTierMap}).
  */
 public class ItemUseTierMap {
 
-    private static final Map<Item, SpecRequirement> MAP = new HashMap<>();
-    private static final Map<Item, SpecRequirement> OVERRIDE = new HashMap<>();
-    private static final java.util.List<Map.Entry<net.minecraft.tags.TagKey<Item>, SpecRequirement>> OVERRIDE_TAGS = new java.util.ArrayList<>();
+    private static final Map<Item, List<SpecRequirement>> MAP = new HashMap<>();
+    private static final Map<Item, List<SpecRequirement>> OVERRIDE = new HashMap<>();
+    private static final java.util.List<Map.Entry<net.minecraft.tags.TagKey<Item>, List<SpecRequirement>>> OVERRIDE_TAGS = new java.util.ArrayList<>();
 
     public static void clearOverride() { OVERRIDE.clear(); OVERRIDE_TAGS.clear(); }
-    public static void override(Item item, SpecRequirement r) { OVERRIDE.put(item, r); }
-    public static void overrideTag(net.minecraft.tags.TagKey<Item> tag, SpecRequirement r) { OVERRIDE_TAGS.add(Map.entry(tag, r)); }
-    public static Map<Item, SpecRequirement> baseEntries() { return MAP; }
+    public static void override(Item item, SpecRequirement r) { OVERRIDE.put(item, List.of(r)); }
+    public static void override(Item item, List<SpecRequirement> reqs) { OVERRIDE.put(item, reqs); }
+    public static void overrideTag(net.minecraft.tags.TagKey<Item> tag, SpecRequirement r) { OVERRIDE_TAGS.add(Map.entry(tag, List.of(r))); }
+    public static void overrideTag(net.minecraft.tags.TagKey<Item> tag, List<SpecRequirement> reqs) { OVERRIDE_TAGS.add(Map.entry(tag, reqs)); }
+    public static Map<Item, List<SpecRequirement>> baseEntries() { return MAP; }
 
     static {
         initWarPath();
@@ -41,15 +45,18 @@ public class ItemUseTierMap {
         initArcher();
     }
 
-    // Специализация "Воин" (броня и ближнее оружие)
+    // Специализация "Воин" (броня и ближнее оружие).
+    // Лёгкая броня (кожа/кольчуга) доступна и Лучнику (кожа L2, кольчуга L4).
     private static void initWarrior() {
-        register(new SpecRequirement(Spec.WARRIOR, 1),
+        registerAny(List.of(new SpecRequirement(Spec.WARRIOR, 1), new SpecRequirement(Spec.ARCHER, 2)),
                 Items.LEATHER_HELMET, Items.LEATHER_CHESTPLATE,
                 Items.LEATHER_LEGGINGS, Items.LEATHER_BOOTS);
 
-        register(new SpecRequirement(Spec.WARRIOR, 2),
+        registerAny(List.of(new SpecRequirement(Spec.WARRIOR, 2), new SpecRequirement(Spec.ARCHER, 4)),
                 Items.CHAINMAIL_HELMET, Items.CHAINMAIL_CHESTPLATE,
-                Items.CHAINMAIL_LEGGINGS, Items.CHAINMAIL_BOOTS,
+                Items.CHAINMAIL_LEGGINGS, Items.CHAINMAIL_BOOTS);
+
+        register(new SpecRequirement(Spec.WARRIOR, 2),
                 Items.SHIELD, Items.TURTLE_HELMET);
 
         register(new SpecRequirement(Spec.WARRIOR, 3),
@@ -80,11 +87,16 @@ public class ItemUseTierMap {
     }
 
     private static void register(SpecRequirement req, Item... items) {
-        for (Item item : items) MAP.put(item, req);
+        for (Item item : items) MAP.put(item, List.of(req));
     }
 
-    public static SpecRequirement get(Item item) {
-        SpecRequirement o = OVERRIDE.get(item);
+    private static void registerAny(List<SpecRequirement> reqs, Item... items) {
+        for (Item item : items) MAP.put(item, reqs);
+    }
+
+    /** Требования (OR) для ношения предмета, либо null. */
+    public static List<SpecRequirement> get(Item item) {
+        List<SpecRequirement> o = OVERRIDE.get(item);
         if (o != null) return o;
         for (var e : OVERRIDE_TAGS) if (item.builtInRegistryHolder().is(e.getKey())) return e.getValue();
         return MAP.get(item);
@@ -94,6 +106,6 @@ public class ItemUseTierMap {
     public static void addById(String id, SpecRequirement req) {
         net.minecraft.core.registries.BuiltInRegistries.ITEM
                 .getOptional(net.minecraft.resources.ResourceLocation.parse(id))
-                .ifPresent(it -> MAP.put(it, req));
+                .ifPresent(it -> MAP.put(it, List.of(req)));
     }
 }

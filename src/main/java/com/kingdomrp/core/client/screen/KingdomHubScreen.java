@@ -103,29 +103,35 @@ public class KingdomHubScreen extends SpruceScreen implements KingdomSyncListene
     private SpruceContainerWidget buildProgressTab(int width, int height) {
         var outer = new SpruceContainerWidget(Position.origin(), width, height);
         var player = Minecraft.getInstance().player;
-        List<Path> withPoints = new ArrayList<>();
-        if (player != null) {
-            PlayerData data = player.getData(KRPAttachments.PLAYER_DATA);
-            for (Path path : Path.values())
-                if (data.hasAvailablePoints(path)) withPoints.add(path);
-        }
+        final PlayerData data = player != null ? player.getData(KRPAttachments.PLAYER_DATA) : null;
 
-        int panelW = 290, barsTop = 30, barsH = Path.values().length * 36;
-        int btnTop = barsTop + barsH + 6;
-        int panelH = btnTop + withPoints.size() * 22 + 10;
+        int panelW = 330, barsTop = 44, barsH = Path.values().length * 36;
+        int panelH = barsTop + barsH + 10;
         int panelX = this.width / 2 - panelW / 2 - sideOffset(width);
         var panel = styledPanel(panelX, Math.max(0, (height - panelH) / 2), panelW, panelH);
 
         panel.addChildren((w, h, adder) -> {
-            adder.accept(new SpruceLabelWidget(Position.of(0, 10),
+            adder.accept(new SpruceLabelWidget(Position.of(0, 8),
                     Component.literal("§6⚔ Пути развития ⚔"), w, true));
+
+            // Шапка-колонки над списком путей (выравнены с PathPanelWidget: name@18, lvl@168, mult@218).
+            adder.accept(new SpruceLabelWidget(Position.of(18, 28),
+                    Component.literal("§7Путь развития"), 140, false));
+            adder.accept(new SpruceLabelWidget(Position.of(168, 28),
+                    Component.literal("§7Уровень"), 46, false));
+            adder.accept(new SpruceLabelWidget(Position.of(218, 28),
+                    Component.literal("§7Модиф. XP"), 70, false));
+
             adder.accept(new PathPanelWidget(Position.of(18, barsTop), w - 36, barsH));
-            int y = btnTop;
-            for (Path path : withPoints) {
-                adder.accept(new SpruceButtonWidget(Position.of(15, y), w - 30, 20,
-                        Component.literal("§6► " + XPSystem.getPathName(path) + " ◄"),
+
+            // Кнопка «Спец.» на каждой строке пути — открывает экран специализаций.
+            // Y центрируем по полосе XP (полоса на строке +12..+20, центр +16).
+            for (Path path : Path.values()) {
+                boolean hasPts = data != null && data.hasAvailablePoints(path);
+                String label = hasPts ? "§a✦ Спец." : "§eСпец.";
+                adder.accept(new SpruceButtonWidget(Position.of(284, barsTop + path.index * 36 + 7), 42, 18,
+                        Component.literal(label),
                         btn -> Minecraft.getInstance().setScreen(new SpecializationScreen(path))));
-                y += 22;
             }
         });
         outer.addChild(panel);

@@ -43,10 +43,14 @@ public final class UpkeepValues {
         return 0f;
     }
 
-    /** Довольствие: изумруд 1, алмаз 3, прочие c:gems 0.5. */
+    /** Довольствие: изумруд 1, алмаз 3, прочие c:gems 0.5; слитки железо 0.5/золото 1/медь 0.3/незерит 50. */
     public static float prosperityValue(ItemStack stack) {
         if (stack.is(Items.EMERALD)) return 1f;
         if (stack.is(Items.DIAMOND)) return 3f;
+        if (stack.is(Items.NETHERITE_INGOT)) return 50f;
+        if (stack.is(Items.GOLD_INGOT)) return 1f;
+        if (stack.is(Items.IRON_INGOT)) return 0.5f;
+        if (stack.is(Items.COPPER_INGOT)) return 0.3f;
         if (stack.is(C_GEMS)) return 0.5f;   // lapis / quartz / amethyst_shard / prismarine_crystals
         return 0f;
     }

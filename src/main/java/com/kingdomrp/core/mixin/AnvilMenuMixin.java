@@ -160,20 +160,9 @@ public class AnvilMenuMixin {
         float xp = EnchantXPMap.xp(EnchantmentHelper.getEnchantmentsForCrafting(inputs.getItem(1)));
         if (xp > 0f) XPSystem.giveXP(serverPlayer, Path.MAGIC, xp);
 
-        float chance = EnchantSystem.successChance(level, required, EnchantSystem.anvilBaseChance());
-        if (player.level().random.nextFloat() > chance) {
-            // Провал: сгорает ТОЛЬКО книга; предмет остаётся; уровни списываются.
-            if (!player.getAbilities().instabuild) player.giveExperienceLevels(-cost);
-            inputs.setItem(1, ItemStack.EMPTY);
-            stack.setCount(0);
-            EnchantSystem.msg(player,
-                    "§c[Kingdom RP] Зачарование книгой провалилось! Книга уничтожена.");
-            self.broadcastChanges();
-            ci.cancel();
-            return;
-        }
-
-        // Успех: ваниль завершит взятие; на TAIL вернём часть уровней (скидка).
+        // Зачарование книгой детерминированное (без RNG): доступ решает тир-гейт выше
+        // (level < required → блок). При доступе — всегда успех.
+        // Ваниль завершит взятие; на TAIL вернём часть уровней (скидка).
         krp$success = true;
         krp$cost = cost;
         krp$level = level;

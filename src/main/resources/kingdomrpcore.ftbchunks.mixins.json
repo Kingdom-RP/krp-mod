@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.kingdomrp.core.kingdom.ftb.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "plugin": "com.kingdomrp.core.kingdom.ftb.FtbChunksMixinPlugin",
+  "mixins": [
+    "ChunkTeamClaimLimitMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
