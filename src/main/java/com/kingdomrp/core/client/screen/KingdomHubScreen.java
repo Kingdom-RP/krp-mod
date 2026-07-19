@@ -207,10 +207,10 @@ public class KingdomHubScreen extends SpruceScreen implements KingdomSyncListene
         return outer;
     }
 
-    /** Метка бара характеристики с расходом за период: «Довольствие §7(−3.02/день)». */
+    /** Метка бара характеристики с расходом за период*/
     private static Component drainLabel(String key, float drain) {
         return Component.translatable(key)
-                .append(Component.literal(String.format(" §7(−%.2f/день)", drain)));
+                .append(Component.literal(String.format(" §7(−%.2f/игровой день)", drain)));
     }
 
     private static int stepOf(float value) {

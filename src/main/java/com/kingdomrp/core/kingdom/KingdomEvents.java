@@ -88,8 +88,8 @@ public class KingdomEvents {
                 case PROSPERITY -> "Довольствие";
             };
             player.sendSystemMessage(Component.literal(String.format(
-                    "§c[Kingdom RP] В королевстве «%s» заканчивается «%s» (осталось %.0f). "
-                            + "Пополните, иначе королевство распадётся!", k.getName(), name, value)));
+                    "§c[Kingdom RP] В королевстве заканчивается ресурс «%s» (осталось %.0f). "
+                            + "Пополните, иначе королевство распадётся!", name, value)));
         }
     }
 
