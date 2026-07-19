@@ -16,7 +16,8 @@ import java.util.UUID;
 public record SyncKingdomInfoPacket(boolean inKingdom, String name, String kingName,
                                     List<String> members, List<UUID> memberIds, int claims,
                                     int color, boolean isKing, List<String> pendingInvites,
-                                    float food, float materials, float prosperity) implements CustomPacketPayload {
+                                    float food, float materials, float prosperity,
+                                    float foodDrain, float materialsDrain, float prosperityDrain) implements CustomPacketPayload {
 
     public static final Type<SyncKingdomInfoPacket> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(KingdomRPCore.MODID, "sync_kingdom_info"));
@@ -38,6 +39,9 @@ public record SyncKingdomInfoPacket(boolean inKingdom, String name, String kingN
                 buf.writeFloat(v.food());
                 buf.writeFloat(v.materials());
                 buf.writeFloat(v.prosperity());
+                buf.writeFloat(v.foodDrain());
+                buf.writeFloat(v.materialsDrain());
+                buf.writeFloat(v.prosperityDrain());
             }, buf -> {
                 boolean in = buf.readBoolean();
                 String name = buf.readUtf();
@@ -55,13 +59,14 @@ public record SyncKingdomInfoPacket(boolean inKingdom, String name, String kingN
                 List<String> pend = new ArrayList<>(pn);
                 for (int i = 0; i < pn; i++) pend.add(buf.readUtf());
                 float food = buf.readFloat(), mat = buf.readFloat(), pros = buf.readFloat();
+                float fd = buf.readFloat(), md = buf.readFloat(), pd = buf.readFloat();
                 return new SyncKingdomInfoPacket(in, name, king, mem, ids, claims, color, isKing, pend,
-                        food, mat, pros);
+                        food, mat, pros, fd, md, pd);
             });
 
     public static final SyncKingdomInfoPacket NONE =
             new SyncKingdomInfoPacket(false, "", "", List.of(), List.of(), 0, 0xFFFFFF, false, List.of(),
-                    0f, 0f, 0f);
+                    0f, 0f, 0f, 0f, 0f, 0f);
 
     @Override
     public Type<? extends CustomPacketPayload> type() { return TYPE; }

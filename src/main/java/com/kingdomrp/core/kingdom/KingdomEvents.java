@@ -64,9 +64,32 @@ public class KingdomEvents {
         if (event.getEntity() instanceof ServerPlayer player) {
             KingdomManager.refreshMemberLevel(player);   // снапшот уровня для потребления довольствия
             Kingdom k = KingdomData.get(player.server).byPlayer(player.getUUID());
-            if (k != null) com.kingdomrp.core.kingdom.upkeep.KingdomBuffs.apply(player, k);
+            if (k != null) {
+                com.kingdomrp.core.kingdom.upkeep.KingdomBuffs.apply(player, k);
+                warnLowUpkeep(player, k);
+            }
             KingdomSync.send(player);
             com.kingdomrp.core.system.ArmorWeightHandler.recompute(player);   // штраф скорости брони (трансиент теряется на релоге)
+        }
+    }
+
+    /** Порог «мало ресурсов» — 20% от максимума. */
+    private static final float LOW_UPKEEP_THRESHOLD =
+            com.kingdomrp.core.kingdom.upkeep.Characteristic.MAX * 0.2f;
+
+    /** Предупредить жителя на входе о характеристиках королевства на исходе. */
+    private static void warnLowUpkeep(ServerPlayer player, Kingdom k) {
+        for (var c : com.kingdomrp.core.kingdom.upkeep.Characteristic.VALUES) {
+            float value = k.getCharacteristic(c);
+            if (value >= LOW_UPKEEP_THRESHOLD) continue;
+            String name = switch (c) {
+                case FOOD -> "Продовольствие";
+                case MATERIALS -> "Материалы";
+                case PROSPERITY -> "Довольствие";
+            };
+            player.sendSystemMessage(Component.literal(String.format(
+                    "§c[Kingdom RP] В королевстве «%s» заканчивается «%s» (осталось %.0f). "
+                            + "Пополните, иначе королевство распадётся!", k.getName(), name, value)));
         }
     }
 

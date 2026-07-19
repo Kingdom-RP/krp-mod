@@ -94,10 +94,12 @@ public class KingdomBlockScreen extends AbstractContainerScreen<KingdomMenu> {
     private void renderCharacteristics(GuiGraphics g) {
         var info = ClientKingdomData.get();
         float[] vals = {info.food(), info.materials(), info.prosperity()};
+        float[] drains = {info.foodDrain(), info.materialsDrain(), info.prosperityDrain()};
         String[] keys = {"kingdomrp.upkeep.food", "kingdomrp.upkeep.materials", "kingdomrp.upkeep.prosperity"};
         for (int i = 0; i < 3; i++) {
             int rowY = this.topPos + KingdomMenu.RES_SLOT_Y[i];
-            g.drawString(this.font, Component.translatable(keys[i]),
+            g.drawString(this.font, Component.translatable(keys[i])
+                            .append(Component.literal(String.format(" §8−%.2f/д", drains[i]))),
                     this.leftPos + BAR_X, rowY - 2, 0xFF303030, false);
             drawSegBar(g, this.leftPos + BAR_X, rowY + 8, vals[i], Characteristic.MAX, BAR_COLORS[i]);
             g.drawString(this.font, "?", this.leftPos + HELP_X + 2, rowY + 4, 0xFF3060B0, false);

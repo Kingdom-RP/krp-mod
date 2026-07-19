@@ -38,7 +38,10 @@ public final class KingdomSync {
                 members, ids, k.getClaims().size(), k.getColor(), k.isKing(viewer), invites,
                 k.getCharacteristic(com.kingdomrp.core.kingdom.upkeep.Characteristic.FOOD),
                 k.getCharacteristic(com.kingdomrp.core.kingdom.upkeep.Characteristic.MATERIALS),
-                k.getCharacteristic(com.kingdomrp.core.kingdom.upkeep.Characteristic.PROSPERITY));
+                k.getCharacteristic(com.kingdomrp.core.kingdom.upkeep.Characteristic.PROSPERITY),
+                com.kingdomrp.core.kingdom.upkeep.KingdomUpkeep.drain(k, com.kingdomrp.core.kingdom.upkeep.Characteristic.FOOD),
+                com.kingdomrp.core.kingdom.upkeep.KingdomUpkeep.drain(k, com.kingdomrp.core.kingdom.upkeep.Characteristic.MATERIALS),
+                com.kingdomrp.core.kingdom.upkeep.KingdomUpkeep.drain(k, com.kingdomrp.core.kingdom.upkeep.Characteristic.PROSPERITY));
     }
 
     private static String name(MinecraftServer server, UUID uuid) {

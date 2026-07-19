@@ -66,20 +66,26 @@ public final class KingdomUpkeep {
         }
     }
 
+    /** Расход характеристики за период (единый источник формул для потребления и UI). */
+    public static float drain(Kingdom k, Characteristic c) {
+        return switch (c) {
+            case FOOD -> (float) (k.getMembers().size() * KRPConfig.UPKEEP_FOOD_PER_RESIDENT.get());
+            case MATERIALS -> (float) (k.getClaims().size() * KRPConfig.UPKEEP_MATERIALS_PER_CHUNK.get());
+            // Довольствие — по СРЕДНЕМУ уровню жителя (не сумме): прокачка отдельного игрока
+            // почти не увеличивает расход, добор низкоуровневых жителей его снижает.
+            case PROSPERITY -> {
+                int r = k.getMembers().size();
+                float avg = r > 0 ? (float) k.sumMemberLevels() / r : 0f;
+                yield (float) (avg * KRPConfig.UPKEEP_PROSPERITY_PER_LEVEL.get());
+            }
+        };
+    }
+
     /** Дневное потребление. true = какая-то характеристика достигла 0 → роспуск. */
     private static boolean consume(MinecraftServer server, Kingdom k) {
-        int residents = k.getMembers().size();
-        int chunks = k.getClaims().size();
-        // Довольствие — по СРЕДНЕМУ уровню жителя (не сумме): прокачка отдельного игрока
-        // почти не увеличивает расход, добор низкоуровневых жителей его снижает.
-        float avgLevel = residents > 0 ? (float) k.sumMemberLevels() / residents : 0f;
-
-        k.addCharacteristic(Characteristic.FOOD,
-                -(float) (residents * KRPConfig.UPKEEP_FOOD_PER_RESIDENT.get()));
-        k.addCharacteristic(Characteristic.MATERIALS,
-                -(float) (chunks * KRPConfig.UPKEEP_MATERIALS_PER_CHUNK.get()));
-        k.addCharacteristic(Characteristic.PROSPERITY,
-                -(float) (avgLevel * KRPConfig.UPKEEP_PROSPERITY_PER_LEVEL.get()));
+        k.addCharacteristic(Characteristic.FOOD, -drain(k, Characteristic.FOOD));
+        k.addCharacteristic(Characteristic.MATERIALS, -drain(k, Characteristic.MATERIALS));
+        k.addCharacteristic(Characteristic.PROSPERITY, -drain(k, Characteristic.PROSPERITY));
 
         for (Characteristic c : Characteristic.VALUES) {
             if (k.getCharacteristic(c) <= 0f) {

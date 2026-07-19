@@ -167,11 +167,11 @@ public class KingdomHubScreen extends SpruceScreen implements KingdomSyncListene
             float max = com.kingdomrp.core.kingdom.upkeep.Characteristic.MAX;
             int bw = w - 24;
             adder.accept(new com.kingdomrp.core.client.screen.widget.ResourceBarWidget(Position.of(12, barsY), bw,
-                    Component.translatable("kingdomrp.upkeep.food"), info.food(), max, 0xFF2ECC71));
+                    drainLabel("kingdomrp.upkeep.food", info.foodDrain()), info.food(), max, 0xFF2ECC71));
             adder.accept(new com.kingdomrp.core.client.screen.widget.ResourceBarWidget(Position.of(12, barsY + 24), bw,
-                    Component.translatable("kingdomrp.upkeep.materials"), info.materials(), max, 0xFFB5651D));
+                    drainLabel("kingdomrp.upkeep.materials", info.materialsDrain()), info.materials(), max, 0xFFB5651D));
             adder.accept(new com.kingdomrp.core.client.screen.widget.ResourceBarWidget(Position.of(12, barsY + 48), bw,
-                    Component.translatable("kingdomrp.upkeep.prosperity"), info.prosperity(), max, 0xFF3498DB));
+                    drainLabel("kingdomrp.upkeep.prosperity", info.prosperityDrain()), info.prosperity(), max, 0xFF3498DB));
 
             // Активные баффы/дебаффы.
             adder.accept(new SpruceLabelWidget(Position.of(0, buffsY),
@@ -205,6 +205,12 @@ public class KingdomHubScreen extends SpruceScreen implements KingdomSyncListene
         });
         outer.addChild(panel);
         return outer;
+    }
+
+    /** Метка бара характеристики с расходом за период: «Довольствие §7(−3.02/день)». */
+    private static Component drainLabel(String key, float drain) {
+        return Component.translatable(key)
+                .append(Component.literal(String.format(" §7(−%.2f/день)", drain)));
     }
 
     private static int stepOf(float value) {
