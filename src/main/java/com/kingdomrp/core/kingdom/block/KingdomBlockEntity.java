@@ -87,10 +87,15 @@ public class KingdomBlockEntity extends BlockEntity implements MenuProvider {
         charterSlot.setItem(0, tag.contains("charter")
                 ? ItemStack.parseOptional(registries, tag.getCompound("charter"))
                 : ItemStack.EMPTY);
-        for (int i = 0; i < 3; i++)
-            resources.setItem(i, tag.contains("res" + i)
-                    ? ItemStack.parseOptional(registries, tag.getCompound("res" + i))
-                    : ItemStack.EMPTY);
+        for (int i = 0; i < 3; i++) {
+            if (!tag.contains("res" + i)) { resources.setItem(i, ItemStack.EMPTY); continue; }
+            ItemStack s = ItemStack.parseOptional(registries, tag.getCompound("res" + i));
+            // Счёт хранится отдельным int (стак сериализован с count=1) — vanilla
+            // ItemStack.CODEC капит "count" на 99, а буфер держит до RESOURCE_MAX_STACK.
+            // Fallback на count самого стака — для старых сейвов без "resNn".
+            if (!s.isEmpty() && tag.contains("res" + i + "n")) s.setCount(tag.getInt("res" + i + "n"));
+            resources.setItem(i, s);
+        }
         kingdomId = tag.hasUUID("kingdom") ? tag.getUUID("kingdom") : null;
         if (tag.contains("beamColor")) beamColor = tag.getInt("beamColor");
     }
@@ -98,13 +103,21 @@ public class KingdomBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
+        writeInventory(tag, registries);
+        if (kingdomId != null)  tag.putUUID("kingdom", kingdomId);
+    }
+
+    /** Хартия + ресурс-слоты. Общее для диск-сейва и синка на клиент (getUpdateTag). */
+    private void writeInventory(CompoundTag tag, HolderLookup.Provider registries) {
         ItemStack charter = getCharter();
         if (!charter.isEmpty()) tag.put("charter", charter.save(registries));
         for (int i = 0; i < 3; i++) {
             ItemStack s = resources.getItem(i);
-            if (!s.isEmpty()) tag.put("res" + i, s.save(registries));
+            if (s.isEmpty()) continue;
+            // Стак с count=1 (ItemStack.CODEC капит "count" на 99), реальный счёт — отдельным int.
+            tag.put("res" + i, s.copyWithCount(1).save(registries));
+            tag.putInt("res" + i + "n", s.getCount());
         }
-        if (kingdomId != null)  tag.putUUID("kingdom", kingdomId);
     }
 
     // Синхронизация на клиент (нужна kingdomId для активного меню по ПКМ).
@@ -112,6 +125,7 @@ public class KingdomBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
         CompoundTag tag = super.getUpdateTag(registries);
+        writeInventory(tag, registries);   // без ресурсов блок-апдейт затирал бы клиентские слоты в empty
         if (kingdomId != null) {
             tag.putUUID("kingdom", kingdomId);
             // Цвет луча берём из данных королевства (сервер), чтобы клиент рисовал маяк.

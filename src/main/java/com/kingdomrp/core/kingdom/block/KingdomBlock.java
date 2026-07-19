@@ -35,6 +35,16 @@ public class KingdomBlock extends BaseEntityBlock {
     @Override
     public RenderShape getRenderShape(BlockState state) { return RenderShape.MODEL; }
 
+    // Меню открываем ТОЛЬКО через useWithoutItem (с buf: pos+isKing). Ванильная
+    // спектатор-ветка ServerPlayerGameMode.useItemOn зовёт getMenuProvider +
+    // player.openMenu(mp) БЕЗ buf → клиентский KingdomMenu ctor падает на readBlockPos.
+    // Возвращаем null → спектатор-байпас (и любой getMenuProvider-путь) отключён.
+    @Nullable
+    @Override
+    public net.minecraft.world.MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
+        return null;
+    }
+
     @Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {

@@ -21,6 +21,8 @@ public class PlayerData implements INBTSerializable<CompoundTag> {
 
     private boolean receivedStarterKit = false;
 
+    private boolean receivedGuide = false;
+
     // Множитель XP от баффа довольствия королевства (transient — пересчёт на логине/событиях).
     private float kingdomXpMultiplier = 1f;
     public float getKingdomXpMultiplier()          { return kingdomXpMultiplier; }
@@ -28,6 +30,9 @@ public class PlayerData implements INBTSerializable<CompoundTag> {
 
     public boolean hasReceivedStarterKit()  { return receivedStarterKit; }
     public void markStarterKitReceived()     { receivedStarterKit = true; }
+
+    public boolean hasReceivedGuide()  { return receivedGuide; }
+    public void markGuideReceived()     { receivedGuide = true; }
 
     public int getMaxLevel(Path path) {
         return SpecializationRegistry.getCount(path) * MAX_SPEC_LEVEL;
@@ -120,6 +125,7 @@ public class PlayerData implements INBTSerializable<CompoundTag> {
         specializationLevels.forEach(specsTag::putInt);
         tag.put("specializations", specsTag);
         tag.putBoolean("starterKit", receivedStarterKit);
+        tag.putBoolean("guide", receivedGuide);
         return tag;
     }
 
@@ -137,5 +143,6 @@ public class PlayerData implements INBTSerializable<CompoundTag> {
             }
         }
         receivedStarterKit = tag.getBoolean("starterKit");
+        receivedGuide = tag.getBoolean("guide");
     }
 }

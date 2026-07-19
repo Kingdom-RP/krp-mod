@@ -1,4 +1,6 @@
 {
+  "kingdomrpcore.guide_name": "Kingdom RP Guide",
+  "kingdomrpcore.guide_tooltip": "Core server mechanics",
   "effect.kingdomrpcore.death_xp_penalty": "XP Penalty",
   "effect.kingdomrpcore.death_xp_penalty.desc": "After death. Reduced XP gain. Not removed by milk.",
   "key.categories.kingdomrpcore": "Kingdom RP",
@@ -42,6 +44,9 @@
   "kingdomrp.menu.title": "Kingdom RP",
   "kingdomrp.menu.tab.progress": "Progression",
   "kingdomrp.menu.tab.kingdom": "Kingdom",
+  "kingdomrp.menu.kingdoms_empty": "No kingdoms yet",
+  "kingdomrp.kingdom.sub.mine": "My kingdom",
+  "kingdomrp.kingdom.sub.all": "All kingdoms",
   "kingdomrp.menu.king": "King: %s",
   "kingdomrp.menu.claims": "Chunks: %s",
   "kingdomrp.menu.members": "Members: %s",

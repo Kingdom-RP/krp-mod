@@ -93,6 +93,7 @@ public class KingdomBlockScreen extends AbstractContainerScreen<KingdomMenu> {
 
     private void renderCharacteristics(GuiGraphics g) {
         var info = ClientKingdomData.get();
+        if (info == null || !ClientKingdomData.inKingdom()) return;  // не член / нет данных — без шкал
         float[] vals = {info.food(), info.materials(), info.prosperity()};
         float[] drains = {info.foodDrain(), info.materialsDrain(), info.prosperityDrain()};
         String[] keys = {"kingdomrp.upkeep.food", "kingdomrp.upkeep.materials", "kingdomrp.upkeep.prosperity"};

@@ -212,6 +212,19 @@ public class KRPCommand {
                                         .executes(KRPCommand::cmdKingdomResyncClaims))
                         )
         );
+
+        // ===== /wiki — выдать справочник GuideMe себе =====
+        dispatcher.register(Commands.literal("wiki").executes(KRPCommand::cmdWiki));
+    }
+
+    /** Выдаёт игроку внутриигровой справочник GuideMe. */
+    private static int cmdWiki(CommandContext<CommandSourceStack> ctx)
+            throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        player.getInventory().add(guideme.Guides.createGuideItem(
+                com.kingdomrp.core.capability.PlayerDataEvents.GUIDE_ID));
+        ctx.getSource().sendSuccess(() -> Component.literal("§6Справочник выдан."), false);
+        return 1;
     }
 
     private static int cmdKingdomDisband(CommandContext<CommandSourceStack> ctx)

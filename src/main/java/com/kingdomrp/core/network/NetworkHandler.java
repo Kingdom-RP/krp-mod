@@ -17,6 +17,10 @@ public class NetworkHandler {
                 XPGainPacket::handle);
         registrar.playToClient(SyncKingdomInfoPacket.TYPE, SyncKingdomInfoPacket.STREAM_CODEC,
                 SyncKingdomInfoPacket::handle);
+        registrar.playToClient(SyncKingdomListPacket.TYPE, SyncKingdomListPacket.STREAM_CODEC,
+                SyncKingdomListPacket::handle);
+        registrar.playToServer(RequestKingdomListPacket.TYPE, RequestKingdomListPacket.STREAM_CODEC,
+                RequestKingdomListPacket::handle);
         registrar.playToServer(ChooseSpecializationPacket.TYPE, ChooseSpecializationPacket.STREAM_CODEC,
                 ChooseSpecializationPacket::handle);
         registrar.playToServer(SignCharterPacket.TYPE, SignCharterPacket.STREAM_CODEC,

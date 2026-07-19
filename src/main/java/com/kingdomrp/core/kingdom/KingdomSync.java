@@ -20,6 +20,19 @@ public final class KingdomSync {
         PacketDistributor.sendToPlayer(player, build(player.server, k, player.getUUID()));
     }
 
+    /** Отправить игроку список всех королевств (название, король, чанки). */
+    public static void sendList(ServerPlayer player) {
+        List<com.kingdomrp.core.network.SyncKingdomListPacket.Entry> entries =
+                KingdomData.get(player.server).all().stream()
+                        .map(k -> new com.kingdomrp.core.network.SyncKingdomListPacket.Entry(
+                                k.getName(), name(player.server, k.getKing()), k.getClaims().size()))
+                        .sorted(java.util.Comparator.comparing(
+                                com.kingdomrp.core.network.SyncKingdomListPacket.Entry::name,
+                                String.CASE_INSENSITIVE_ORDER))
+                        .toList();
+        PacketDistributor.sendToPlayer(player, new com.kingdomrp.core.network.SyncKingdomListPacket(entries));
+    }
+
     /** Разослать сводку всем онлайн-участникам королевства (isKing — индивидуально). */
     public static void broadcast(MinecraftServer server, Kingdom k) {
         for (UUID member : k.getMembers()) {

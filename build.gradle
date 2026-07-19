@@ -85,6 +85,7 @@ dependencies {
             'libs/ftb-library-neoforge-2101.1.32.jar',
             'libs/architectury-13.0.8-neoforge.jar',
             'libs/ObsidianUI-neoforge-0.2.9+mc1.21.1.jar',
+            'libs/guideme-21.1.17.jar',
     )
 }
 

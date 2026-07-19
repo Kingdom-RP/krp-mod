@@ -1,0 +1,14 @@
+{
+  "item_settings": {
+    "display_name": {
+      "type": "translatable",
+      "translate": "kingdomrpcore.guide_name"
+    },
+    "tooltip_lines": [
+      {
+        "translate": "kingdomrpcore.guide_tooltip",
+        "color": "dark_gray"
+      }
+    ]
+  }
+}

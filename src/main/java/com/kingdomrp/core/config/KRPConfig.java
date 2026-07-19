@@ -16,9 +16,6 @@ public class KRPConfig {
     public static final ModConfigSpec.IntValue DEATH_PENALTY_DURATION;
     public static final ModConfigSpec.DoubleValue DEATH_XP_MULTIPLIER;
 
-    // Магия
-    public static final ModConfigSpec.DoubleValue BREW_BASE_CHANCE;
-
     // Общее
     public static final ModConfigSpec.BooleanValue RESTRICTIONS_ENABLED;
     public static final ModConfigSpec.BooleanValue KINGDOM_DEBUG_NO_SIGNATURES;
@@ -56,12 +53,6 @@ public class KRPConfig {
         DEATH_XP_MULTIPLIER = builder
                 .comment("Множитель получаемого опыта при дебаффе смерти (0.5 = -50%)")
                 .defineInRange("deathXpMultiplier", 0.5, 0.0, 1.0);
-        builder.pop();
-
-        builder.comment("Настройки магии").push("magic");
-        BREW_BASE_CHANCE = builder
-                .comment("Базовый шанс успешной варки зелья без навыка")
-                .defineInRange("brewBaseChance", 0.4, 0.0, 1.0);
         builder.pop();
 
         builder.comment("Общие настройки").push("general");

@@ -1,4 +1,6 @@
 {
+  "kingdomrpcore.guide_name": "Справочник Kingdom RP",
+  "kingdomrpcore.guide_tooltip": "Основные механики сервера",
   "effect.kingdomrpcore.death_xp_penalty": "Штраф к опыту",
   "effect.kingdomrpcore.death_xp_penalty.desc": "После смерти. Получаемый опыт снижен. Не снимается молоком.",
   "key.categories.kingdomrpcore": "Kingdom RP",
@@ -42,6 +44,9 @@
   "kingdomrp.menu.title": "Kingdom RP",
   "kingdomrp.menu.tab.progress": "Прокачка",
   "kingdomrp.menu.tab.kingdom": "Королевство",
+  "kingdomrp.menu.kingdoms_empty": "Королевств пока нет",
+  "kingdomrp.kingdom.sub.mine": "Моё королевство",
+  "kingdomrp.kingdom.sub.all": "Все королевства",
   "kingdomrp.menu.king": "Король: %s",
   "kingdomrp.menu.claims": "Чанков: %s",
   "kingdomrp.menu.members": "Участники: %s",

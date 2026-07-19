@@ -51,6 +51,10 @@ public class KingdomHubScreen extends SpruceScreen implements KingdomSyncListene
 
     public KingdomHubScreen() {
         super(Component.translatable("kingdomrp.menu.title"));
+        // Запросить список всех королевств ОДИН раз при открытии (не в init — тот
+        // зовётся и на rebuildWidgets → был бы цикл запрос→sync→rebuild→запрос).
+        net.neoforged.neoforge.network.PacketDistributor.sendToServer(
+                new com.kingdomrp.core.network.RequestKingdomListPacket());
     }
 
     @Override
@@ -65,11 +69,11 @@ public class KingdomHubScreen extends SpruceScreen implements KingdomSyncListene
         super.init();
         this.tabbed = new SpruceTabbedWidget(Position.of(this, 0, 4), this.width, this.height - 35 - 4, this.title);
         this.tabbed.addTabEntry(Component.translatable("kingdomrp.menu.tab.progress"), null, this::buildProgressTab);
-        if (ClientKingdomData.inKingdom()) {
-            this.tabbed.addTabEntry(Component.translatable("kingdomrp.menu.tab.kingdom"), null, this::buildKingdomTab);
-            if (ClientKingdomData.get().isKing())
-                this.tabbed.addTabEntry(Component.translatable("kingdomrp.menu.tab.manage"), null, this::buildManageTab);
-        }
+        // Одна вкладка «Королевство»: члену — подвкладки [Моё королевство|Все королевства],
+        // не-члену — только список всех королевств.
+        this.tabbed.addTabEntry(Component.translatable("kingdomrp.menu.tab.kingdom"), null, this::buildKingdomTab);
+        if (ClientKingdomData.inKingdom() && ClientKingdomData.get().isKing())
+            this.tabbed.addTabEntry(Component.translatable("kingdomrp.menu.tab.manage"), null, this::buildManageTab);
         this.addRenderableWidget(this.tabbed);
         reselectTab();
 
@@ -138,9 +142,48 @@ public class KingdomHubScreen extends SpruceScreen implements KingdomSyncListene
         return outer;
     }
 
-    // ===== Королевство (инфо) =====
+    // ===== Королевство (вкладка-диспетчер: подвкладки для члена / список для не-члена) =====
+
+    private int kingdomSubTab = 0;   // 0 = моё королевство, 1 = все королевства
+    private com.kingdomrp.core.client.screen.widget.FlatTabWidget btnKMine, btnKAll;
 
     private SpruceContainerWidget buildKingdomTab(int width, int height) {
+        if (!ClientKingdomData.inKingdom())
+            return buildKingdomsListTab(width, height);   // не-член: только список
+
+        var outer = new SpruceContainerWidget(Position.origin(), width, height);
+        var info = buildKingdomInfoTab(width, height);
+        var list = buildKingdomsListTab(width, height);
+
+        int tabW = 150, tabsY = 2;
+        int barX = this.width / 2 - (tabW * 2 + 2) / 2 - sideOffset(width);
+        btnKMine = new com.kingdomrp.core.client.screen.widget.FlatTabWidget(
+                Position.of(barX, tabsY), tabW, 21,
+                Component.translatable("kingdomrp.kingdom.sub.mine"),
+                () -> { kingdomSubTab = 0; applyKingdomSub(info, list); });
+        btnKAll = new com.kingdomrp.core.client.screen.widget.FlatTabWidget(
+                Position.of(barX + tabW + 2, tabsY), tabW, 21,
+                Component.translatable("kingdomrp.kingdom.sub.all"),
+                () -> { kingdomSubTab = 1; applyKingdomSub(info, list); });
+
+        outer.addChild(info);
+        outer.addChild(list);
+        outer.addChild(btnKMine);
+        outer.addChild(btnKAll);
+        applyKingdomSub(info, list);
+        return outer;
+    }
+
+    private void applyKingdomSub(SpruceContainerWidget info, SpruceContainerWidget list) {
+        info.setVisible(kingdomSubTab == 0);
+        list.setVisible(kingdomSubTab == 1);
+        btnKMine.setSelected(kingdomSubTab == 0);
+        btnKAll.setSelected(kingdomSubTab == 1);
+    }
+
+    // ===== Королевство (инфо своего) =====
+
+    private SpruceContainerWidget buildKingdomInfoTab(int width, int height) {
         var outer = new SpruceContainerWidget(Position.origin(), width, height);
         SyncKingdomInfoPacket info = ClientKingdomData.get();
 
@@ -153,7 +196,7 @@ public class KingdomHubScreen extends SpruceScreen implements KingdomSyncListene
         int membersEnd = resY + 16 + info.members().size() * 20;
         int panelH = membersEnd + 8 + (isKing ? 0 : 26);
         int panelX = this.width / 2 - panelW / 2 - sideOffset(width);
-        var panel = styledPanel(panelX, Math.max(0, (height - panelH) / 2), panelW, panelH);
+        var panel = styledPanel(panelX, Math.max(28, (height - panelH) / 2), panelW, panelH);
 
         panel.addChildren((w, h, adder) -> {
             adder.accept(new SpruceLabelWidget(Position.of(0, 10),
@@ -231,6 +274,50 @@ public class KingdomHubScreen extends SpruceScreen implements KingdomSyncListene
 
     private static Component sign(int step, String text) {
         return Component.literal(text).withStyle(step > 0 ? ChatFormatting.GREEN : ChatFormatting.RED);
+    }
+
+    // ===== Королевства (список всех) =====
+
+    private SpruceContainerWidget buildKingdomsListTab(int width, int height) {
+        var outer = new SpruceContainerWidget(Position.origin(), width, height);
+        var entries = com.kingdomrp.core.client.ClientKingdomList.get();
+
+        int panelW = 340, headerTop = 32, rowH = 16;
+        int rows = Math.max(entries.size(), 1);
+        int panelH = headerTop + 14 + rows * rowH + 10;
+        int panelX = this.width / 2 - panelW / 2 - sideOffset(width);
+        var panel = styledPanel(panelX, Math.max(28, (height - panelH) / 2), panelW, panelH);
+
+        // Колонки: название @16, король @176, чанки @286.
+        final int cName = 16, cKing = 176, cChunks = 286;
+        panel.addChildren((w, h, adder) -> {
+            adder.accept(new SpruceLabelWidget(Position.of(0, 8),
+                    Component.literal("§6👑 Королевства мира 👑"), w, true));
+            adder.accept(new SpruceLabelWidget(Position.of(cName, headerTop),
+                    Component.literal("§7Название"), 150, false));
+            adder.accept(new SpruceLabelWidget(Position.of(cKing, headerTop),
+                    Component.literal("§7Король"), 100, false));
+            adder.accept(new SpruceLabelWidget(Position.of(cChunks, headerTop),
+                    Component.literal("§7Чанки"), 46, false));
+
+            if (entries.isEmpty()) {
+                adder.accept(new SpruceLabelWidget(Position.of(0, headerTop + 18),
+                        Component.translatable("kingdomrp.menu.kingdoms_empty").withStyle(ChatFormatting.GRAY), w, true));
+                return;
+            }
+            for (int i = 0; i < entries.size(); i++) {
+                var e = entries.get(i);
+                int ry = headerTop + 14 + i * rowH;
+                adder.accept(new SpruceLabelWidget(Position.of(cName, ry),
+                        Component.literal(e.name()).withStyle(ChatFormatting.GOLD), 150, false));
+                adder.accept(new SpruceLabelWidget(Position.of(cKing, ry),
+                        Component.literal(e.king()).withStyle(ChatFormatting.WHITE), 100, false));
+                adder.accept(new SpruceLabelWidget(Position.of(cChunks, ry),
+                        Component.literal(String.valueOf(e.chunks())).withStyle(ChatFormatting.WHITE), 46, false));
+            }
+        });
+        outer.addChild(panel);
+        return outer;
     }
 
     // ===== Управление (встроенное, подвкладки) =====

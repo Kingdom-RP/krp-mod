@@ -90,3 +90,12 @@ config="${mod_id}.ftbchunks.mixins.json"
     versionRange="*"
     ordering="AFTER"
     side="BOTH"
+
+# Внутриигровой справочник (книга механик). Выдаётся при первом входе и по /wiki —
+# нужен в рантайме на обеих сторонах (createGuideItem).
+[[dependencies.${mod_id}]]
+    modId="guideme"
+    type="required"
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"
